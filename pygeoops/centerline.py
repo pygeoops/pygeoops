@@ -27,7 +27,7 @@ def centerline(
 
     Example output:
 
-        |centerline_L_shape|
+    |centerline_L_shape|
 
     Args:
         geometry (geometry or array_like): a geometry or ndarray of geometries
