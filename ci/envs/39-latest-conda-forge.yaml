@@ -7,6 +7,7 @@ dependencies:
   # required
   - shapely >1
   # testing
+  - matplotlib
   - pytest
   - pytest-cov
   - pip:
