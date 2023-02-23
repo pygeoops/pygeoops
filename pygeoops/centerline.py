@@ -54,8 +54,7 @@ def centerline(
               - value < 0: simplifytolerance = average width of geometry * abs(value)
 
     Returns:
-        geometry or array_like: the centerline for each of
-            the input geometries.
+        geometry or array_like: the centerline for each of the input geometries.
 
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
