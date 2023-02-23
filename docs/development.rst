@@ -23,7 +23,7 @@ dependencies::
     conda activate pygeoopsdev
     conda config --env --add channels conda-forge
     conda config --env --set channel_priority strict
-    conda install python=3.10 geopandas>0.11
+    conda install python=3.10 shapely>1
     conda install black flake8 pylint pytest rope pydata-sphinx-theme sphinx-automodapi
 
 
