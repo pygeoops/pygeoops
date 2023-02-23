@@ -1,0 +1,13 @@
+name: test
+channels:
+  - conda-forge
+dependencies:
+  - python =3.8
+  - pip
+  # required
+  - shapely >1
+  # testing
+  - pytest
+  - pytest-cov
+  - pip:
+    - simplification
