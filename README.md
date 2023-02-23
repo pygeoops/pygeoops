@@ -7,7 +7,7 @@
 
 PyGeoOps provides some less common or extended spatial algorithms and utility functions.
 
-# Usage
+## Usage
 
 Calculate a centerline for a polygon
 
@@ -20,16 +20,17 @@ centerline = pygeoops.centerline(polygon)
 ```
 ![centerline](https://github.com/pygeoops/pygeoops/blob/main/docs/_static/images/centerline_fancy_Lshape.png)
 
-# Installation
+## Installation
 
-PyGeoOps is available on PyPi as well as on conda-forge:
+PyGeoOps is available on PyPi, so can be installed using pip:
 
 ```
 pip install pygeoops
 ```
 
-or 
+Another option is to use conda or mamba, as it is also available on conda-forge:
 
 ```
 conda install pygeoops --channel conda-forge
 ```
+s
