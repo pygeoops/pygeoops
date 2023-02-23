@@ -11,7 +11,7 @@ setuptools.setup(
     version=version,
     author="Pieter Roggemans",
     author_email="pieter.roggemans@gmail.com",
-    description="Library with some spatial algorithms to use on shapely geometries.",
+    description="PyGeoOps provides some less common or extended spatial algorithms and utility functions.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pygeoops/pygeoops",

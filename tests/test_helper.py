@@ -44,4 +44,4 @@ def plot(geoms: List[BaseGeometry], output_path: Path, clean_name: bool = True):
         # Replace all possibly invalid characters by "_"
         output_path = output_path.with_name(re.sub(r"[^\w_. -]", "_", output_path.name))
 
-    figure.savefig(str(output_path))
+    figure.savefig(str(output_path), dpi=72)
