@@ -9,10 +9,12 @@ available in shapely.
 A full list of operations can be found in the 
 :ref:`API reference<API-reference>`. 
 
-This is how eg. a centerline can be determined for a geometry:
+This is how eg. a centerline can be determined for a polygon:
 
 .. code-block:: python
 
     import pygeoops
-    
-    centerline = pygeoops.centerline(geometry='...')
+    import shapely
+
+    polygon = shapely.from_wkt("POLYGON ((0 0, 0 10, 2 10, 2 2, 10 2, 10 0, 0 0))")
+    centerline = pygeoops.centerline(polygon)
