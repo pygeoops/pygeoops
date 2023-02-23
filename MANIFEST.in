@@ -1,0 +1,2 @@
+# Include the version.txt file
+include pygeoops/version.txt

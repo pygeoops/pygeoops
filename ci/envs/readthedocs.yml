@@ -1,0 +1,15 @@
+name: pygeoopsdoc
+channels:
+  - conda-forge
+dependencies:
+  - python =3.10
+  - pip
+  # required
+  - shapely >1
+  # docs
+  # Restrict sphinx version to < 6 to avoid logo error
+  - sphinx <6
+  - pydata-sphinx-theme
+  - pip:
+    - sphinx-automodapi ==0.13
+    - simplification
