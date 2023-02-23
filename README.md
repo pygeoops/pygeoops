@@ -5,4 +5,10 @@
 [![PyPI version](https://img.shields.io/pypi/v/pygeoops.svg)](https://pypi.org/project/pygeoops)
 [![Conda version](https://anaconda.org/conda-forge/pygeoops/badges/version.svg)](https://anaconda.org/conda-forge/pygeoops)
 
-Library with some spatial algorithms that are not available in shapely.
+PyGeoOps provides some more exotic spatial algorithms that are not available in shapely.
+
+# Examples
+
+## Centerline
+
+Calculates a centerline for a polygon.

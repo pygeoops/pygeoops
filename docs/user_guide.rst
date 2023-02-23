@@ -3,8 +3,7 @@
 User guide
 ==========
 
-The main objective of pygeoops is to provide extra spatial algorithms that are not
-available in shapely.
+PyGeoOps provides some more exotic spatial algorithms that are not available in shapely.
 
 A full list of operations can be found in the 
 :ref:`API reference<API-reference>`. 
