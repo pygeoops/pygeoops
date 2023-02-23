@@ -25,5 +25,5 @@ Determine a centerline for a shapely polygon
 |centerline_L_shape|
 
 
-.. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
+.. |centerline_L_shape| image:: ./_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
