@@ -7,8 +7,31 @@
 
 PyGeoOps provides some less common or extended spatial algorithms and utility functions.
 
-# Examples
+# Usage
 
 ## Centerline
 
 Calculates a centerline for a polygon.
+
+```
+import pygeoops
+import shapely
+
+polygon = shapely.from_wkt("POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))")
+centerline = pygeoops.centerline(polygon)
+```
+![centerline](https://github.com/pygeoops/pygeoops/blob/main/docs/_static/images/centerline_fancy_Lshape.png)
+
+# Installation
+
+PyGeoOps is available on PyPi as well as on conda-forge:
+
+```
+pip install pygeoops
+```
+
+or 
+
+```
+conda install pygeoops --channel conda-forge
+```
