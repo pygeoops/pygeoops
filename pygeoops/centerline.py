@@ -18,7 +18,12 @@ def centerline(
     simplifytolerance: float = -0.25,
 ) -> Union[shapely.geometry.base.BaseGeometry, np.ndarray, list, None]:
     """
-    Calculates a centerline for a geometry.
+    Calculates a centerline.
+
+    Negative values for the algorithm parameters will result in an automatic
+    optimisation based on the average geometry width for each input geometry.
+
+    Alternative name: medial axis
 
     Args:
         geometry (geometry or array_like): a geometry or ndarray of geometries
@@ -45,7 +50,8 @@ def centerline(
               - value < 0: simplifytolerance = average width of geometry * abs(value)
 
     Returns:
-        Union[sh_geom.base.BaseGeometry, np.ndarray, None]: the result.
+        geometry or array_like: the centerline for each of
+            the input geometries.
     """
     # Check if input is an array or not
     array_input = True

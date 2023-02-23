@@ -2,7 +2,6 @@
 
 ## 0.1.0 (???)
 
-### Improvements
+First version. The following spatial operations are available:
 
-- Centerline function (#1)
-
+- Calculate the centerline for a polygon (#1).

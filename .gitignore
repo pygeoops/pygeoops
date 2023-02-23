@@ -11,6 +11,6 @@ dist/
 docs/_autosummary
 docs/_build
 docs/api
-geofileops.egg-info/
+pygeoops.egg-info/
 htmlcov/
 tmp/
