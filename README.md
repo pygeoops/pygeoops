@@ -33,4 +33,3 @@ Another option is to use conda or mamba, as it is also available on conda-forge:
 ```
 conda install pygeoops --channel conda-forge
 ```
-s

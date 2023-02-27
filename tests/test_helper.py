@@ -11,6 +11,7 @@ from typing import List
 from matplotlib import figure as mpl_figure
 import matplotlib.colors as mcolors
 import shapely
+import shapely.affinity
 import shapely.plotting
 from shapely.geometry.base import BaseGeometry
 
@@ -45,3 +46,10 @@ def plot(geoms: List[BaseGeometry], output_path: Path, clean_name: bool = True):
         output_path = output_path.with_name(re.sub(r"[^\w_. -]", "_", output_path.name))
 
     figure.savefig(str(output_path), dpi=72)
+
+
+def translate_to_origin(wkt: str) -> str:
+    geom = shapely.from_wkt(wkt)
+    bounds = shapely.bounds(geom)
+    translated = shapely.affinity.translate(geom, xoff=-bounds[0], yoff=-bounds[1])
+    return translated.wkt
