@@ -4,21 +4,20 @@ from typing import Union
 import numpy as np
 
 import shapely
-import shapely.ops as sh_ops
-import shapely.geometry
+from shapely.geometry.base import BaseGeometry
 
 
 logger = logging.getLogger(__name__)
 
 
 def centerline(
-    geometry: Union[shapely.geometry.base.BaseGeometry, np.ndarray, list, None],
+    geometry: Union[BaseGeometry, np.ndarray, list, None],
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
-) -> Union[shapely.geometry.base.BaseGeometry, np.ndarray, list, None]:
+) -> Union[BaseGeometry, np.ndarray, list, None]:
     """
-    Calculates a centerline.
+    Calculates an approximated centerline for a polygon.
 
     Negative values for the algorithm parameters will result in an automatic
     optimisation based on the average geometry width for each input geometry.
@@ -78,15 +77,14 @@ def centerline(
     for geom in geometries:  # type: ignore
         if geom is None or geom.is_empty:
             result.append(None)
-
+        average_width = None
         # Densify lines in the input
-        average_width = geom.length / 4 - math.sqrt(
-            max((geom.length / 4) ** 2 - geom.area, 0)
-        )
         if densify_distance != 0:
             max_segment_length = densify_distance
             if densify_distance < 0:
                 # Automatically determine length
+                if average_width is None:
+                    average_width = _average_width(geom)
                 max_segment_length = abs(densify_distance) * average_width
             geom_prepared = shapely.segmentize(geom, max_segment_length)
         else:
@@ -98,6 +96,7 @@ def centerline(
         # Only keep edges that are covered by the original geometry to remove edges
         # going to infinity,...
         # Remark: contains is optimized for prepared geometries <> within
+        # TODO: test if it is really faster!
         edges = shapely.get_parts(voronoi_edges)
         shapely.prepare(geom)
         edges = edges[shapely.contains(geom, edges)]
@@ -114,6 +113,8 @@ def centerline(
         min_branch_length_cur = min_branch_length
         if min_branch_length_cur < 0:
             # If < 0, calculate
+            if average_width is None:
+                average_width = _average_width(geom)
             min_branch_length_cur = abs(min_branch_length_cur) * average_width
         if min_branch_length_cur > 0:
             lines = _remove_short_branches(lines, min_branch_length_cur)
@@ -123,6 +124,8 @@ def centerline(
             tol = simplifytolerance
             if simplifytolerance < 0:
                 # Automatically determine tol
+                if average_width is None:
+                    average_width = _average_width(geom)
                 tol = abs(simplifytolerance) * average_width
             lines = shapely.simplify(lines, tol)
 
@@ -134,6 +137,19 @@ def centerline(
         return result[0]
 
     return result
+
+
+def _average_width(geom: BaseGeometry) -> float:
+    """
+    Calculate the average width for a polygon.
+
+    Args:
+        geom (BaseGeometry): the input polygon
+
+    Returns:
+        float: the average width
+    """
+    return geom.length / 4 - math.sqrt(max((geom.length / 4) ** 2 - geom.area, 0))
 
 
 def _remove_short_branches(
@@ -155,67 +171,75 @@ def _remove_short_branches(
         return line
 
     # Remove short branches till there are no more short branches
-    line_cleaned = shapely.MultiLineString(line)
+    line_cleaned = shapely.normalize(line)
     while isinstance(line_cleaned, shapely.MultiLineString):
-        # Loop over each line to check if we keep it
-        edges_tree = shapely.STRtree(line_cleaned.geoms)
-        lines_to_keep = []
-        for line_cur_idx, line_cur in enumerate(line_cleaned.geoms):
+        # Loop over each line to check if we keep it, strating with shortest lines
+        lines_rtree = None
+        line_removed = False
+        linetuples_sorted = sorted(
+            enumerate(line_cleaned.geoms), key=lambda x: shapely.length(x[1])
+        )
+        for line_cur_idx, line_cur in linetuples_sorted:
             # If the line is long enough, always keep it
             if line_cur.length >= min_branch_length:
-                lines_to_keep.append(line_cur)
                 continue
 
             # Check for the first and last point whether they touch another edge
             # Check first point
             search_point = shapely.Point(line_cur.coords[0])
-            near_lines = list(edges_tree.query(search_point))
+            if lines_rtree is None:
+                lines_rtree = shapely.STRtree(line_cleaned.geoms)
+            neighbour_idxs = list(lines_rtree.query(search_point))
             startpoint_adjacency = False
 
             # If only one found, it is itself so nothing adjacent.
-            if len(near_lines) > 1:
-                for near_line in near_lines:
+            if len(neighbour_idxs) > 1:
+                for neighbour_idx in neighbour_idxs:
                     # If the near line is itself, skip
-                    if near_line == line_cur_idx:
+                    if neighbour_idx == line_cur_idx:
                         continue
                     # Check if the near line really intersects
-                    if line_cleaned.geoms[near_line].intersects(search_point):
+                    if line_cleaned.geoms[neighbour_idx].intersects(search_point):
                         startpoint_adjacency = True
                         break
 
             # Check last point
             search_point = shapely.Point(line_cur.coords[-1])
-            near_lines = list(edges_tree.query(search_point))
+            neighbour_idxs = list(lines_rtree.query(search_point))
             endpoint_adjacency = False
 
             # If only one found, it is itself so nothing adjacent.
-            if len(near_lines) > 1:
-                for near_line in near_lines:
+            if len(neighbour_idxs) > 1:
+                for neighbour_idx in neighbour_idxs:
                     # If the near line is itself, skip
-                    if near_line == line_cur_idx:
+                    if neighbour_idx == line_cur_idx:
                         continue
                     # Check if the near line really intersects
-                    if line_cleaned.geoms[near_line].intersects(search_point):
+                    if line_cleaned.geoms[neighbour_idx].intersects(search_point):
                         endpoint_adjacency = True
                         break
 
             if startpoint_adjacency is False and endpoint_adjacency is False:
                 # Standalone line, keep it
-                lines_to_keep.append(line_cur)
+                continue
             elif startpoint_adjacency and endpoint_adjacency:
                 # Line between two others, so keep it
-                lines_to_keep.append(line_cur)
+                continue
             else:
                 # Only either start or end point has an adjacency: short branch,
                 # so don't keep.
-                continue
+                line_cleaned = shapely.multilinestrings(
+                    np.delete(line_cleaned.geoms, line_cur_idx, axis=0)
+                )
+                line_removed = True
+                break
 
         # If no lines were removed anymore in the last pass, we are ready
-        if len(line_cleaned.geoms) == len(lines_to_keep):
+        if not line_removed:
             break
 
         # Merge the lines to keep again...
-        line_cleaned = sh_ops.linemerge(shapely.MultiLineString(lines_to_keep))
+        line_cleaned = shapely.line_merge(line_cleaned)
 
     if line_cleaned is None or line_cleaned.is_empty:
         return line
