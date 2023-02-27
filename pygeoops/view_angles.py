@@ -10,7 +10,13 @@ def view_angles(
     visible_geom: shapely.Geometry,
 ) -> Tuple[float, float]:
     """
-    Returns start and end angle how the visible geometry can be seen from the viewpoint.
+    Returns the start and end angle where the visible geometry can be seen from the
+    viewpoint.
+
+    Remark: start_angle can be larger than end_angle. E.g. if the visible geom is
+    located in the south east of the viewpoint till the north east.
+
+    |view_angles|
 
     Args:
         viewpoint (Geometry): the point that is being viewed from.
@@ -18,7 +24,11 @@ def view_angles(
             view angles to. Only single-type geometries are supported.
 
     Returns:
-        Tuple[float, float]: the angle_start and angle_end for the viewpoint.
+        Tuple[float, float]: the angle_start and angle_end for the viewpoint in degrees.
+        Values are between 0 and 360, or np.nan if no visible_geom.
+
+    .. |view_angles| image:: ../_static/images/view_angles.png
+        :alt: View angles returned by the function
     """
     if not isinstance(viewpoint, shapely.Point):
         raise ValueError("viewpoint should be a point")
