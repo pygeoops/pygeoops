@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pygeoops.centerline import *
+from pygeoops.view_angles import *
 
 
 def _get_version():
