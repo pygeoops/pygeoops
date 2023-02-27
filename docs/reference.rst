@@ -12,3 +12,4 @@ methods implemented in PyGeoOps. All classes and function exposed in
    :toctree: api/
 
    centerline
+   view_angles
