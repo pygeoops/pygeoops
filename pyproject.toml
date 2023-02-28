@@ -1,3 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pygeoops"
+version = "0.0.1"
+authors = [
+  { name="Pieter Roggemans", email="pieter.roggemans@gmail.com" },
+]
+description = "Library with some less common or extended spatial functions"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "shapely>1",
+]
+keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
+
+[project.urls]
+"Homepage" = "https://github.com/pygeoops/pygeoops"
+"Bug Tracker" = "https://github.com/pygeoops/pygeoops/issues"
+
 [tool.pytest.ini_options]
 pythonpath = "."
 testpaths = [
