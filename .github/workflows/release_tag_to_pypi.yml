@@ -4,8 +4,9 @@
 name: Build and upload pygeoops to pypi
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: read
