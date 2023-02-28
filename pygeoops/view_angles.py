@@ -1,11 +1,89 @@
 import math
 from typing import Tuple
+
 import numpy as np
 import shapely
 import shapely.geometry
 
 
 def view_angles(
+    viewpoint,
+    visible_geom,
+):
+    """
+    Returns the start and end angle where the visible geometry can be seen from the
+    viewpoint.
+
+    If one of the parameters is an array, the view angles are calculated for each
+    of these with the other parameter. If both parameters are arrays, they should each
+    have the same length and the angles will be calculated one on one between the
+    corresponding elements.
+
+    Remark: the start angle can be larger than the end angle. E.g. if the visible geom
+    is located in the south east of the viewpoint till the north east.
+
+    |view_angles|
+
+    Args:
+        viewpoint (Geometry or arraylike): the point that is being viewed from.
+        visible_geom (Geometry or arraylike): the visible geometry to calculate the view
+            angles to. Only singlepart geometries are supported.
+
+    Returns:
+        Tuple or array of floats with for each viewpoint/visible_geom combination the
+        start angle and end angle in degrees. Values are between 0 and 360, or np.nan
+        for None or empty geometries.
+
+    .. |view_angles| image:: ../_static/images/view_angles.png
+        :alt: View angles returned by the function
+    """
+
+    # If no param is a list, simple return
+    visible_geom_is_arr = hasattr(visible_geom, "__len__")
+    viewpoint_is_arr = hasattr(viewpoint, "__len__")
+    if not visible_geom_is_arr and not viewpoint_is_arr:
+        return _view_angles(viewpoint, visible_geom)
+
+    # At least one of the inputs is arraylike, so prepare input arrays
+    if viewpoint_is_arr:
+        viewpoint_arr = np.array(viewpoint)
+    else:
+        viewpoint_arr = np.full(len(visible_geom), viewpoint)
+    if visible_geom_is_arr:
+        visible_geom_arr = np.array(visible_geom)
+    else:
+        visible_geom_arr = np.full(len(viewpoint), visible_geom)
+
+    if len(viewpoint_arr) != len(visible_geom_arr):
+        raise ValueError(
+            "viewpoint and visible_geom are arrays, so they must be the same length"
+        )
+
+    # Combine both input arrays
+    geoms_arr = np.concatenate(
+        [
+            np.expand_dims(viewpoint_arr, 1),  # type: ignore
+            np.expand_dims(visible_geom_arr, 1),  # type: ignore
+        ],
+        axis=1,
+    )
+
+    # Function to calculate the view angles for one viewpoint, visible_geom pair
+    def calculate_angles(input) -> Tuple[float, float]:
+        viewpoint_geom, visible_geom = input
+        return _view_angles(viewpoint_geom, visible_geom)
+
+    # Calculate angles for all elements
+    angles_arr = np.apply_along_axis(
+        calculate_angles,
+        arr=geoms_arr,
+        axis=1,
+    )
+
+    return angles_arr
+
+
+def _view_angles(
     viewpoint: shapely.Point,
     visible_geom: shapely.Geometry,
 ) -> Tuple[float, float]:
@@ -13,10 +91,8 @@ def view_angles(
     Returns the start and end angle where the visible geometry can be seen from the
     viewpoint.
 
-    Remark: start_angle can be larger than end_angle. E.g. if the visible geom is
-    located in the south east of the viewpoint till the north east.
-
-    |view_angles|
+    Remark: the start angle can be larger than the end angle. E.g. if the visible geom
+    is located in the south east of the viewpoint till the north east.
 
     Args:
         viewpoint (Geometry): the point that is being viewed from.
@@ -24,11 +100,8 @@ def view_angles(
             view angles to. Only single-type geometries are supported.
 
     Returns:
-        Tuple[float, float]: the angle_start and angle_end for the viewpoint in degrees.
+        Tuple[float, float]: the start angle and end angle for the viewpoint in degrees.
         Values are between 0 and 360, or np.nan if no visible_geom.
-
-    .. |view_angles| image:: ../_static/images/view_angles.png
-        :alt: View angles returned by the function
     """
     if not isinstance(viewpoint, shapely.Point):
         raise ValueError("viewpoint should be a point")
@@ -38,7 +111,9 @@ def view_angles(
     # Prepare the viewpoint
     viewpoint_coords_arr = shapely.get_coordinates(viewpoint)
     if len(viewpoint_coords_arr) != 1:
-        raise ValueError("viewpoint should be a point")
+        raise ValueError(
+            f"viewpoint should have one coordinate, not {len(viewpoint_coords_arr)}"
+        )
     viewpoint_x = viewpoint_coords_arr[0][0]
     viewpoint_y = viewpoint_coords_arr[0][1]
 
