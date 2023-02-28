@@ -1,9 +1,33 @@
-
+from typing import Tuple
+import geopandas as gpd
 import numpy as np
+import pandas as pd
 import pytest
 import shapely
 
 import pygeoops
+
+
+def get_testdata_gdf() -> Tuple[gpd.GeoDataFrame, shapely.Point]:
+    # Prepare visible_geom data
+    columns = ["descr", "exp_angle_start", "exp_angle_end", "wkt"]
+    visible_geoms = [
+        ["Geom EMPTY", np.nan, np.nan, "POLYGON(EMPTY)"],
+        ["Geom None", np.nan, np.nan, None],
+        ["NE_SE", 315.0, 45.0, "POLYGON((1 1, 1 -1, 2 -1, 2 1, 1 1))"],
+        ["NE, y=0", 0.0, 45.0, "POLYGON((1 0, 1 1, 2 1, 2 0, 1 0))"],
+        ["NW", 135.0, 180.0, "POLYGON((-1 0, -1 1, -2 1, -2 0, -1 0))"],
+        ["NW_SE", 135.0, 315.0, "POLYGON((-1 1, -1 0.5, 1 -1, -3 1, -1 1))"],
+    ]
+    df = pd.DataFrame(visible_geoms, columns=columns)
+    gs = gpd.GeoSeries.from_wkt(df["wkt"])
+    df = df.drop(columns="wkt")
+    visible_geoms_gdf = gpd.GeoDataFrame(df, geometry=gs)  # type: ignore
+
+    # Viewpoint
+    viewpoint = shapely.Point(10, 20)
+
+    return (visible_geoms_gdf, viewpoint)
 
 
 @pytest.mark.parametrize(
@@ -75,3 +99,53 @@ def test_view_angles_invalid_input():
 
     with pytest.raises(ValueError, match="visible_geom can't be a multipart geometry"):
         pygeoops.view_angles(shapely.Point(), shapely.MultiPolygon())
+
+    with pytest.raises(ValueError, match="viewpoint should have one coordinate, not 0"):
+        pygeoops.view_angles(shapely.Point(), shapely.Polygon())
+
+    with pytest.raises(
+        ValueError,
+        match="viewpoint and visible_geom are arrays, so they must be the same length",
+    ):
+        pygeoops.view_angles([shapely.Point(), shapely.Point()], [shapely.Polygon()])
+
+
+def test_view_angles_array():
+    """
+    Test view_angles with array input(s).
+    """
+    visible_geoms_gdf, viewpoint = get_testdata_gdf()
+
+    # The raw testdata is based on a view location of 0,0. Adapt it to the
+    # view location used as 0,0 wouldn't have a good test coverage.
+    visible_geoms_gdf.geometry = visible_geoms_gdf.geometry.translate(
+        xoff=viewpoint.x, yoff=viewpoint.y
+    )
+
+    # Run test with viewpoint a Point and visible_geoms an array
+    # ----------------------------------------------------------
+    angles_arr = pygeoops.view_angles(viewpoint, visible_geoms_gdf.geometry.values)
+
+    # Compare expected results
+    exp_angles_arr = visible_geoms_gdf[["exp_angle_start", "exp_angle_end"]].to_numpy()
+    assert np.array_equal(angles_arr, exp_angles_arr, equal_nan=True)
+
+    # Run test with viewpoint + visible_goms as an array
+    # --------------------------------------------------
+    viewpoint_arr = np.array([viewpoint for i in range(len(visible_geoms_gdf))])
+    angles_arr = pygeoops.view_angles(viewpoint_arr, visible_geoms_gdf.geometry.values)
+
+    # Compare expected results
+    exp_angles_arr = visible_geoms_gdf[["exp_angle_start", "exp_angle_end"]].to_numpy()
+    assert np.array_equal(angles_arr, exp_angles_arr, equal_nan=True)
+
+    # Run test with viewpoint an array and visible_geoms a single geometry
+    # --------------------------------------------------------------------
+    viewpoint_arr = np.array([viewpoint for i in range(len(visible_geoms_gdf))])
+    visible_geom = visible_geoms_gdf.geometry.values[3]
+    angles_arr = pygeoops.view_angles(viewpoint_arr, visible_geom)
+
+    # Compare expected results
+    exp_angles = visible_geoms_gdf[["exp_angle_start", "exp_angle_end"]].to_numpy()[3]
+    exp_angles_arr = np.full((len(viewpoint_arr), 2), exp_angles)
+    assert np.array_equal(angles_arr, exp_angles_arr, equal_nan=True)
