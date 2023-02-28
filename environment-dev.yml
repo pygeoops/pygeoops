@@ -1,4 +1,4 @@
-name: pygeoopsdev
+name: pygeoops-dev
 channels:
   - conda-forge
 dependencies:
