@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.1.0 (???)
+## 0.1.0 (2023-03-01)
 
 First version. The following spatial operations are available:
 
