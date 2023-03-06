@@ -9,7 +9,7 @@ PyGeoOps provides some less common or extended spatial algorithms and utility fu
 
 ## Usage
 
-Calculate a centerline for a polygon:
+Calculate a [centerline](https://pygeoops.readthedocs.io/en/latest/api/pygeoops.centerline.html#pygeoops.centerline) for a polygon:
 
 ```
 import pygeoops
