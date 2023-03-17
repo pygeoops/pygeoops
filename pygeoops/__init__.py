@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from pygeoops.centerline import *
-from pygeoops.view_angles import *
+from pygeoops.centerline import *  # noqa: F401, F403
+from pygeoops.view_angles import *  # noqa: F401, F403
 
 
 def _get_version():
