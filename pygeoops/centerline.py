@@ -128,7 +128,7 @@ def _centerline(
             average_width = _average_width(geom)
         min_branch_length_cur = abs(min_branch_length_cur) * average_width
     if min_branch_length_cur > 0:
-        lines = _remove_short_branches(lines, min_branch_length_cur)
+        lines = _remove_short_branches_notempty(lines, min_branch_length_cur)
 
     # Simplify if needed
     if simplifytolerance is not None:
@@ -158,9 +158,47 @@ def _average_width(geom: BaseGeometry) -> float:
     return geom.length / 4 - math.sqrt(max((geom.length / 4) ** 2 - geom.area, 0))
 
 
+def _remove_short_branches_notempty(
+    line: Union[shapely.MultiLineString, shapely.LineString, None],
+    min_branch_length: float,
+) -> Union[shapely.MultiLineString, shapely.LineString, None]:
+    """
+    Remove all branches of the input lines shorter than min_branch_length. If this
+    leads to a None or empty result, return a valid line anyway.
+
+    Args:
+        line (shapely line): input line
+        min_branch_length (float): the minimum length of branches to keep.
+
+    Returns:
+        Union[shapely.MultiLineString, shapely.LineString, None]: the cleaned line
+    """
+    # If line already OK or minimum branch length invalid, just return input
+    if line is None or isinstance(line, shapely.LineString) or min_branch_length <= 0:
+        return line
+
+    # Remove short branches
+    line_cleaned = _remove_short_branches(
+        line, min_branch_length, remove_one_by_one=False
+    )
+
+    # If _remove_short_branches returned an empty result, try again but less agressive
+    if line_cleaned is None or line_cleaned.is_empty:
+        line_cleaned = _remove_short_branches(
+            line, min_branch_length, remove_one_by_one=True
+        )
+
+    # If still an empty result, return original version
+    if line_cleaned is None or line_cleaned.is_empty:
+        line_cleaned = line
+
+    return line_cleaned
+
+
 def _remove_short_branches(
     line: Union[shapely.MultiLineString, shapely.LineString, None],
     min_branch_length: float,
+    remove_one_by_one: bool,
 ) -> Union[shapely.MultiLineString, shapely.LineString, None]:
     """
     Remove all branches of the input lines shorter than min_branch_length.
@@ -168,6 +206,9 @@ def _remove_short_branches(
     Args:
         line (shapely line): input line
         min_branch_length (float): the minimum length of branches to keep.
+        remove_one_by_one (bool): True to remove short branches one by one, with line
+            merges in between. This will give a less clean result, but will less often
+            result in an empty result.
 
     Returns:
         Union[shapely.MultiLineString, shapely.LineString, None]: the cleaned line
@@ -181,7 +222,7 @@ def _remove_short_branches(
     while isinstance(line_cleaned, shapely.MultiLineString):
         # Loop over each line to check if we keep it, ordered by length
         lines_rtree = None
-        line_removed = False
+        line_parts_to_remove = []
         line_cleaned_parts = shapely.get_parts(line_cleaned)
         linetuples_sorted = sorted(
             enumerate(line_cleaned_parts),
@@ -241,20 +282,20 @@ def _remove_short_branches(
             else:
                 # Only either start or end point has an adjacency: short branch,
                 # so don't keep.
-                line_cleaned = shapely.multilinestrings(
-                    np.delete(line_cleaned_parts, line_cur_idx, axis=0)
-                )
-                line_removed = True
-                break
+                line_parts_to_remove.append(line_cur_idx)
+                if remove_one_by_one:
+                    break
 
-        # If no lines were removed anymore in the last pass, we are ready
-        if not line_removed:
+        # Remove the line parts found
+        if len(line_parts_to_remove) > 0:
+            line_cleaned = shapely.multilinestrings(
+                np.delete(line_cleaned_parts, line_parts_to_remove, axis=0)
+            )
+        else:
+            # If no lines were removed anymore in the last pass, we are ready
             break
 
         # Merge the lines to keep again...
         line_cleaned = shapely.line_merge(line_cleaned)
-
-    if line_cleaned is None or line_cleaned.is_empty:
-        return line
 
     return line_cleaned
