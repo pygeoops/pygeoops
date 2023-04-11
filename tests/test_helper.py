@@ -6,7 +6,7 @@ Helper functions for all tests.
 import os
 from pathlib import Path
 import re
-from typing import List
+from typing import List, Optional
 
 from matplotlib import figure as mpl_figure
 import matplotlib.colors as mcolors
@@ -16,13 +16,20 @@ import shapely.plotting
 from shapely.geometry.base import BaseGeometry
 
 
-def plot(geoms: List[BaseGeometry], output_path: Path, clean_name: bool = True):
+def plot(
+    geoms: List[BaseGeometry],
+    output_path: Path,
+    title: Optional[str] = None,
+    clean_name: bool = True,
+):
     # If we are running on CI server, don't plot
     if "GITHUB_ACTIONS" in os.environ:
         return
 
     figure = mpl_figure.Figure()
     figure.subplots(1, 1)
+    if title is not None:
+        figure.suptitle(title)
 
     colors = mcolors.TABLEAU_COLORS  # type: ignore
     for geom_idx, geom in enumerate(geoms):
