@@ -58,8 +58,8 @@ def centerline(
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
     """
-    # Check if input is an array or not
-    if isinstance(geometry, np.ndarray) or isinstance(geometry, list):
+    # Check if input is arraylike
+    if hasattr(geometry, "__len__"):
         # Treat every geometry
         result = []
         for geom in geometry:  # type: ignore

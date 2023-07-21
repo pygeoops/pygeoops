@@ -56,8 +56,7 @@ def simplify(
         BaseGeometry: The simplified version of the geometry.
     """
     # Check if input is arraylike
-    if isinstance(geometry, np.ndarray) or isinstance(geometry, list):
-        # if hasattr(geometry, "__len__"):
+    if hasattr(geometry, "__len__"):
         # Treat every geometry
         result = []
         for geom in geometry:  # type: ignore
