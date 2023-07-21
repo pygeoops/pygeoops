@@ -1,43 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Tests for functionalities in vector_util, regarding geometry operations.
+Tests on simplify.
 """
 
 import sys
 
 import geopandas as gpd
-import numpy as np
 import pytest
 import shapely
 
 import pygeoops
-from pygeoops import _simplify as pygeoops_simpl
 import test_helper
 
 
-def test_simplify_coords_lang():
-    # Test LineString, lookahead -1, via coordinates
-    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
-    coords_simplified = pygeoops_simpl._simplify_coords_lang(
-        coords=linestring.coords, tolerance=1, lookahead=-1
+def test_simplify_arr():
+    """Test simplify of an array of linestrings."""
+    linestrings = [shapely.LineString([(0, 0), (10, 10), (20, 20)])] * 2
+    simplified_lines = pygeoops.simplify(
+        geometry=linestrings, algorithm="lang", tolerance=1
     )
-    assert isinstance(coords_simplified, np.ndarray)
-    assert len(coords_simplified) < len(linestring.coords)
-    assert len(coords_simplified) == 2
+    assert simplified_lines is not None
+    assert len(simplified_lines) == 2
+    for test_idx, simplified_line in enumerate(simplified_lines):
+        assert isinstance(simplified_line, shapely.LineString)
+        assert len(simplified_line.coords) < len(linestrings[test_idx].coords)
+        assert len(simplified_line.coords) == 2
 
 
-def test_simplify_coords_lang_list():
-    # Test LineString, lookahead -1, via coordinates
-    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
-    coords_simplified = pygeoops_simpl._simplify_coords_lang(
-        coords=list(linestring.coords), tolerance=1, lookahead=-1
-    )
-    assert isinstance(coords_simplified, list)
-    assert len(coords_simplified) < len(linestring.coords)
-    assert len(coords_simplified) == 2
-
-
-def test_simplify_ext_lang_basic():
+def test_simplify_basic_lang():
+    """
+    Some basic tests of simplify. The lang algorithm is used because it is no optional
+    dependency.
+    """
     # Test LineString, lookahead -1, via geometry
     linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     geom_simplified = pygeoops.simplify(
@@ -101,9 +95,7 @@ def test_simplify_ext_lang_basic():
     )
     assert isinstance(geom_simplified, shapely.MultiLineString)
     assert len(geom_simplified.geoms) == 2
-    assert len(geom_simplified.geoms[0].coords) < len(
-        multilinestring.geoms[0].coords  # pyright: ignore[reportOptionalMemberAccess]
-    )
+    assert len(geom_simplified.geoms[0].coords) < len(multilinestring.geoms[0].coords)
     assert len(geom_simplified.geoms[0].coords) == 2
 
     # Test Polygon simplification
@@ -140,35 +132,7 @@ def test_simplify_ext_lang_basic():
     assert len(geom_simplified.geoms) == 6
 
 
-def test_simplify_ext_lang_preservetopology():
-    # Test Polygon lookahead -1
-    poly = shapely.Polygon(
-        shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
-        holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
-    )
-    # If preserve_topology True, the original polygon is returned...
-    geom_simplified = pygeoops.simplify(
-        geometry=poly,
-        algorithm="lang",
-        tolerance=10,
-        preserve_topology=True,
-        lookahead=-1,
-    )
-    assert isinstance(geom_simplified, shapely.Polygon)
-    assert poly.equals(geom_simplified) is True
-
-    # If preserve_topology True, the original polygon is returned...
-    geom_simplified = pygeoops.simplify(
-        geometry=poly,
-        algorithm="lang",
-        tolerance=10,
-        preserve_topology=False,
-        lookahead=-1,
-    )
-    assert geom_simplified is None
-
-
-def test_simplify_ext_invalid():
+def test_simplify_invalid_geometry():
     # Test Polygon simplification, with invalid exterior ring
     poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (5, 10), (3, 12), (3, 9), (10, 10), (10, 0), (0, 0)],
@@ -239,7 +203,16 @@ def test_simplify_ext_invalid():
     assert len(geom_simplified.geoms) == 3
 
 
-def test_simplify_ext_keep_points_on_lang(tmp_path):
+def test_simplify_invalid_params():
+    with pytest.raises(ValueError, match="Unsupported algorythm specified: invalid!"):
+        pygeoops.simplify(
+            geometry=shapely.LineString([(0, 0), (10, 10), (20, 20)]),
+            tolerance=1,
+            algorithm="invalid!",
+        )
+
+
+def test_simplify_keep_points_on_lang(tmp_path):
     # First init some stuff
     input_path = test_helper.get_testfile("polygon-simplify-onborder-testcase")
     input_gdf = gpd.read_file(input_path)
@@ -318,7 +291,7 @@ def test_simplify_ext_keep_points_on_lang(tmp_path):
     )
 
 
-def test_simplify_ext_keep_points_on_rdp(tmp_path):
+def test_simplify_keep_points_on_rdp(tmp_path):
     # Skip test if simplification is not available
     _ = pytest.importorskip("simplification")
 
@@ -394,7 +367,7 @@ def test_simplify_ext_keep_points_on_rdp(tmp_path):
     )
 
 
-def test_simplify_ext_keep_points_on_vw(tmp_path):
+def test_simplify_keep_points_on_vw(tmp_path):
     # Skip test if simplification is not available
     _ = pytest.importorskip("simplification")
 
@@ -468,7 +441,41 @@ def test_simplify_ext_keep_points_on_vw(tmp_path):
     )
 
 
-def test_simplify_ext_no_simplification():
+def test_simplify_none():
+    # Test simplify on None geometry
+    result = pygeoops.simplify(None, 1)
+    assert result is None
+
+
+def test_simplify_preservetopology_lang():
+    # Test Polygon lookahead -1
+    poly = shapely.Polygon(
+        shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
+        holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
+    )
+    # If preserve_topology True, the original polygon is returned...
+    geom_simplified = pygeoops.simplify(
+        geometry=poly,
+        algorithm="lang",
+        tolerance=10,
+        preserve_topology=True,
+        lookahead=-1,
+    )
+    assert isinstance(geom_simplified, shapely.Polygon)
+    assert poly.equals(geom_simplified) is True
+
+    # If preserve_topology True, the original polygon is returned...
+    geom_simplified = pygeoops.simplify(
+        geometry=poly,
+        algorithm="lang",
+        tolerance=10,
+        preserve_topology=False,
+        lookahead=-1,
+    )
+    assert geom_simplified is None
+
+
+def test_simplify_simplification_not_installed():
     # Backup reference to simplification module
     _temp_simplification = None
     if sys.modules.get("simplification"):

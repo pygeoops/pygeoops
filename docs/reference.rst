@@ -12,4 +12,13 @@ methods implemented in PyGeoOps. All classes and function exposed in
    :toctree: api/
 
    centerline
+   collect
+   collection_extract
+   create_grid
+   create_grid2
+   create_grid3
+   numberpoints
+   remove_inner_rings
+   simplify
+   split_tiles
    view_angles
