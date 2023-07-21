@@ -84,6 +84,14 @@ def test_simplify_basic_lang():
     assert len(geom_simplified.coords) < len(linestring.coords)
     assert len(geom_simplified.coords) == 2
 
+    # Two point -> no simplification
+    linestring_2points = shapely.LineString([(0, 0), (20, 20)])
+    geom_simplified = pygeoops.simplify(
+        geometry=linestring_2points, algorithm="lang", tolerance=1
+    )
+    assert isinstance(geom_simplified, shapely.LineString)
+    assert len(geom_simplified.coords) == 2
+
     # Test MultiLineString simplification
     multilinestring = shapely.MultiLineString(
         [list(linestring.coords), [(100, 100), (110, 110), (120, 120)]]

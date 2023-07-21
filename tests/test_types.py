@@ -20,6 +20,18 @@ def test_geometrytype():
     assert GeometryType(GeometryType.POLYGON) is GeometryType.POLYGON
 
 
+def test_geometrytype_is_multitype():
+    # Test is_multitype
+    assert not GeometryType.POLYGON.is_multitype
+    assert GeometryType.MULTIPOLYGON.is_multitype
+    assert not GeometryType.LINESTRING.is_multitype
+    assert GeometryType.MULTILINESTRING.is_multitype
+    assert not GeometryType.POINT.is_multitype
+    assert GeometryType.MULTIPOINT.is_multitype
+    assert GeometryType.GEOMETRY.is_multitype
+    assert GeometryType.GEOMETRYCOLLECTION.is_multitype
+
+
 def test_geometrytype_name_camelcase():
     # Test to_singletype
     assert GeometryType.POLYGON.name_camelcase == "Polygon"

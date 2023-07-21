@@ -9,8 +9,8 @@ from typing import Optional, Tuple, Union
 
 import geopandas as gpd
 import pyproj
-import shapely.ops as sh_ops
-import shapely.geometry as sh_geom
+import shapely
+import shapely.ops
 
 #####################################################################
 # First define/init some general variables/constants
@@ -45,7 +45,7 @@ def create_grid3(
     crs: Union[pyproj.CRS, int, str, None],
 ) -> gpd.GeoDataFrame:
     """
-
+    Creates a grid with cells of the width and height specified.
 
     Args:
         total_bounds (Tuple[float, float, float, float]): [description]
@@ -75,7 +75,7 @@ def create_grid3(
             if cell_bottom > ymax:
                 break
             polygons.append(
-                sh_ops.Polygon(
+                shapely.Polygon(
                     [
                         (cell_left, cell_top),
                         (cell_right, cell_top),
@@ -114,8 +114,13 @@ def create_grid2(
         gpd.GeoDataFrame: geodataframe with the grid
     """
     # Check input
-    if nb_squarish_tiles_max is not None and nb_squarish_tiles_max < 1:
-        raise Exception("The maximum nb of tiles should be larger than 1")
+    if nb_squarish_tiles <= 0:
+        raise ValueError("nb_squarish_tiles should be > 0")
+    if nb_squarish_tiles_max is not None:
+        if not nb_squarish_tiles_max > 0:
+            raise ValueError("nb_squarish_tiles_max should be > 0")
+        elif not nb_squarish_tiles_max >= nb_squarish_tiles:
+            raise ValueError("nb_squarish_tiles_max should be >= nb_squarich_tiles")
 
     # If more cells asked, calculate optimal number
     xmin, ymin, xmax, ymax = total_bounds
@@ -152,6 +157,18 @@ def create_grid2(
 def split_tiles(
     input_tiles: gpd.GeoDataFrame, nb_tiles_wanted: int
 ) -> gpd.GeoDataFrame:
+    """
+    Split the tiles in the input tiles so the number of tiles approaches
+    nb_tiles_wanted specified as close as possible.
+
+    Args:
+        input_tiles (gpd.GeoDataFrame): the input tiles to split
+        nb_tiles_wanted (int): the number of tiles wanted in the result
+
+    Returns:
+        gpd.GeoDataFrame: tiles that are the result of splitting input_tiles and
+        approaching nb_tiles_wanted as close as possible.
+    """
     nb_tiles = len(input_tiles)
     if nb_tiles >= nb_tiles_wanted:
         return input_tiles
@@ -184,7 +201,7 @@ def split_tiles(
                 # Split in 2 or 3...
                 if divisor == 3:
                     if width > height:
-                        split_line = sh_geom.LineString(
+                        split_line = shapely.LineString(
                             [
                                 (xmin + width / 3, ymin - 1),
                                 (xmin + width / 3, ymax + 1),
@@ -193,7 +210,7 @@ def split_tiles(
                             ]
                         )
                     else:
-                        split_line = sh_geom.LineString(
+                        split_line = shapely.LineString(
                             [
                                 (xmin - 1, ymin + height / 3),
                                 (xmax + 1, ymin + height / 3),
@@ -203,18 +220,18 @@ def split_tiles(
                         )
                 else:
                     if width > height:
-                        split_line = sh_geom.LineString(
+                        split_line = shapely.LineString(
                             [(xmin + width / 2, ymin - 1), (xmin + width / 2, ymax + 1)]
                         )
                     else:
-                        split_line = sh_geom.LineString(
+                        split_line = shapely.LineString(
                             [
                                 (xmin - 1, ymin + height / 2),
                                 (xmax + 1, ymin + height / 2),
                             ]
                         )
                 tmp_tiles_after_split.extend(
-                    sh_ops.split(tile_to_split, split_line).geoms
+                    shapely.ops.split(tile_to_split, split_line).geoms
                 )
             curr_tiles_being_split = tmp_tiles_after_split
 
