@@ -6,7 +6,7 @@ Tests for functionalities in _grid.py.
 import geopandas as gpd
 
 import pygeoops
-from tests import test_helper
+import test_helper
 
 
 def test_create_grid2():

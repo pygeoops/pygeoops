@@ -8,16 +8,16 @@ import sys
 import geopandas as gpd
 import numpy as np
 import pytest
-import shapely.geometry as sh_geom
+import shapely
 
 import pygeoops
 from pygeoops import _simplify as pygeoops_simpl
-from tests import test_helper
+import test_helper
 
 
 def test_simplify_coords_lang():
     # Test LineString, lookahead -1, via coordinates
-    linestring = sh_geom.LineString([(0, 0), (10, 10), (20, 20)])
+    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     coords_simplified = pygeoops_simpl._simplify_coords_lang(
         coords=linestring.coords, tolerance=1, lookahead=-1
     )
@@ -28,7 +28,7 @@ def test_simplify_coords_lang():
 
 def test_simplify_coords_lang_list():
     # Test LineString, lookahead -1, via coordinates
-    linestring = sh_geom.LineString([(0, 0), (10, 10), (20, 20)])
+    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     coords_simplified = pygeoops_simpl._simplify_coords_lang(
         coords=list(linestring.coords), tolerance=1, lookahead=-1
     )
@@ -39,19 +39,19 @@ def test_simplify_coords_lang_list():
 
 def test_simplify_ext_lang_basic():
     # Test LineString, lookahead -1, via geometry
-    linestring = sh_geom.LineString([(0, 0), (10, 10), (20, 20)])
+    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     geom_simplified = pygeoops.simplify(
         geometry=linestring,
         algorithm="lang",
         tolerance=1,
         lookahead=-1,
     )
-    assert isinstance(geom_simplified, sh_geom.LineString)
+    assert isinstance(geom_simplified, shapely.LineString)
     assert len(geom_simplified.coords) < len(linestring.coords)
     assert len(geom_simplified.coords) == 2
 
     # Test Polygon lookahead -1
-    poly = sh_geom.Polygon(
+    poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
@@ -61,37 +61,37 @@ def test_simplify_ext_lang_basic():
         tolerance=1,
         lookahead=-1,
     )
-    assert isinstance(geom_simplified, sh_geom.Polygon)
+    assert isinstance(geom_simplified, shapely.Polygon)
     assert geom_simplified.exterior is not None
     assert poly.exterior is not None
     assert len(geom_simplified.exterior.coords) < len(poly.exterior.coords)
     assert len(geom_simplified.exterior.coords) == 5
 
     # Test Point simplification
-    point = sh_geom.Point((0, 0))
+    point = shapely.Point((0, 0))
     geom_simplified = pygeoops.simplify(geometry=point, algorithm="lang", tolerance=1)
-    assert isinstance(geom_simplified, sh_geom.Point)
+    assert isinstance(geom_simplified, shapely.Point)
     assert len(geom_simplified.coords) == 1
 
     # Test MultiPoint simplification
-    multipoint = sh_geom.MultiPoint([(0, 0), (10, 10), (20, 20)])
+    multipoint = shapely.MultiPoint([(0, 0), (10, 10), (20, 20)])
     geom_simplified = pygeoops.simplify(
         geometry=multipoint, algorithm="lang", tolerance=1
     )
-    assert isinstance(geom_simplified, sh_geom.MultiPoint)
+    assert isinstance(geom_simplified, shapely.MultiPoint)
     assert len(geom_simplified.geoms) == 3
 
     # Test LineString simplification
-    linestring = sh_geom.LineString([(0, 0), (10, 10), (20, 20)])
+    linestring = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     geom_simplified = pygeoops.simplify(
         geometry=linestring, algorithm="lang", tolerance=1
     )
-    assert isinstance(geom_simplified, sh_geom.LineString)
+    assert isinstance(geom_simplified, shapely.LineString)
     assert len(geom_simplified.coords) < len(linestring.coords)
     assert len(geom_simplified.coords) == 2
 
     # Test MultiLineString simplification
-    multilinestring = sh_geom.MultiLineString(
+    multilinestring = shapely.MultiLineString(
         [list(linestring.coords), [(100, 100), (110, 110), (120, 120)]]
     )
     geom_simplified = pygeoops.simplify(
@@ -99,7 +99,7 @@ def test_simplify_ext_lang_basic():
         algorithm="lang",
         tolerance=1,
     )
-    assert isinstance(geom_simplified, sh_geom.MultiLineString)
+    assert isinstance(geom_simplified, shapely.MultiLineString)
     assert len(geom_simplified.geoms) == 2
     assert len(geom_simplified.geoms[0].coords) < len(
         multilinestring.geoms[0].coords  # pyright: ignore[reportOptionalMemberAccess]
@@ -107,42 +107,42 @@ def test_simplify_ext_lang_basic():
     assert len(geom_simplified.geoms[0].coords) == 2
 
     # Test Polygon simplification
-    poly = sh_geom.Polygon(
+    poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
     geom_simplified = pygeoops.simplify(geometry=poly, algorithm="lang", tolerance=1)
-    assert isinstance(geom_simplified, sh_geom.Polygon)
+    assert isinstance(geom_simplified, shapely.Polygon)
     assert geom_simplified.exterior is not None
     assert poly.exterior is not None
     assert len(geom_simplified.exterior.coords) < len(poly.exterior.coords)
     assert len(geom_simplified.exterior.coords) == 5
 
     # Test MultiPolygon simplification
-    poly2 = sh_geom.Polygon(
+    poly2 = shapely.Polygon(
         shell=[(100, 100), (100, 110), (110, 110), (110, 100), (100, 100)]
     )
-    multipoly = sh_geom.MultiPolygon([poly, poly2])
+    multipoly = shapely.MultiPolygon([poly, poly2])
     geom_simplified = pygeoops.simplify(
         geometry=multipoly, algorithm="lang", tolerance=1
     )
-    assert isinstance(geom_simplified, sh_geom.MultiPolygon)
+    assert isinstance(geom_simplified, shapely.MultiPolygon)
     assert len(geom_simplified.geoms) == 2
     assert len(geom_simplified.geoms[0].exterior.coords) < len(poly.exterior.coords)
     assert len(geom_simplified.geoms[0].exterior.coords) == 5
 
     # Test GeometryCollection (as combination of all previous ones) simplification
-    geom = sh_geom.GeometryCollection(
+    geom = shapely.GeometryCollection(
         [point, multipoint, linestring, multilinestring, poly, multipoly]
     )
     geom_simplified = pygeoops.simplify(geometry=geom, algorithm="lang", tolerance=1)
-    assert isinstance(geom_simplified, sh_geom.GeometryCollection)
+    assert isinstance(geom_simplified, shapely.GeometryCollection)
     assert len(geom_simplified.geoms) == 6
 
 
 def test_simplify_ext_lang_preservetopology():
     # Test Polygon lookahead -1
-    poly = sh_geom.Polygon(
+    poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
@@ -154,7 +154,7 @@ def test_simplify_ext_lang_preservetopology():
         preserve_topology=True,
         lookahead=-1,
     )
-    assert isinstance(geom_simplified, sh_geom.Polygon)
+    assert isinstance(geom_simplified, shapely.Polygon)
     assert poly.equals(geom_simplified) is True
 
     # If preserve_topology True, the original polygon is returned...
@@ -170,12 +170,12 @@ def test_simplify_ext_lang_preservetopology():
 
 def test_simplify_ext_invalid():
     # Test Polygon simplification, with invalid exterior ring
-    poly = sh_geom.Polygon(
+    poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (5, 10), (3, 12), (3, 9), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
     geom_simplified = pygeoops.simplify(geometry=poly, algorithm="lang", tolerance=1)
-    assert isinstance(geom_simplified, sh_geom.MultiPolygon)
+    assert isinstance(geom_simplified, shapely.MultiPolygon)
     assert poly.exterior is not None
     assert len(geom_simplified.geoms[0].exterior.coords) < len(poly.exterior.coords)
     assert len(geom_simplified.geoms[0].exterior.coords) == 7
@@ -184,7 +184,7 @@ def test_simplify_ext_invalid():
     # Test Polygon simplification, with exterior ring that touches itself
     # due to simplification and after make_valid results in multipolygon of
     # 2 equally large parts (left and right part of M shape).
-    poly_m_touch = sh_geom.Polygon(
+    poly_m_touch = shapely.Polygon(
         shell=[
             (0, 0),
             (0, 10),
@@ -206,14 +206,14 @@ def test_simplify_ext_invalid():
     )
     assert geom_simplified is not None
     assert geom_simplified.is_valid
-    assert isinstance(geom_simplified, sh_geom.MultiPolygon)
+    assert isinstance(geom_simplified, shapely.MultiPolygon)
     assert len(geom_simplified.geoms) == 2
     assert pygeoops.numberpoints(geom_simplified) < pygeoops.numberpoints(poly)
 
     # Test Polygon simplification, with exterior ring that crosses itself
     # due to simplification and after make_valid results in multipolygon of
     # 3 parts (left, middle and right part of M shape).
-    poly_m_cross = sh_geom.Polygon(
+    poly_m_cross = shapely.Polygon(
         shell=[
             (0, 0),
             (0, 10),
@@ -235,7 +235,7 @@ def test_simplify_ext_invalid():
     )
     assert geom_simplified is not None
     assert geom_simplified.is_valid
-    assert isinstance(geom_simplified, sh_geom.MultiPolygon)
+    assert isinstance(geom_simplified, shapely.MultiPolygon)
     assert len(geom_simplified.geoms) == 3
 
 
@@ -258,12 +258,12 @@ def test_simplify_ext_keep_points_on_lang(tmp_path):
     )
     grid_gdf.to_file(tmp_path / "grid.gpkg")
     grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = sh_geom.MultiLineString(grid_coords)
+    grid_lines_geom = shapely.MultiLineString(grid_coords)
 
     # Test lang
     # Without keep_points_on, the following point that is on the test data +
     # on the grid is removed by lang
-    point_on_input_and_border = sh_geom.Point(210431.875, 176606.125)
+    point_on_input_and_border = shapely.Point(210431.875, 176606.125)
     tolerance_lang = 0.25
     step_lang = 8
 
@@ -340,12 +340,12 @@ def test_simplify_ext_keep_points_on_rdp(tmp_path):
     )
     grid_gdf.to_file(tmp_path / "grid.gpkg")
     grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = sh_geom.MultiLineString(grid_coords)
+    grid_lines_geom = shapely.MultiLineString(grid_coords)
 
     # Test rdp (ramer–douglas–peucker)
     # Without keep_points_on, the following point that is on the test data +
     # on the grid is removed by rdp
-    point_on_input_and_border = sh_geom.Point(210431.875, 176599.375)
+    point_on_input_and_border = shapely.Point(210431.875, 176599.375)
     tolerance_rdp = 0.5
 
     # Determine the number of intersects with the input test data
@@ -416,12 +416,12 @@ def test_simplify_ext_keep_points_on_vw(tmp_path):
     )
     grid_gdf.to_file(tmp_path / "grid.gpkg")
     grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = sh_geom.MultiLineString(grid_coords)
+    grid_lines_geom = shapely.MultiLineString(grid_coords)
 
     # Test vw (visvalingam-whyatt)
     # Without keep_points_on, the following point that is on the test data +
     # on the grid is removed by vw
-    point_on_input_and_border = sh_geom.Point(210430.125, 176640.125)
+    point_on_input_and_border = shapely.Point(210430.125, 176640.125)
     tolerance_vw = 16 * 0.25 * 0.25  # 1m²
 
     # Determine the number of intersects with the input test data
@@ -479,7 +479,7 @@ def test_simplify_ext_no_simplification():
 
         # Using RDP needs simplification module, so should give ImportError
         pygeoops.simplify(
-            geometry=sh_geom.LineString([(0, 0), (10, 10), (20, 20)]),
+            geometry=shapely.LineString([(0, 0), (10, 10), (20, 20)]),
             algorithm="rdp",
             tolerance=1,
         )

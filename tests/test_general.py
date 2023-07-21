@@ -6,7 +6,7 @@ Tests for functionalities in vector_util, regarding geometry operations.
 import shapely
 
 import pygeoops
-from tests import test_helper
+import test_helper
 
 
 def test_numberpoints():
