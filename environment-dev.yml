@@ -14,6 +14,7 @@ dependencies:
   # linting
   - black
   - flake8
+  - pre-commit
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
   - sphinx <6

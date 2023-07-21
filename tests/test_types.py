@@ -4,12 +4,8 @@ Tests for functionalities in vector_util, regarding geometry operations.
 """
 
 import pytest
-import shapely
-import shapely.geometry as sh_geom
 
-import pygeoops
 from pygeoops import GeometryType, PrimitiveType
-from tests import test_helper
 
 
 def test_geometrytype():

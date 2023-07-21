@@ -35,7 +35,7 @@ author = "Pieter Roggemans"
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-import pygeoops
+import pygeoops  # noqa: E402
 
 version = release = pygeoops.__version__
 
