@@ -5,6 +5,7 @@ dependencies:
   - python =3.10
   - pip
   # required
+  - geopandas
   - shapely >1
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
