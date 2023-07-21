@@ -169,7 +169,7 @@ def simplify(
     # Loop over the rings, and simplify them one by one...
     # If the geometry is None, just return...
     if geometry is None:
-        raise Exception("geom input paramerter should not be None")
+        raise Exception("geom input parameter should not be None")
     elif isinstance(geometry, shapely.Point):
         # Point cannot be simplified
         return geometry
