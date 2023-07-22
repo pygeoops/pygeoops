@@ -19,13 +19,8 @@ If you don't have the conda package manager installed yet, here is a link to the
 Then you'll need to create a new conda environment with the necessary 
 dependencies::
 
-    conda create -n pygeoopsdev
-    conda activate pygeoopsdev
-    conda config --env --add channels conda-forge
-    conda config --env --set channel_priority strict
-    conda install python=3.10 shapely>1
-    conda install black flake8 pylint pytest rope pydata-sphinx-theme sphinx-automodapi
-
+    conda env create -f environment-dev.yml
+    conda activate pygeoops-dev
 
 
 .. _miniforge installer : https://github.com/conda-forge/miniforge#miniforge3
