@@ -3,11 +3,9 @@
 Tests for functionalities in _grid.py.
 """
 
-import geopandas as gpd
 import pytest
 
 import pygeoops
-import test_helper
 
 
 def test_create_grid():
@@ -37,6 +35,16 @@ def test_create_grid2():
         crs="epsg:31370",
     )
     assert len(grid_gdf) == 96
+
+    # Test for larger number of cells + nb_squarish_tiles_max
+    # Remark: without nb_squarish_tiles_max, nb_squarish_tiles=150 results in 156 tiles
+    grid_gdf = pygeoops.create_grid2(
+        total_bounds=(40000.0, 160000.0, 45000.0, 210000.0),
+        nb_squarish_tiles=150,
+        nb_squarish_tiles_max=150,
+        crs="epsg:31370",
+    )
+    assert len(grid_gdf) == 148
 
 
 @pytest.mark.parametrize(
@@ -72,11 +80,25 @@ def test_create_grid3():
 
 
 def test_split_tiles():
-    input_tiles_path = test_helper.get_testfile("BEFL-kbl")
-    input_tiles = gpd.read_file(input_tiles_path)
-    nb_tiles_wanted = len(input_tiles) * 8
-    result = pygeoops.split_tiles(
-        input_tiles=input_tiles, nb_tiles_wanted=nb_tiles_wanted
+    # Prepare test data
+    nb_input_tiles = 4
+    input_tiles = pygeoops.create_grid2(
+        total_bounds=(40000.0, 160000.0, 45000.0, 210000.0),
+        nb_squarish_tiles=4,
+        crs="epsg:31370",
     )
+    assert len(input_tiles) == 4
 
-    assert len(result) == len(input_tiles) * 8
+    # Test asking for double the number of tiles
+    nb_tiles = nb_input_tiles * 2
+    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=nb_tiles)
+    assert len(result) == nb_tiles
+
+    # Test asking for triple the number of tiles
+    nb_tiles = nb_input_tiles * 3
+    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=nb_tiles)
+    assert len(result) == nb_tiles
+
+    # Test asking less tiles (just returns input)
+    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=2)
+    assert len(result) == 4

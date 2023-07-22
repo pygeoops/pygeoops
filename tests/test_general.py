@@ -3,6 +3,7 @@
 Tests for functionalities in vector_util, regarding geometry operations.
 """
 
+import pytest
 import shapely
 
 import pygeoops
@@ -165,3 +166,10 @@ def test_remove_inner_rings():
         0
     ].interiors  # pyright: ignore[reportOptionalMemberAccess]
     assert len(interiors) == 1
+
+
+def test_remove_inner_rings_invalid_input():
+    with pytest.raises(ValueError, match="remove_inner_rings impossible on LineString"):
+        pygeoops.remove_inner_rings(
+            shapely.LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
+        )

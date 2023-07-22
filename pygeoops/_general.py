@@ -259,6 +259,6 @@ def remove_inner_rings(
             polys.append(remove_inner_rings_polygon(poly, min_area_to_keep, crs=crs))
         return shapely.MultiPolygon(polys)
     else:
-        raise Exception(
+        raise ValueError(
             f"remove_inner_rings impossible on {geometry.geom_type}: {geometry}"
         )
