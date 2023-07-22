@@ -52,6 +52,10 @@ def test_centerline_box_arr(tmp_path: Path):
         assert centerlines[test_idx].wkt == box_test[2]
 
 
+def test_centerline_None_geometry():
+    assert pygeoops.centerline(None) is None
+
+
 @pytest.mark.parametrize(
     "test, min_branch_length, poly_wkt, expected_centerline_wkt",
     [
