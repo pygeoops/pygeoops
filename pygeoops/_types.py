@@ -87,7 +87,7 @@ class GeometryType(enum.Enum):
         elif self is GeometryType.POLYGON:
             return GeometryType.MULTIPOLYGON
         else:
-            raise Exception(f"No multitype implemented for: {self}")
+            raise ValueError(f"No multitype implemented for: {self}")
 
     @property
     def to_singletype(self):
@@ -108,7 +108,7 @@ class GeometryType(enum.Enum):
         elif GeometryType.GEOMETRYCOLLECTION:
             return GeometryType.GEOMETRY
         else:
-            raise Exception(f"No multitype implemented for: {self}")
+            raise ValueError(f"No multitype implemented for: {self}")
 
     @property
     def to_primitivetype(self):
@@ -120,9 +120,9 @@ class GeometryType(enum.Enum):
         elif self in [GeometryType.POLYGON, GeometryType.MULTIPOLYGON]:
             return PrimitiveType.POLYGON
         elif self in [GeometryType.GEOMETRY, GeometryType.GEOMETRYCOLLECTION]:
-            raise Exception(f"{self} doesn't have a primitive type")
+            raise ValueError(f"{self} doesn't have a primitive type")
         else:
-            raise Exception(f"No primitive type implemented for {self}")
+            raise ValueError(f"No primitive type implemented for {self}")
 
 
 class PrimitiveType(enum.Enum):
@@ -150,7 +150,7 @@ class PrimitiveType(enum.Enum):
         elif self is PrimitiveType.POLYGON:
             return GeometryType.MULTIPOLYGON
         else:
-            raise Exception(f"no multitype implemented for: {self}")
+            raise ValueError(f"no multitype implemented for: {self}")
 
     @property
     def to_singletype(self) -> GeometryType:
@@ -162,4 +162,4 @@ class PrimitiveType(enum.Enum):
         elif self is PrimitiveType.POLYGON:
             return GeometryType.POLYGON
         else:
-            raise Exception(f"no singletype implemented for: {self}")
+            raise ValueError(f"no singletype implemented for: {self}")

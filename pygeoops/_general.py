@@ -123,7 +123,7 @@ def collection_extract(
         if len(returngeoms) > 0:
             return collect(returngeoms)
     else:
-        raise Exception(f"Invalid/unsupported geometry(type): {geometry}")
+        raise ValueError(f"Invalid/unsupported geometry(type): {geometry}")
 
     # Nothing found yet, so return None
     return None
@@ -172,7 +172,7 @@ def force_geometrytype(
             GeometryType.POLYGON, GeometryType.POINT, GeometryType.LINESTRING]:
         logger.debug(f"geometrytype is {dest_geometrytype}, so no conversion is done")
     else:
-        raise Exception(f"Unsupported geometrytype: {dest_geometrytype}")
+        raise ValueError(f"Unsupported geometrytype: {dest_geometrytype}")
 """
 
 
