@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pygeoops"
-version = "0.1.1"
+version = "0.2.0"
 authors = [
   { name="Pieter Roggemans", email="pieter.roggemans@gmail.com" },
 ]
@@ -18,12 +18,20 @@ classifiers = [
 ]
 dependencies = [
     "shapely>1",
+    "geopandas",
 ]
 keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
 
 [project.urls]
 "Homepage" = "https://github.com/pygeoops/pygeoops"
 "Bug Tracker" = "https://github.com/pygeoops/pygeoops/issues"
+
+[tool.black]
+line-length = 88
+
+[tool.pyright]
+reportGeneralTypeIssues = false
+reportOptionalMemberAccess = false
 
 [tool.pytest.ini_options]
 pythonpath = "."

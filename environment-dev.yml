@@ -5,6 +5,7 @@ dependencies:
   - python =3.10
   - pip
   # required
+  - geopandas
   - shapely >1
   # testing
   - matplotlib
@@ -13,6 +14,7 @@ dependencies:
   # linting
   - black
   - flake8
+  - pre-commit
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
   - sphinx <6

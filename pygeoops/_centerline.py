@@ -58,8 +58,8 @@ def centerline(
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
     """
-    # Check if input is an array or not
-    if isinstance(geometry, np.ndarray) or isinstance(geometry, list):
+    # Check if input is arraylike
+    if hasattr(geometry, "__len__"):
         # Treat every geometry
         result = []
         for geom in geometry:  # type: ignore
@@ -128,7 +128,9 @@ def _centerline(
             average_width = _average_width(geom)
         min_branch_length_cur = abs(min_branch_length_cur) * average_width
     if min_branch_length_cur > 0:
-        lines = _remove_short_branches_notempty(lines, min_branch_length_cur)
+        lines = _remove_short_branches_notempty(
+            line=lines, min_branch_length=min_branch_length_cur
+        )
 
     # Simplify if needed
     if simplifytolerance is not None:
