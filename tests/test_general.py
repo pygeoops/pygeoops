@@ -85,6 +85,9 @@ def test_explode():
 
 
 def test_remove_inner_rings():
+    # Test with None input
+    assert pygeoops.remove_inner_rings(None) is None
+
     # Apply to single Polygon, with area tolerance smaller than holes
     polygon_removerings_withholes = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
