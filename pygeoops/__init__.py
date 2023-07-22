@@ -4,6 +4,7 @@ from pygeoops._centerline import *  # noqa: F403
 from pygeoops._general import *  # noqa: F403
 from pygeoops._grid import *  # noqa: F403
 from pygeoops._simplify import *  # noqa: F403
+from pygeoops._types import *  # noqa: F403
 from pygeoops._view_angles import *  # noqa: F403
 
 

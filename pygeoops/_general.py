@@ -8,12 +8,12 @@ from pygeoops._types import GeometryType, PrimitiveType
 
 
 def collect(
-    geometry_list: Union[BaseGeometry, List[BaseGeometry], None],
+    geometries: Union[BaseGeometry, List[BaseGeometry], None],
 ) -> Optional[BaseGeometry]:
     """
     Collects a list of geometries to one geometry.
 
-    Elements in the list that are None or empty geometries are ignored.
+    Elements in the list that are None or empty geometries are dropped.
 
     Examples:
       * if the list contains only Polygon's, returns a MultiPolygon.
@@ -21,7 +21,8 @@ def collect(
         GeometryCollection.
 
     Args:
-        geometry_list (List[BaseGeometry]): [description]
+        geometries (List[BaseGeometry]): arraylike list of geometries to collect to one
+            geometry.
 
     Raises:
         ValueError: raises an exception if one of the input geometries is of an
@@ -31,26 +32,26 @@ def collect(
         BaseGeometry: the result
     """
     # If geometry_list is None or no list, just return itself
-    if geometry_list is None:
+    if geometries is None:
         return None
-    if not hasattr(geometry_list, "__len__"):
-        return geometry_list
+    if not hasattr(geometries, "__len__"):
+        return geometries
 
     # Only keep geometries in the input list that are not None nor empty
-    geometry_list = [
-        geom for geom in geometry_list if geom is not None and geom.is_empty is False
+    geometries = [
+        geom for geom in geometries if geom is not None and geom.is_empty is False
     ]
 
     # If the list is empty or contains only 1 element, it is easy...
-    if geometry_list is None or len(geometry_list) == 0:
+    if geometries is None or len(geometries) == 0:
         return None
-    elif len(geometry_list) == 1:
-        return geometry_list[0]
+    elif len(geometries) == 1:
+        return geometries[0]
 
     # Loop over all elements in the list, and determine the appropriate geometry
     # type to create
     result_collection_type = None
-    for geom in geometry_list:
+    for geom in geometries:
         if isinstance(geom, BaseMultipartGeometry):
             # If geom is a multitype, the result needs to be a GeometryCollection, as
             # this is the only type that can contain Multi-types
@@ -71,13 +72,13 @@ def collect(
 
     # Now we can create the collection
     if result_collection_type == GeometryType.MULTIPOINT:
-        return shapely.MultiPoint(geometry_list)
+        return shapely.MultiPoint(geometries)
     elif result_collection_type == GeometryType.MULTILINESTRING:
-        return shapely.MultiLineString(geometry_list)
+        return shapely.MultiLineString(geometries)
     elif result_collection_type == GeometryType.MULTIPOLYGON:
-        return shapely.MultiPolygon(geometry_list)
+        return shapely.MultiPolygon(geometries)
     elif result_collection_type == GeometryType.GEOMETRYCOLLECTION:
-        return shapely.GeometryCollection(geometry_list)
+        return shapely.GeometryCollection(geometries)
     else:
         raise ValueError(f"Unsupported geometry type: {result_collection_type}")
 
@@ -134,15 +135,13 @@ def explode(geometry: Optional[BaseGeometry]) -> Optional[List[BaseGeometry]]:
     Dump all (multi)geometries in the input to one list of single geometries.
 
     Args:
-        geometry (Union[BaseGeometry, List[BaseGeometry], None]): geometry or an array
-            of geometries.
+        geometry (BaseGeometry, optional): geometry to explode.
 
     Returns:
         Optional[List[BaseGeometry]]: a list of simple geometries or None if the input
             was None.
 
     """
-    # If geometry_list is None or no list, just return itself
     if geometry is None:
         return None
     elif isinstance(geometry, BaseMultipartGeometry):
@@ -185,21 +184,18 @@ def remove_inner_rings(
     Remove (small) inner rings from a (multi)polygon.
 
     Args:
-        geometry (Union[shapely.Polygon, shapely.MultiPolygon, None]): polygon
-        min_area_to_keep (float, optional): keep the inner rings with at least
-            this area in the coordinate units (typically m). If 0.0,
-            no inner rings are kept.
-        crs (Union[str, pyproj.CRS], optional): the projection of the geometry. Passing
+        geometry (Union[shapely.Polygon, shapely.MultiPolygon, None]): polygon geometry.
+        min_area_to_keep (float): keep the inner rings with at least this area
+            in the coordinate units (typically m). If 0.0, no inner rings are kept.
+        crs (Union[str, pyproj.CRS]): the projection of the geometry. Passing
             None is fine if min_area_to_keep and/or the geometry is in a
-            projected crs (not in degrees). Otherwise the/a crs should be
-            passed.
+            projected crs (not in degrees). Otherwise the/a crs should be passed.
 
     Raises:
         Exception: if the input geometry is no (multi)polygon.
 
     Returns:
-        Union[shapely.Polygon, shapely.MultiPolygon, None]: the resulting
-            (multi)polygon.
+        Union[shapely.Polygon, shapely.MultiPolygon, None]: the resulting (multi)polygon
     """
     # If input geom is None, just return.
     if geometry is None:
