@@ -179,7 +179,7 @@ def force_geometrytype(
 def remove_inner_rings(
     geometry: Union[shapely.Polygon, shapely.MultiPolygon, None],
     min_area_to_keep: float,
-    crs: Optional[pyproj.CRS],
+    crs: Union[str, pyproj.CRS, None],
 ) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
     """
     Remove (small) inner rings from a (multi)polygon.
@@ -189,7 +189,7 @@ def remove_inner_rings(
         min_area_to_keep (float, optional): keep the inner rings with at least
             this area in the coordinate units (typically m). If 0.0,
             no inner rings are kept.
-        crs (pyproj.CRS, optional): the projection of the geometry. Passing
+        crs (Union[str, pyproj.CRS], optional): the projection of the geometry. Passing
             None is fine if min_area_to_keep and/or the geometry is in a
             projected crs (not in degrees). Otherwise the/a crs should be
             passed.
@@ -204,6 +204,8 @@ def remove_inner_rings(
     # If input geom is None, just return.
     if geometry is None:
         return None
+    if crs is not None and isinstance(crs, str):
+        crs = pyproj.CRS(crs)
 
     # Define function to treat simple polygons
     def remove_inner_rings_polygon(
