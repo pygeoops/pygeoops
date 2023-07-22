@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from pygeoops._centerline import *  # noqa: F401, F403
-from pygeoops._general import *  # noqa: F401, F403
-from pygeoops._grid import *  # noqa: F401, F403
-from pygeoops._simplify import *  # noqa: F401, F403
-from pygeoops._view_angles import *  # noqa: F401, F403
+from pygeoops._centerline import *  # noqa: F403
+from pygeoops._general import *  # noqa: F403
+from pygeoops._grid import *  # noqa: F403
+from pygeoops._simplify import *  # noqa: F403
+from pygeoops._view_angles import *  # noqa: F403
 
 
 def _get_version():
