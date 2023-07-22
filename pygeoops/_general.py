@@ -107,11 +107,10 @@ def collection_extract(
         if primitivetype == PrimitiveType.POLYGON:
             return geometry
     elif isinstance(geometry, shapely.GeometryCollection):
-        returngeoms = []
-        for geometry in shapely.GeometryCollection(geometry).geoms:
-            returngeoms.append(
-                collection_extract(geometry, primitivetype=primitivetype)
-            )
+        returngeoms = [
+            collection_extract(geometry, primitivetype=primitivetype)
+            for geometry in shapely.GeometryCollection(geometry).geoms
+        ]
         if len(returngeoms) > 0:
             return collect(returngeoms)
     else:

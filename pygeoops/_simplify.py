@@ -6,11 +6,17 @@ Module containing utilities to simplify geometries.
 import logging
 from typing import Optional, Union
 
-import geopandas as gpd
 import numpy as np
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 import shapely.coords
+
+try:
+    import simplification.cutil as simplification
+
+    HAS_SIMPLIFICATION = True
+except ImportError:
+    HAS_SIMPLIFICATION = False
 
 import pygeoops._general as general
 from pygeoops._general import PrimitiveType
@@ -55,21 +61,23 @@ def simplify(
     Returns:
         BaseGeometry: The simplified version of the geometry.
     """
+    if geometry is None:
+        return None
+
     # Check if input is arraylike
     if hasattr(geometry, "__len__"):
         # Treat every geometry
-        result = []
-        for geom in geometry:  # type: ignore
-            result.append(
-                _simplify(
-                    geometry=geom,
-                    tolerance=tolerance,
-                    algorithm=algorithm,
-                    lookahead=lookahead,
-                    preserve_topology=preserve_topology,
-                    keep_points_on=keep_points_on,
-                )
+        result = [
+            _simplify(
+                geometry=geom,
+                tolerance=tolerance,
+                algorithm=algorithm,
+                lookahead=lookahead,
+                preserve_topology=preserve_topology,
+                keep_points_on=keep_points_on,
             )
+            for geom in geometry
+        ]
         return result
     else:
         return _simplify(
@@ -94,13 +102,11 @@ def _simplify(
     if geometry is None:
         return None
     if algorithm in ["rdp", "vw"]:
-        try:
-            import simplification.cutil as simplification
-        except ImportError as ex:
+        if not HAS_SIMPLIFICATION:
             raise ImportError(
-                "To use simplify_ext using rdp or vw, first install "
-                "simplification with 'pip install simplification'"
-            ) from ex
+                "To use simplify_ext using rdp or vw, first install simplification "
+                "with 'pip install simplification'"
+            )
     elif algorithm == "lang":
         pass
     else:
@@ -109,11 +115,11 @@ def _simplify(
     # Define some inline funtions
     # Apply the simplification (can result in multipolygons)
     def simplify_polygon(
-        polygon: shapely.Polygon,
+        polygon: shapely.Polygon, keep_points_on: Optional[BaseGeometry]
     ) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
         # First simplify exterior ring
         assert polygon.exterior is not None
-        exterior_simplified = simplify_coords(polygon.exterior.coords)
+        exterior_simplified = simplify_coords(polygon.exterior.coords, keep_points_on)
 
         # If topology needs to be preserved, keep original ring if simplify results in
         # None or not enough points
@@ -125,7 +131,7 @@ def _simplify(
         # Now simplify interior rings
         interiors_simplified = []
         for interior in polygon.interiors:
-            interior_simplified = simplify_coords(interior.coords)
+            interior_simplified = simplify_coords(interior.coords, keep_points_on)
 
             # If simplified version is ring, add it
             if interior_simplified is not None and len(interior_simplified) >= 3:
@@ -149,13 +155,15 @@ def _simplify(
 
         return result_poly
 
-    def simplify_linestring(linestring: shapely.LineString) -> shapely.LineString:
+    def simplify_linestring(
+        linestring: shapely.LineString, keep_points_on: Optional[BaseGeometry]
+    ) -> shapely.LineString:
         # If the linestring cannot be simplified, return it
         if linestring is None or len(linestring.coords) <= 2:
             return linestring
 
         # Simplify
-        coords_simplified = simplify_coords(linestring.coords)
+        coords_simplified = simplify_coords(linestring.coords, keep_points_on)
 
         # If preserve_topology is True and the result is no line anymore, return
         # original line
@@ -167,7 +175,8 @@ def _simplify(
             return shapely.LineString(coords_simplified)
 
     def simplify_coords(
-        coords: Union[np.ndarray, shapely.coords.CoordinateSequence]
+        coords: Union[np.ndarray, shapely.coords.CoordinateSequence],
+        keep_points_on: Optional[BaseGeometry],
     ) -> np.ndarray:
         if isinstance(coords, shapely.coords.CoordinateSequence):
             coords = np.asarray(coords)
@@ -187,13 +196,15 @@ def _simplify(
 
         coords_on_border_idx = []
         if keep_points_on is not None:
-            coords_gdf = gpd.GeoDataFrame(
-                geometry=list(shapely.MultiPoint(coords).geoms)
-            )
-            coords_on_border_series = coords_gdf.intersects(keep_points_on)
-            coords_on_border_idx = np.array(
-                coords_on_border_series.index[coords_on_border_series]
-            )
+            # Check if there are coordinates that would be removed that should be kept
+            shapely.prepare(keep_points_on)
+            coords_to_drop_mask = np.ones(len(coords), dtype=int)
+            coords_to_drop_mask[coords_simplify_idx] = 0
+            coords_to_drop_idx = coords_to_drop_mask.nonzero()[0]
+
+            coords_points = shapely.points(coords[coords_to_drop_idx])
+            coords_to_drop_on_border = keep_points_on.intersects(coords_points)
+            coords_on_border_idx = coords_to_drop_idx[coords_to_drop_on_border]
 
         # Extracts coordinates that need to be kept
         coords_to_keep = coords_simplify_idx
@@ -201,6 +212,8 @@ def _simplify(
             coords_to_keep = np.concatenate(
                 [coords_to_keep, coords_on_border_idx], dtype=np.int64
             )
+            coords_to_keep = np.sort(coords_to_keep)
+
         return coords[coords_to_keep]
 
     # Loop over the rings, and simplify them one by one...
@@ -214,23 +227,22 @@ def _simplify(
         # MultiPoint cannot be simplified
         return geometry
     elif isinstance(geometry, shapely.LineString):
-        result_geom = simplify_linestring(geometry)
+        result_geom = simplify_linestring(geometry, keep_points_on)
     elif isinstance(geometry, shapely.Polygon):
-        result_geom = simplify_polygon(geometry)
+        result_geom = simplify_polygon(geometry, keep_points_on)
     elif isinstance(geometry, BaseMultipartGeometry):
         # If it is a multi-part, recursively call simplify for all parts.
-        simplified_geometries = []
-        for geom in geometry.geoms:
-            simplified_geometries.append(
-                simplify(
-                    geom,
-                    tolerance=tolerance,
-                    algorithm=algorithm,
-                    lookahead=lookahead,
-                    preserve_topology=preserve_topology,
-                    keep_points_on=keep_points_on,
-                )
+        simplified_geometries = [
+            _simplify(
+                geom,
+                tolerance=tolerance,
+                algorithm=algorithm,
+                lookahead=lookahead,
+                preserve_topology=preserve_topology,
+                keep_points_on=keep_points_on,
             )
+            for geom in geometry.geoms
+        ]
         result_geom = general.collect(simplified_geometries)
     else:
         raise ValueError(f"Unsupported geometrytype: {geometry}")

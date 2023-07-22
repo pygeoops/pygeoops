@@ -3,9 +3,6 @@
 Tests on simplify.
 """
 
-import sys
-
-import geopandas as gpd
 import pytest
 import shapely
 
@@ -220,233 +217,42 @@ def test_simplify_invalid_params():
         )
 
 
-def test_simplify_keep_points_on_lang(tmp_path):
-    # First init some stuff
-    input_path = test_helper.get_testfile("polygon-simplify-onborder-testcase")
-    input_gdf = gpd.read_file(input_path)
-
-    # Create geometry where we want the points kept
-    grid_gdf = pygeoops.create_grid(
-        total_bounds=(
-            210431.875 - 1000,
-            176640.125 - 1000,
-            210431.875 + 1000,
-            176640.125 + 1000,
-        ),
-        nb_columns=2,
-        nb_rows=2,
-        crs="epsg:31370",
-    )
-    grid_gdf.to_file(tmp_path / "grid.gpkg")
-    grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = shapely.MultiLineString(grid_coords)
-
-    # Test lang
-    # Without keep_points_on, the following point that is on the test data +
-    # on the grid is removed by lang
-    point_on_input_and_border = shapely.Point(210431.875, 176606.125)
-    tolerance_lang = 0.25
-    step_lang = 8
-
-    # Determine the number of intersects with the input test data
-    nb_intersects_with_input = len(
-        input_gdf[input_gdf.intersects(point_on_input_and_border)]
-    )
-    assert nb_intersects_with_input > 0
-    # Test if intersects > 0
-    assert len(input_gdf[grid_gdf.intersects(point_on_input_and_border)]) > 0
-
-    # Without keep_points_on the number of intersections changes
-    simplified_gdf = input_gdf.copy()
-    # assert to evade pyLance warning
-    assert isinstance(simplified_gdf, gpd.GeoDataFrame)
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="lang",
-            tolerance=tolerance_lang,
-            lookahead=step_lang,
-        )
-    )
-    simplified_gdf.to_file(
-        tmp_path / f"simplified_lang;{tolerance_lang};{step_lang}.gpkg"
-    )
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        != nb_intersects_with_input
-    )
-
-    # With keep_points_on specified, the number of intersections stays the same
-    simplified_gdf = input_gdf.copy()
-    # assert to evade pyLance warning
-    assert isinstance(simplified_gdf, gpd.GeoDataFrame)
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="lang",
-            tolerance=tolerance_lang,
-            lookahead=step_lang,
-            keep_points_on=grid_lines_geom,
-        )
-    )
-    output_path = (
-        tmp_path / f"simplified_lang;{tolerance_lang};{step_lang}_keep_points_on.gpkg"
-    )
-    simplified_gdf.to_file(output_path)
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        == nb_intersects_with_input
-    )
-
-
-def test_simplify_keep_points_on_rdp(tmp_path):
+@pytest.mark.parametrize("algorithm, tolerance", [("lang", 2), ("rdp", 2), ("vw", 15)])
+def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
     # Skip test if simplification is not available
     _ = pytest.importorskip("simplification")
 
-    # First init some stuff
-    input_path = test_helper.get_testfile("polygon-simplify-onborder-testcase")
-    input_gdf = gpd.read_file(input_path)
-
+    # Prepare test data
+    poly_input = shapely.Polygon(
+        shell=[(0, 0), (0, 10), (5, 12), (10, 10), (10, 0), (5, 0), (0, 0)]
+    )
     # Create geometry where we want the points kept
-    grid_gdf = pygeoops.create_grid(
-        total_bounds=(
-            210431.875 - 1000,
-            176640.125 - 1000,
-            210431.875 + 1000,
-            176640.125 + 1000,
-        ),
-        nb_columns=2,
-        nb_rows=2,
-        crs="epsg:31370",
-    )
-    grid_gdf.to_file(tmp_path / "grid.gpkg")
-    grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = shapely.MultiLineString(grid_coords)
+    keep_points_on_line = shapely.LineString([(0, 0), (0, 12), (10, 12)])
 
-    # Test rdp (ramer–douglas–peucker)
-    # Without keep_points_on, the following point that is on the test data +
-    # on the grid is removed by rdp
-    point_on_input_and_border = shapely.Point(210431.875, 176599.375)
-    tolerance_rdp = 0.5
+    # Plot input
+    output_path = tmp_path / f"{__name__}_{algorithm}_input.png"
+    test_helper.plot([poly_input, keep_points_on_line], output_path)
 
-    # Determine the number of intersects with the input test data
-    nb_intersects_with_input = len(
-        input_gdf[input_gdf.intersects(point_on_input_and_border)]
-    )
-    assert nb_intersects_with_input > 0
-    # Test if intersects > 0
-    assert len(input_gdf[grid_gdf.intersects(point_on_input_and_border)]) > 0
+    # Without keep_points_on
+    poly_simpl = pygeoops.simplify(poly_input, algorithm=algorithm, tolerance=tolerance)
+    output_path = tmp_path / f"{__name__}_{algorithm}_simpl.png"
+    test_helper.plot([poly_simpl], output_path)
 
-    # Without keep_points_on the number of intersections changes
-    simplified_gdf = input_gdf.copy()
-    # assert to evade pyLance warning
-    assert isinstance(simplified_gdf, gpd.GeoDataFrame)
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="rdp",
-            tolerance=tolerance_rdp,
-        )
-    )
-    simplified_gdf.to_file(tmp_path / f"simplified_rdp{tolerance_rdp}.gpkg")
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        != nb_intersects_with_input
-    )
+    assert len(poly_simpl.exterior.coords) == len(poly_input.exterior.coords) - 2
+    assert poly_simpl.area < poly_input.area
 
-    # With keep_points_on specified, the number of intersections stays the same
-    simplified_gdf = input_gdf.copy()
-    # assert to evade pyLance warning
-    assert isinstance(simplified_gdf, gpd.GeoDataFrame)
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="rdp",
-            tolerance=tolerance_rdp,
-            keep_points_on=grid_lines_geom,
-        )
+    # With keep_points_on
+    poly_simpl_keep = pygeoops.simplify(
+        poly_input,
+        algorithm=algorithm,
+        tolerance=tolerance,
+        keep_points_on=keep_points_on_line,
     )
-    simplified_gdf.to_file(
-        tmp_path / f"simplified_rdp{tolerance_rdp}_keep_points_on.gpkg"
-    )
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        == nb_intersects_with_input
-    )
+    output_path = tmp_path / f"{__name__}_{algorithm}_simpl_keep.png"
+    test_helper.plot([poly_simpl_keep], output_path)
 
-
-def test_simplify_keep_points_on_vw(tmp_path):
-    # Skip test if simplification is not available
-    _ = pytest.importorskip("simplification")
-
-    # First init some stuff
-    input_path = test_helper.get_testfile("polygon-simplify-onborder-testcase")
-    input_gdf = gpd.read_file(input_path)
-
-    # Create geometry where we want the points kept
-    grid_gdf = pygeoops.create_grid(
-        total_bounds=(
-            210431.875 - 1000,
-            176640.125 - 1000,
-            210431.875 + 1000,
-            176640.125 + 1000,
-        ),
-        nb_columns=2,
-        nb_rows=2,
-        crs="epsg:31370",
-    )
-    grid_gdf.to_file(tmp_path / "grid.gpkg")
-    grid_coords = [tile.exterior.coords for tile in grid_gdf.geometry]
-    grid_lines_geom = shapely.MultiLineString(grid_coords)
-
-    # Test vw (visvalingam-whyatt)
-    # Without keep_points_on, the following point that is on the test data +
-    # on the grid is removed by vw
-    point_on_input_and_border = shapely.Point(210430.125, 176640.125)
-    tolerance_vw = 16 * 0.25 * 0.25  # 1m²
-
-    # Determine the number of intersects with the input test data
-    nb_intersects_with_input = len(
-        input_gdf[input_gdf.intersects(point_on_input_and_border)]
-    )
-    assert nb_intersects_with_input > 0
-    # Test if intersects > 0
-    assert len(input_gdf[grid_gdf.intersects(point_on_input_and_border)]) > 0
-
-    # Without keep_points_on the number of intersections changes
-    simplified_gdf = input_gdf.copy()
-    # assert to evade pyLance warning
-    assert isinstance(simplified_gdf, gpd.GeoDataFrame)
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="vw",
-            tolerance=tolerance_vw,
-        )
-    )
-    simplified_gdf.to_file(tmp_path / f"simplified_vw{tolerance_vw}.gpkg")
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        != nb_intersects_with_input
-    )
-
-    # With keep_points_on specified, the number of intersections stays the same
-    simplified_gdf = input_gdf.copy()
-    simplified_gdf.geometry = input_gdf.geometry.apply(
-        lambda geom: pygeoops.simplify(
-            geom,
-            algorithm="vw",
-            tolerance=tolerance_vw,
-            keep_points_on=grid_lines_geom,
-        )
-    )
-    simplified_gdf.to_file(
-        tmp_path / f"simplified_vw{tolerance_vw}_keep_points_on.gpkg"
-    )
-    assert (
-        len(simplified_gdf[simplified_gdf.intersects(point_on_input_and_border)])
-        == nb_intersects_with_input
-    )
+    assert len(poly_simpl_keep.exterior.coords) == len(poly_input.exterior.coords) - 1
+    assert poly_simpl_keep.area == poly_input.area
 
 
 def test_simplify_none():
@@ -481,28 +287,3 @@ def test_simplify_preservetopology_lang():
         lookahead=-1,
     )
     assert geom_simplified is None
-
-
-def test_simplify_simplification_not_installed():
-    # Backup reference to simplification module
-    _temp_simplification = None
-    if sys.modules.get("simplification"):
-        _temp_simplification = sys.modules["simplification"]
-    try:
-        # Fake that the module is not available
-        sys.modules["simplification"] = None
-
-        # Using RDP needs simplification module, so should give ImportError
-        pygeoops.simplify(
-            geometry=shapely.LineString([(0, 0), (10, 10), (20, 20)]),
-            algorithm="rdp",
-            tolerance=1,
-        )
-        assert False
-    except ImportError:
-        assert True
-    finally:
-        if _temp_simplification:
-            sys.modules["simplification"] = _temp_simplification
-        else:
-            del sys.modules["simplification"]
