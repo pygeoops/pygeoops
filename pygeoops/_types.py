@@ -28,7 +28,7 @@ class GeometryType(enum.Enum):
                 * GeometryType: create the same GeometryType as the one passed in
 
         Returns:
-            [GeometryType]: The corresponding GeometryType.
+            [GeometryType]: the corresponding GeometryType.
         """
         if isinstance(value, str):
             # If a string is passed in, try lookup based on case insensitive enum name
