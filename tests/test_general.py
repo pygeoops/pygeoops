@@ -6,43 +6,6 @@ Tests for functionalities in vector_util, regarding geometry operations.
 import shapely
 
 import pygeoops
-import test_helper
-
-
-def test_numberpoints():
-    # Test Point
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.point)
-    numberpoints_geometrycollection = numberpoints
-    assert numberpoints == 1
-
-    # Test MultiPoint
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.multipoint)
-    numberpoints_geometrycollection += numberpoints
-    assert numberpoints == 3
-
-    # Test LineString
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.linestring)
-    numberpoints_geometrycollection += numberpoints
-    assert numberpoints == 3
-
-    # Test MultiLineString
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.multilinestring)
-    numberpoints_geometrycollection += numberpoints
-    assert numberpoints == 6
-
-    # Test Polygon
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.polygon_with_island)
-    numberpoints_geometrycollection += numberpoints
-    assert numberpoints == 11
-
-    # Test MultiPolygon
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.multipolygon)
-    numberpoints_geometrycollection += numberpoints
-    assert numberpoints == 16
-
-    # Test GeometryCollection (as combination of all previous ones)
-    numberpoints = pygeoops.numberpoints(test_helper.TestData.geometrycollection)
-    assert numberpoints == numberpoints_geometrycollection
 
 
 def test_remove_inner_rings():

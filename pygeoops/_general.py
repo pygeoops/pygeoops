@@ -145,36 +145,6 @@ def force_geometrytype(
 """
 
 
-def numberpoints(geometry: Optional[BaseGeometry]) -> int:
-    """
-    Calculates the total number of points in a geometry.
-
-    Args:
-        geometry (BaseGeometry): the geometry to count the point of.
-
-    Returns:
-        int: the number of points in the geometry.
-    """
-    # If it is a multi-part, recursively call numberpoints for all parts.
-    if geometry is None:
-        return 0
-    elif isinstance(geometry, BaseMultipartGeometry):
-        nb_points = 0
-        for geom in geometry.geoms:
-            nb_points += numberpoints(geom)
-        return nb_points
-    elif isinstance(geometry, shapely.Polygon):
-        # If it is a polygon, calculate number for exterior and interior rings.
-        assert geometry.exterior is not None
-        nb_points = len(geometry.exterior.coords)
-        for ring in geometry.interiors:
-            nb_points += len(ring.coords)
-        return nb_points
-    else:
-        # For other types, it is just the number of coordinates.
-        return len(geometry.coords)
-
-
 def remove_inner_rings(
     geometry: Union[shapely.Polygon, shapely.MultiPolygon, None],
     min_area_to_keep: float,

@@ -177,7 +177,9 @@ def test_simplify_invalid_geometry():
     assert geom_simplified.is_valid
     assert isinstance(geom_simplified, shapely.MultiPolygon)
     assert len(geom_simplified.geoms) == 2
-    assert pygeoops.numberpoints(geom_simplified) < pygeoops.numberpoints(poly)
+    assert shapely.get_num_coordinates(geom_simplified) < shapely.get_num_coordinates(
+        poly
+    )
 
     # Test Polygon simplification, with exterior ring that crosses itself
     # due to simplification and after make_valid results in multipolygon of
@@ -255,10 +257,14 @@ def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
     assert poly_simpl_keep.area == poly_input.area
 
 
-def test_simplify_none():
+def test_simplify_None():
     # Test simplify on None geometry
     result = pygeoops.simplify(None, 1)
     assert result is None
+
+    # Test simplify on None geometry list
+    result = pygeoops.simplify([None], 1)
+    assert result == [None]
 
 
 def test_simplify_preservetopology_lang():
