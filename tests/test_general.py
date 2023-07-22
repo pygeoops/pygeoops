@@ -105,7 +105,7 @@ def test_remove_inner_rings():
     # Apply to single Polygon, with area tolerance between
     # smallest hole (= 2m²) and largest (= 4m²)
     poly_result = pygeoops.remove_inner_rings(
-        polygon_removerings_withholes, min_area_to_keep=3, crs=None
+        polygon_removerings_withholes, min_area_to_keep=3, crs="epsg:31370"
     )
     assert isinstance(poly_result, shapely.Polygon)
     assert len(poly_result.interiors) == 1
