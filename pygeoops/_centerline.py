@@ -58,23 +58,24 @@ def centerline(
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
     """
-    # Check if input is arraylike
+    if geometry is None:
+        return None
+
+    # If input is arraylike, treat every geometry in loop
     if hasattr(geometry, "__len__"):
-        # Treat every geometry
-        result = []
-        for geom in geometry:  # type: ignore
-            result.append(
-                _centerline(
-                    geom,
-                    densify_distance=densify_distance,
-                    min_branch_length=min_branch_length,
-                    simplifytolerance=simplifytolerance,
-                )
+        result = [
+            _centerline(
+                geom=geom,
+                densify_distance=densify_distance,
+                min_branch_length=min_branch_length,
+                simplifytolerance=simplifytolerance,
             )
+            for geom in geometry
+        ]
         return result
     else:
         return _centerline(
-            geometry,
+            geom=geometry,
             densify_distance=densify_distance,
             min_branch_length=min_branch_length,
             simplifytolerance=simplifytolerance,

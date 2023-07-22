@@ -62,8 +62,8 @@ def view_angles(
     # Combine both input arrays
     geoms_arr = np.concatenate(
         [
-            np.expand_dims(viewpoint_arr, 1),  # type: ignore
-            np.expand_dims(visible_geom_arr, 1),  # type: ignore
+            np.expand_dims(viewpoint_arr, 1),
+            np.expand_dims(visible_geom_arr, 1),
         ],
         axis=1,
     )

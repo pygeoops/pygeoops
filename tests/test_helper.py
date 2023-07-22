@@ -78,19 +78,17 @@ def plot(
     if title is not None:
         figure.suptitle(title)
 
-    colors = mcolors.TABLEAU_COLORS  # type: ignore
+    colors = mcolors.TABLEAU_COLORS
     for geom_idx, geom in enumerate(geoms):
         if geom.is_empty:
             continue
 
         color = colors[list(colors.keys())[geom_idx % len(colors)]]
-        if isinstance(geom, shapely.Polygon) or isinstance(geom, shapely.MultiPolygon):
+        if isinstance(geom, (shapely.MultiPolygon, shapely.Polygon)):
             shapely.plotting.plot_polygon(geom, ax=figure.axes[0], color=color)
-        elif isinstance(geom, shapely.LineString) or isinstance(
-            geom, shapely.MultiLineString
-        ):
+        elif isinstance(geom, (shapely.LineString, shapely.MultiLineString)):
             shapely.plotting.plot_line(geom, ax=figure.axes[0], color=color)
-        elif isinstance(geom, shapely.Point) or isinstance(geom, shapely.MultiPoint):
+        elif isinstance(geom, (shapely.MultiPoint, shapely.Point)):
             shapely.plotting.plot_points(geom, ax=figure.axes[0], color=color)
         else:
             raise ValueError(f"invalid geom to plot: {geom}")
