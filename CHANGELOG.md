@@ -7,7 +7,7 @@
 - Copy/move geometry utility functions from geofileops to pygeoops (#20)
   - extended `simplify` function (support for different algorithmns, exclude points from removal)
   - grid utility functions: `create_grid`, `split_tiles`
-  - general geometry utility functions: `collect`, `collection_extract`, `numberpoints`, `remove_inner_rings`
+  - general geometry utility functions: `collect`, `collection_extract`, `explode`, `remove_inner_rings`
 
 ## 0.1.1 (2023-04-12)
 

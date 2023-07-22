@@ -17,6 +17,7 @@ methods implemented in PyGeoOps. All classes and function exposed in
    create_grid
    create_grid2
    create_grid3
+   explode
    remove_inner_rings
    simplify
    split_tiles

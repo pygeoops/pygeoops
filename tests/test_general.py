@@ -8,6 +8,82 @@ import shapely
 import pygeoops
 
 
+def test_collect():
+    # Test dealing with None/empty input
+    # ----------------------------------
+    assert pygeoops.collect(None) is None
+    assert pygeoops.collect([None]) is None
+    # Empty geometries are treated as None as well
+    assert pygeoops.collect([None, shapely.Polygon(), None, shapely.Polygon()]) is None
+
+    # Test points
+    # -----------
+    point = shapely.Point((0, 0))
+    assert pygeoops.collect(point) == point
+    assert pygeoops.collect([point]) == point
+    assert pygeoops.collect([point, point]) == shapely.MultiPoint([(0, 0), (0, 0)])
+
+    # Test linestrings
+    # ----------------
+    line = shapely.LineString([(0, 0), (0, 1)])
+    assert pygeoops.collect(line) == line
+    assert pygeoops.collect([line]) == line
+    assert pygeoops.collect([line, line]) == shapely.MultiLineString([line, line])
+
+    # Test polygons
+    # -------------
+    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = shapely.MultiPolygon([poly, poly])
+    assert pygeoops.collect(poly) == poly
+    assert pygeoops.collect([poly]) == poly
+    assert pygeoops.collect([poly, poly]) == multipoly
+
+    # Test geometrycollection
+    # -----------------------
+    geometrycoll = shapely.GeometryCollection([point, line, poly])
+    assert pygeoops.collect(geometrycoll) == geometrycoll
+    assert pygeoops.collect([geometrycoll]) == geometrycoll
+    assert pygeoops.collect([point, line, poly]) == geometrycoll
+    assert pygeoops.collect([geometrycoll, line]) == shapely.GeometryCollection(
+        [geometrycoll, line]
+    )
+    assert pygeoops.collect([poly, multipoly]) == shapely.GeometryCollection(
+        [poly, multipoly]
+    )
+
+
+def test_explode():
+    # Test dealing with None/empty input
+    # ----------------------------------
+    assert pygeoops.explode(None) is None
+
+    # Test dealing with points
+    # ------------------------
+    point = shapely.Point((0, 0))
+    multipoint = shapely.MultiPoint([point, point])
+    assert pygeoops.explode(point) == [point]
+    assert pygeoops.explode(multipoint) == [point, point]
+
+    # Test dealing with linestrings
+    # -----------------------------
+    line = shapely.LineString([(0, 0), (0, 1)])
+    multiline = shapely.MultiLineString([line, line])
+    assert pygeoops.explode(line) == [line]
+    assert pygeoops.explode(multiline) == [line, line]
+
+    # Test dealing with Polygons
+    # --------------------------
+    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = shapely.MultiPolygon([poly, poly])
+    assert pygeoops.explode(poly) == [poly]
+    assert pygeoops.explode(multipoly) == [poly, poly]
+
+    # Test geometrycollection
+    # -----------------------
+    geometrycoll = shapely.GeometryCollection([point, line, poly])
+    assert pygeoops.explode(geometrycoll) == [point, line, poly]
+
+
 def test_remove_inner_rings():
     # Apply to single Polygon, with area tolerance smaller than holes
     polygon_removerings_withholes = shapely.Polygon(

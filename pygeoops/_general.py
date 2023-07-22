@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
-import pyproj
 
+import pyproj
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 
@@ -8,30 +8,37 @@ from pygeoops._types import GeometryType, PrimitiveType
 
 
 def collect(
-    geometry_list: List[BaseGeometry],
+    geometry_list: Union[BaseGeometry, List[BaseGeometry], None],
 ) -> Optional[BaseGeometry]:
     """
-    Collect a list of geometries to one geometry.
+    Collects a list of geometries to one geometry.
+
+    Elements in the list that are None or empty geometries are ignored.
 
     Examples:
       * if the list contains only Polygon's, returns a MultiPolygon.
-      * if the list contains different types, returns a GeometryCollection.
+      * if the list contains different types (and Multipolygon != Polygon!), returns a
+        GeometryCollection.
 
     Args:
         geometry_list (List[BaseGeometry]): [description]
 
     Raises:
-        Exception: raises an exception if one of the input geometries is of an
+        ValueError: raises an exception if one of the input geometries is of an
             unknown type.
 
     Returns:
         BaseGeometry: the result
     """
-    # First remove all None geometries in the input list
+    # If geometry_list is None or no list, just return itself
+    if geometry_list is None:
+        return None
+    if not hasattr(geometry_list, "__len__"):
+        return geometry_list
+
+    # Only keep geometries in the input list that are not None nor empty
     geometry_list = [
-        geometry
-        for geometry in geometry_list
-        if geometry is not None and geometry.is_empty is False
+        geom for geom in geometry_list if geom is not None and geom.is_empty is False
     ]
 
     # If the list is empty or contains only 1 element, it is easy...
@@ -42,35 +49,37 @@ def collect(
 
     # Loop over all elements in the list, and determine the appropriate geometry
     # type to create
-    result_collection_type = GeometryType(geometry_list[0].geom_type).to_multitype
+    result_collection_type = None
     for geom in geometry_list:
-        # If it is the same as the collection_geom_type, continue checking
-        if GeometryType(geom.geom_type).to_multitype == result_collection_type:
+        if isinstance(geom, BaseMultipartGeometry):
+            # If geom is a multitype, the result needs to be a GeometryCollection, as
+            # this is the only type that can contain Multi-types
+            result_collection_type = GeometryType.GEOMETRYCOLLECTION
+            break
+
+        geometrytype = GeometryType(geom.geom_type)
+        if result_collection_type is None:
+            # First element
+            result_collection_type = geometrytype.to_multitype
+        elif geometrytype.to_multitype == result_collection_type:
+            # Same as the previous types encountered, so continue checking
             continue
         else:
-            # If multiple types in the list, result becomes a geometrycollection
+            # Another type than current result_collection_type, so GeometryCollection
             result_collection_type = GeometryType.GEOMETRYCOLLECTION
             break
 
     # Now we can create the collection
-    # Explode the multi-geometries to single ones
-    singular_geometry_list = []
-    for geom in geometry_list:
-        if isinstance(geom, BaseMultipartGeometry):
-            singular_geometry_list.extend(geom.geoms)
-        else:
-            singular_geometry_list.append(geom)
-
     if result_collection_type == GeometryType.MULTIPOINT:
-        return shapely.MultiPoint(singular_geometry_list)
+        return shapely.MultiPoint(geometry_list)
     elif result_collection_type == GeometryType.MULTILINESTRING:
-        return shapely.MultiLineString(singular_geometry_list)
+        return shapely.MultiLineString(geometry_list)
     elif result_collection_type == GeometryType.MULTIPOLYGON:
-        return shapely.MultiPolygon(singular_geometry_list)
+        return shapely.MultiPolygon(geometry_list)
     elif result_collection_type == GeometryType.GEOMETRYCOLLECTION:
         return shapely.GeometryCollection(geometry_list)
     else:
-        raise Exception(f"Unsupported geometry type: {result_collection_type}")
+        raise ValueError(f"Unsupported geometry type: {result_collection_type}")
 
 
 def collection_extract(
@@ -118,6 +127,28 @@ def collection_extract(
 
     # Nothing found yet, so return None
     return None
+
+
+def explode(geometry: Optional[BaseGeometry]) -> Optional[List[BaseGeometry]]:
+    """
+    Dump all (multi)geometries in the input to one list of single geometries.
+
+    Args:
+        geometry (Union[BaseGeometry, List[BaseGeometry], None]): geometry or an array
+            of geometries.
+
+    Returns:
+        Optional[List[BaseGeometry]]: a list of simple geometries or None if the input
+            was None.
+
+    """
+    # If geometry_list is None or no list, just return itself
+    if geometry is None:
+        return None
+    elif isinstance(geometry, BaseMultipartGeometry):
+        return list(geometry.geoms)
+    else:
+        return [geometry]
 
 
 """
