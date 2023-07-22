@@ -79,26 +79,34 @@ def test_create_grid3():
     assert len(grid_gdf) == 4
 
 
-def test_split_tiles():
+@pytest.mark.parametrize(
+    "bounds, nb_input_tiles, nb_tiles_wanted, exp_tiles",
+    [
+        ((40, 40, 45, 46), 4, 8, 8),
+        ((40, 40, 45, 46), 4, 12, 12),
+        ((40, 40, 46, 45), 4, 8, 8),
+        ((40, 40, 46, 45), 4, 12, 12),
+        ((40, 40, 45, 45), 4, 2, 4),
+    ],
+)
+def test_split_tiles(bounds, nb_input_tiles, nb_tiles_wanted, exp_tiles):
     # Prepare test data
     nb_input_tiles = 4
     input_tiles = pygeoops.create_grid2(
-        total_bounds=(40000.0, 160000.0, 45000.0, 210000.0),
-        nb_squarish_tiles=4,
+        total_bounds=bounds,
+        nb_squarish_tiles=nb_input_tiles,
         crs="epsg:31370",
     )
-    assert len(input_tiles) == 4
+    assert len(input_tiles) == nb_input_tiles
 
     # Test asking for double the number of tiles
-    nb_tiles = nb_input_tiles * 2
-    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=nb_tiles)
-    assert len(result) == nb_tiles
+    result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
+    assert len(result) == exp_tiles
 
     # Test asking for triple the number of tiles
-    nb_tiles = nb_input_tiles * 3
-    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=nb_tiles)
-    assert len(result) == nb_tiles
+    result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
+    assert len(result) == exp_tiles
 
     # Test asking less tiles (just returns input)
-    result = pygeoops.split_tiles(input_tiles=input_tiles, nb_tiles_wanted=2)
-    assert len(result) == 4
+    result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
+    assert len(result) == exp_tiles
