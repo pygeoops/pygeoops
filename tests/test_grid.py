@@ -99,14 +99,9 @@ def test_split_tiles(bounds, nb_input_tiles, nb_tiles_wanted, exp_tiles):
     )
     assert len(input_tiles) == nb_input_tiles
 
-    # Test asking for double the number of tiles
+    # Test split_tiles
     result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
-    assert len(result) == exp_tiles
 
-    # Test asking for triple the number of tiles
-    result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
     assert len(result) == exp_tiles
-
-    # Test asking less tiles (just returns input)
-    result = pygeoops.split_tiles(input_tiles, nb_tiles_wanted)
-    assert len(result) == exp_tiles
+    # Total area of tiles should stay the same after split
+    assert input_tiles.geometry.area.sum() == result.geometry.area.sum()
