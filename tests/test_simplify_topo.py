@@ -1,4 +1,5 @@
 import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
 
@@ -21,7 +22,7 @@ def test_simplify_topo(algorithm):
 
     # Check result
     assert result is not None
-    assert type(result) == type(input)
+    assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
     # poly 1 can't be simplified and stays the same.
     assert result[0] == input[0]
@@ -30,29 +31,7 @@ def test_simplify_topo(algorithm):
     assert result[0] == result[1]
 
 
-def test_simplify_topo_array():
-    # Prepare test data
-    poly1 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)])
-    poly2 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (11, 0), (10, 10)])
-    input_gs = gpd.GeoSeries([poly1, poly1, poly2])
-    input_gs = input_gs.drop(index=1)
-    input_arr = input_gs.array
-
-    # Test
-    result_arr = simplify_topo.simplify_topo(input_arr, tolerance=1, algorithm="lang")
-
-    # Check result
-    assert result_arr is not None
-    assert type(result_arr) == type(input_arr)
-    assert len(result_arr) == len(input_arr)
-    # poly 1 can't be simplified and stays the same.
-    assert result_arr[0] == input_arr[0]
-    # Due to the ~ common boundary between poly1 and poly2, a point (10, 0) is added
-    # to poly2. Simplification removes (11,0), so poly2 ends up the same as poly1.
-    assert result_arr[0] == result_arr[1]
-
-
-def test_simplify_topo_geoseries():
+def test_simplify_topo_ducktype_GeoSeries():
     # Prepare test data
     poly1 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)])
     poly2 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (11, 0), (10, 10)])
@@ -73,7 +52,7 @@ def test_simplify_topo_geoseries():
     assert result_gs[0] == result_gs[2]
 
 
-def test_simplify_topo_list_GeometryCollection():
+def test_simplify_topo_GeometryCollection():
     """
     Test with a GeometryCollection as input -> a GeometryCollection will be returned, so
     no extraction of a specific geometry type.
@@ -89,13 +68,13 @@ def test_simplify_topo_list_GeometryCollection():
 
     # Check result
     assert result is not None
-    assert type(result) == type(input)
+    assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
     for geom_input, geom_result in zip(input, result):
         assert type(geom_input) == type(geom_result)
 
 
-def test_simplify_topo_list_mixed():
+def test_simplify_topo_mixedtypes():
     """
     Test with a list of mixed geometry types as input -> so no extraction of a specific
     geometry type.
@@ -110,7 +89,7 @@ def test_simplify_topo_list_mixed():
 
     # Check result
     assert result is not None
-    assert type(result) == type(input)
+    assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
     for geom_input, geom_result in zip(input, result):
         assert type(geom_result) == type(geom_input)
