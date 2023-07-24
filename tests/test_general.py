@@ -58,6 +58,7 @@ def test_collection_extract():
     # Test None input
     # ---------------
     assert pygeoops.collection_extract(None, PrimitiveType.POINT) is None
+    assert pygeoops.collection_extract([None], PrimitiveType.POINT) == [None]
 
     # Test dealing with points
     # ------------------------
