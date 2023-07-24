@@ -6,11 +6,11 @@ Module containing utilities regarding operations on geoseries.
 import logging
 from typing import Optional, Union
 
-import geopandas as gpd
+from geopandas import GeoSeries
 import numpy as np
+from numpy import ndarray
 import shapely
 from shapely.geometry.base import BaseGeometry
-from shapely import geometry as sh_geom
 import topojson
 
 import pygeoops
@@ -30,12 +30,12 @@ logger = logging.getLogger(__name__)
 
 
 def simplify_topo(
-    geometry: Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None],
+    geometry: Union[BaseGeometry, ndarray, list, GeoSeries, None],
     tolerance: float,
     algorithm: str = "rdp",
     lookahead: int = 8,
-    keep_points_on: Optional[sh_geom.base.BaseGeometry] = None,
-) -> Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]:
+    keep_points_on: Optional[BaseGeometry] = None,
+) -> Union[BaseGeometry, ndarray, list, GeoSeries, None]:
     """
     Applies simplify while retaining common boundaries between all input geometries.
 
@@ -52,12 +52,12 @@ def simplify_topo(
             * "vw": Visvalingal Whyatt
         lookahead (int, optional): lookahead value for algorithms that use this.
             Defaults to 8.
-        keep_points_on (Optional[sh_geom.base.BaseGeometry], optional): points that
+        keep_points_on (Optional[BaseGeometry], optional): points that
             intersect with this geometry won't be removed by the simplification.
             Defaults to None.
 
     Returns:
-        Union[BaseGeometry, np.ndarray, list, GeoSeries, None]: the simplified geometry.
+        Union[BaseGeometry, ndarray, list, GeoSeries, None]: the simplified geometry.
     """
     if geometry is None:
         return None
@@ -74,8 +74,13 @@ def simplify_topo(
             keep_points_on=keep_points_on,
         )
 
-    topo = topojson.Topology(geometry, prequantize=False)
-    topolines = sh_geom.MultiLineString(topo.output["arcs"])
+    geometries = geometry
+    if not isinstance(geometry, (GeoSeries, list)):
+        # If the input is no Geoseries or list, convert it to a list as topojson library
+        # seems to like that best.
+        geometries = geometry.tolist()
+    topo = topojson.Topology(data=geometries, prequantize=False)
+    topolines = shapely.MultiLineString(topo.output["arcs"])
     topolines_simpl = pygeoops.simplify(
         geometry=topolines,
         tolerance=tolerance,
@@ -89,7 +94,7 @@ def simplify_topo(
     # Copy the results of the simplified lines
     if algorithm == "lang":
         # For LANG, a simple copy is OK
-        assert isinstance(topolines_simpl, sh_geom.MultiLineString)
+        assert isinstance(topolines_simpl, shapely.MultiLineString)
         topo.output["arcs"] = [list(geom.coords) for geom in topolines_simpl.geoms]
     else:
         # For rdp, only overwrite the lines that have a valid result
@@ -108,13 +113,13 @@ def simplify_topo(
                 topo.output["arcs"][index] = list(topoline_simpl)
 
     crs = None
-    if isinstance(geometry, gpd.GeoSeries):
+    if isinstance(geometry, GeoSeries):
         crs = geometry.crs
     topo_simpl_gdf = topo.to_gdf(crs=crs)
     topo_simpl_gdf.geometry = topo_simpl_gdf.geometry.make_valid()
 
     # If the input was of a single geometry type, filter the result so it stays that way
-    if isinstance(geometry, gpd.GeoSeries):
+    if isinstance(geometry, GeoSeries):
         types_orig = geometry.geom_type.unique()
     else:
         types_orig = np.unique(shapely.get_type_id(geometry))
@@ -142,24 +147,10 @@ def simplify_topo(
                 PrimitiveType(primitive_types_orig[0]),
             )
 
-    # Ready
-    if isinstance(geometry, gpd.GeoSeries):
+    # Return in same type as input
+    if isinstance(geometry, GeoSeries):
         return topo_simpl_gdf.geometry
+    elif isinstance(geometry, list):
+        return topo_simpl_gdf.geometry.array.tolist()
     else:
-        return topo_simpl_gdf.geometry.array.data
-
-
-def geometry_collection_extract(
-    geoseries: gpd.GeoSeries, primitivetype: PrimitiveType
-) -> gpd.GeoSeries:
-    """
-    # Apply the collection_extract
-    return pd.GeoSeries(
-        [geometry_util.collection_extract(geom, primitivetype) for geom in geoseries])
-    """
-    # Apply the collection_extract
-    geoseries_copy = geoseries.copy()
-    for index, geom in geoseries_copy.items():
-        geoseries_copy[index] = pygeoops.collection_extract(geom, primitivetype)
-    assert isinstance(geoseries_copy, gpd.GeoSeries)
-    return geoseries_copy
+        return topo_simpl_gdf.geometry.array
