@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from geopandas import GeoSeries
 import numpy as np
 import pytest
 import shapely
@@ -115,17 +116,23 @@ def test_view_angles_invalid_input():
         pygeoops.view_angles([shapely.Point(), shapely.Point()], [shapely.Polygon()])
 
 
-def test_view_angles_arraylike():
+@pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+def test_view_angles_geometries(input_type):
     """
-    Test view_angles with arraylike input(s).
+    Test view_angles with input(s) > 1 geometry.
     """
     viewpoint, visible_geoms, expected_angles = get_testdata()
+    if input_type == "geoseries":
+        visible_geoms = GeoSeries(visible_geoms)
+    elif input_type == "ndarray":
+        visible_geoms = np.array(visible_geoms)
 
     # Run test with viewpoint a Point and visible_geoms an array
     # ----------------------------------------------------------
     angles_arr = pygeoops.view_angles(viewpoint, visible_geoms)
 
     # Compare expected results
+    assert isinstance(angles_arr, np.ndarray)
     assert np.array_equal(angles_arr, np.array(expected_angles), equal_nan=True)
 
     # Run test with viewpoint + visible_goms as an array
@@ -134,6 +141,7 @@ def test_view_angles_arraylike():
     angles_arr = pygeoops.view_angles(viewpoint_arr, visible_geoms)
 
     # Compare expected results
+    assert isinstance(angles_arr, np.ndarray)
     assert np.array_equal(angles_arr, np.array(expected_angles), equal_nan=True)
 
     # Run test with viewpoint an array and visible_geoms a single geometry
@@ -143,5 +151,6 @@ def test_view_angles_arraylike():
     angles_arr = pygeoops.view_angles(viewpoint_arr, visible_geom)
 
     # Compare expected results
+    assert isinstance(angles_arr, np.ndarray)
     exp_angles_arr = np.full((len(viewpoint_arr), 2), expected_angles[3])
     assert np.array_equal(angles_arr, exp_angles_arr, equal_nan=True)

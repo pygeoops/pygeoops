@@ -4,6 +4,9 @@ Tests for centerline.
 """
 
 from pathlib import Path
+
+import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
 from shapely.geometry.base import BaseGeometry
@@ -41,15 +44,37 @@ def test_centerline_box(
     assert centerline.wkt == expected_centerline_wkt, f"test descr: {test}"
 
 
-def test_centerline_box_arr(tmp_path: Path):
+@pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+def test_centerline_box_geometries(tmp_path: Path, input_type):
     """Test processing an array of polygons."""
-    polys = [shapely.from_wkt(box_tests[0][1]), shapely.from_wkt(box_tests[1][1])]
-    centerlines = pygeoops.centerline(polys)
-    assert centerlines is not None
-    for test_idx, box_test in enumerate(box_tests):
-        output_path = tmp_path / f"test_centerline_box_arr_{box_test[0]}.png"
-        test_helper.plot([centerlines[test_idx], centerlines[test_idx]], output_path)
-        assert centerlines[test_idx].wkt == box_test[2]
+    # Prepare test data
+    input = [shapely.from_wkt(box_tests[0][1]), shapely.from_wkt(box_tests[1][1])]
+
+    start_idx = 0
+    if input_type == "geoseries":
+        # For geoseries, also check if the indexers are retained!
+        start_idx = 5
+        input = gpd.GeoSeries(
+            input, index=[index + start_idx for index in range(len(input))]
+        )
+    elif input_type == "ndarray":
+        input = np.array(input)
+
+    # Run test
+    result = pygeoops.centerline(input)
+
+    # Check result
+    assert result is not None
+    if input_type == "geoseries":
+        assert isinstance(result, gpd.GeoSeries)
+    else:
+        assert isinstance(result, np.ndarray)
+    for test_idx, box_test in enumerate(input):
+        output_path = tmp_path / f"{__name__}{box_test.wkt}.png"
+        test_helper.plot(
+            [result[start_idx + test_idx], input[start_idx + test_idx]], output_path
+        )
+        assert result[start_idx + test_idx].wkt == box_tests[test_idx][2]
 
 
 def test_centerline_None_geometry():

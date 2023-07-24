@@ -84,7 +84,7 @@ def test_collection_extract():
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
-def test_collection_extract_arraylike(input_type):
+def test_collection_extract_geometries(input_type):
     """
     Test collection_extract with several geometries as input.
     """

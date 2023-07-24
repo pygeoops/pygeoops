@@ -1,21 +1,22 @@
 import logging
 import math
 from typing import Optional, Union
-import numpy as np
 
+from geopandas import GeoSeries
+import numpy as np
+from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
-
 
 logger = logging.getLogger(__name__)
 
 
 def centerline(
-    geometry: Union[BaseGeometry, np.ndarray, list, None],
+    geometry,
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
-) -> Union[BaseGeometry, np.ndarray, list, None]:
+) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
     """
     Calculates an approximated centerline for a polygon.
 
@@ -29,7 +30,7 @@ def centerline(
     |centerline_L_shape|
 
     Args:
-        geometry (geometry or array_like): a geometry or ndarray of geometries
+        geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
         densify_distance (float, optional): densify input geometry
             so each segment has maximum this length. A reasonable value is the typical
             minimal width of the input geometries. If a larger value is used centerlines
@@ -53,7 +54,8 @@ def centerline(
               - value < 0: simplifytolerance = average width of geometry * abs(value)
 
     Returns:
-        geometry or array_like: the centerline for each of the input geometries.
+        geometry, GeoSeries or array_like: the centerline for each of the input
+            geometries.
 
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
@@ -63,15 +65,19 @@ def centerline(
 
     # If input is arraylike, treat every geometry in loop
     if hasattr(geometry, "__len__"):
-        result = [
-            _centerline(
-                geom=geom,
-                densify_distance=densify_distance,
-                min_branch_length=min_branch_length,
-                simplifytolerance=simplifytolerance,
-            )
-            for geom in geometry
-        ]
+        result = np.array(
+            [
+                _centerline(
+                    geom=geom,
+                    densify_distance=densify_distance,
+                    min_branch_length=min_branch_length,
+                    simplifytolerance=simplifytolerance,
+                )
+                for geom in geometry
+            ]
+        )
+        if isinstance(geometry, GeoSeries):
+            result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
         return result
     else:
         return _centerline(
