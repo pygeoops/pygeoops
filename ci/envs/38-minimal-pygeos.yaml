@@ -5,7 +5,7 @@ dependencies:
   - python =3.8
   - pip
   # required
-  - geopandas
+  - geopandas-base
   - pygeos
   - shapely >1
   - topojson
