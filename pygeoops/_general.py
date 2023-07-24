@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 
 from geopandas import GeoSeries
+import numpy as np
 from numpy.typing import NDArray
 import pyproj
 import shapely
@@ -113,10 +114,12 @@ def collection_extract(
     if not hasattr(geometry, "__len__"):
         return _collection_extract(geometry=geometry, primitivetype=primitivetype)
     else:
-        result = [
-            _collection_extract(geometry=geom, primitivetype=primitivetype)
-            for geom in geometry
-        ]
+        result = np.array(
+            [
+                _collection_extract(geometry=geom, primitivetype=primitivetype)
+                for geom in geometry
+            ]
+        )
         if isinstance(geometry, GeoSeries):
             result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
         return result
