@@ -113,12 +113,14 @@ def simplify_coords_lang_idx(
     window_end = window_size
 
     # Apply simplification till the window_start arrives at the last point.
-    ready = False
-    while ready is False:
+    idx_to_drop = set()
+    while True:
         # Check if all points between window_start and window_end are within
         # tolerance distance to the line (window_start, window_end).
         points_outside_tolerance_found = False
         for i in range(window_start + 1, window_end):
+            if i in idx_to_drop:
+                continue
             distance = point_line_distance(
                 line_arr[i, 0],
                 line_arr[i, 1],
@@ -137,20 +139,28 @@ def simplify_coords_lang_idx(
             # Move window_end to previous point, and try again
             window_end -= 1
         else:
-            # There are no more points in the window, so move window
-            if window_start + 1 == window_end:
+            # Add points in window to idx_to_drop
+            nb_idx_to_drop_before = len(idx_to_drop)
+            idx_to_drop.update(range(window_start + 1, window_end))
+
+            # If there were no points added, move window forward
+            if nb_idx_to_drop_before == len(idx_to_drop):
                 window_start = window_end
             else:
-                # Because all points still in the window are in tolerance, mask them
+                # There were points added, so mask them as well
                 mask[window_start + 1 : window_end] = False
 
-                # Move window, but keep current window_end in the next window so it also
-                # has a possibility to be masked.
+                # The standard LANG algorithm moves the window to window_end, but this
+                # results in the window_end not being able to be masked. If lookahead=3
+                # par example, this leads to keeping at least 33% of the input points in
+                # the output, which isn't great.
                 # Remark: this is a change compared to standard LANG algorithm!
-                window_start = window_end - 1
-            if window_start >= nb_points - 1:
-                ready = True
-            window_end = window_start + window_size
+                # window_start = window_end - 1
+                # window_start = window_end
+                # window_end += (window_size - 1)
+            if window_start >= nb_points - 1 or window_end >= nb_points - 1:
+                break
+            window_end += window_size
             if window_end >= nb_points:
                 window_end = nb_points - 1
 

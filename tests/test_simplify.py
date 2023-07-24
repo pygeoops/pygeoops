@@ -161,21 +161,21 @@ def test_simplify_input_geoseries(preserve_common_boundaries: bool):
     """Test simplify of a geoseries of linestrings."""
     line1 = shapely.LineString([(0, 0), (10, 10), (20, 20)])
     line2 = shapely.LineString([(0, 0), (10, 0), (20, 0)])
-    lines_gs = gpd.GeoSeries([line1, line2, line2])
-    lines_gs = lines_gs.drop(index=1)
-    simplified_lines_gs = pygeoops.simplify(
-        geometry=lines_gs,
+    lines = gpd.GeoSeries([line1, line2, line2])
+    lines = lines.drop(index=1)
+    simplified_lines = pygeoops.simplify(
+        geometry=lines,
         algorithm="lang",
         tolerance=1,
         preserve_common_boundaries=preserve_common_boundaries,
     )
-    assert simplified_lines_gs is not None
-    assert isinstance(simplified_lines_gs, gpd.GeoSeries)
-    assert len(simplified_lines_gs) == len(lines_gs)
-    assert simplified_lines_gs.index.to_list() == lines_gs.index.to_list()
-    for test_idx, simplified_line in simplified_lines_gs.items():
+    assert simplified_lines is not None
+    assert isinstance(simplified_lines, gpd.GeoSeries)
+    assert len(simplified_lines) == len(lines)
+    assert simplified_lines.index.to_list() == lines.index.to_list()
+    for test_idx, simplified_line in simplified_lines.items():
         assert isinstance(simplified_line, shapely.LineString)
-        assert len(simplified_line.coords) < len(lines_gs.geometry[test_idx].coords)
+        assert len(simplified_line.coords) < len(lines.geometry[test_idx].coords)
         assert len(simplified_line.coords) == 2
 
 
@@ -276,7 +276,8 @@ def test_simplify_invalid_params():
 @pytest.mark.parametrize("algorithm, tolerance", [("lang", 2), ("rdp", 2), ("vw", 15)])
 def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
     # Skip test if simplification is not available
-    _ = pytest.importorskip("simplification")
+    if algorithm != "lang":
+        _ = pytest.importorskip("simplification")
 
     # Prepare test data
     poly_input = shapely.Polygon(
