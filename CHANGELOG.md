@@ -8,7 +8,7 @@
   - extended `simplify` function (support for different algorithmns, exclude points from removal)
   - grid utility functions: `create_grid`, `split_tiles`
   - general geometry utility functions: `collect`, `collection_extract`, `explode`, `remove_inner_rings`
-- Copy/move topologic simplify (preserve common boundaries) from geofilops to pygeoops (#)
+- Copy/move topologic simplify (preserve common boundaries) from geofilops to pygeoops (#24)
 - Use ruff as linter instead of flake8 (#22)
 
 ## 0.1.1 (2023-04-12)
