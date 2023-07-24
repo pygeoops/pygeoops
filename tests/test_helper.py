@@ -80,7 +80,7 @@ def plot(
 
     colors = mcolors.TABLEAU_COLORS
     for geom_idx, geom in enumerate(geoms):
-        if geom.is_empty:
+        if geom is None or geom.is_empty:
             continue
 
         color = colors[list(colors.keys())[geom_idx % len(colors)]]

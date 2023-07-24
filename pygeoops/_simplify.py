@@ -37,10 +37,10 @@ def simplify(
     keep_points_on: Optional[BaseGeometry] = None,
 ) -> Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]:
     """
-    Simplify the geometry.
+    Simplify the geometry/geometries.
 
     Args:
-        geometry (geometry or array_like): a geometry or ndarray of geometries
+        geometry (geometry or array_like): a geometry or ndarray of geometries.
         tolerance (float): mandatory for the following algorithms:
             * "rdp": distance to use as tolerance
             * "lang": distance to use as tolerance
@@ -84,9 +84,8 @@ def simplify(
             keep_points_on=keep_points_on,
         )
 
-    # Check if input is arraylike
+    # If input is arraylike, apply to all elements
     if hasattr(geometry, "__len__"):
-        # Treat every geometry
         result = [
             _simplify(
                 geometry=geom,

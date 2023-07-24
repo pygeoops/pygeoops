@@ -31,8 +31,7 @@ def simplify_topo(
     Applies simplify while retaining common boundaries between all input geometries.
 
     Args:
-        geometry (geometry, GeoSeries or arraylike): the geometry or geometries to
-            simplify.
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
         tolerance (float): tolerance to use for simplify:
             * "rdp": distance to use as tolerance
             * "lang": distance to use as tolerance

@@ -4,6 +4,7 @@ import pytest
 import shapely
 
 from pygeoops import _simplify_topo as simplify_topo
+import test_helper
 
 
 @pytest.mark.parametrize("algorithm", ["rdp", "lang"])
@@ -39,21 +40,45 @@ def test_simplify_topo_ducktype_GeoSeries():
     # Prepare test data
     poly1 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)])
     poly2 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (11, 0), (10, 10)])
-    input_gs = gpd.GeoSeries([poly1, poly1, poly2])
-    input_gs = input_gs.drop(index=1)
+    input = gpd.GeoSeries([poly1, poly1, poly2])
+    input = input.drop(index=1)
 
     # Test
-    result_gs = simplify_topo.simplify_topo(input_gs, tolerance=1, algorithm="lang")
+    result = simplify_topo.simplify_topo(input, tolerance=1, algorithm="lang")
 
     # Check result
-    assert result_gs is not None
-    assert type(result_gs) == type(input_gs)
-    assert len(result_gs) == len(input_gs)
+    assert result is not None
+    assert type(result) == type(input)
+    assert len(result) == len(input)
     # poly 1 can't be simplified and stays the same.
-    assert result_gs[0] == input_gs[0]
+    assert result[0] == input[0]
     # Due to the ~ common boundary between poly1 and poly2, a point (10, 0) is added
     # to poly2. Simplification removes (11,0), so poly2 ends up the same as poly1.
-    assert result_gs[0] == result_gs[2]
+    assert result[0] == result[2]
+
+
+def test_simplify_topo_ducktype_ndarray():
+    """
+    Test returning a GeoSeries when input is a GeoSeries + make sure the indexes from
+    the input GeoSeries are retained!
+    """
+    # Prepare test data
+    poly1 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)])
+    poly2 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (11, 0), (10, 10)])
+    input = np.array([poly1, poly2])
+
+    # Test
+    result = simplify_topo.simplify_topo(input, tolerance=1, algorithm="lang")
+
+    # Check result
+    assert result is not None
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(input)
+    # poly 1 can't be simplified and stays the same.
+    assert result[0] == input[0]
+    # Due to the ~ common boundary between poly1 and poly2, a point (10, 0) is added
+    # to poly2. Simplification removes (11,0), so poly2 ends up the same as poly1.
+    assert result[0] == result[1]
 
 
 def test_simplify_topo_GeometryCollection():
@@ -109,3 +134,37 @@ def test_simplify_topo_mixedtypes():
 def test_simplify_topo_None():
     assert simplify_topo.simplify_topo(None, tolerance=1, algorithm="lang") is None
     assert simplify_topo.simplify_topo([None], tolerance=1, algorithm="lang") == [None]
+
+
+def test_simplify_topo_result_mixed(tmp_path):
+    """
+    Test with Polygons as input where some of the polygons collapse to lines because of
+    the simplification.
+    In this case the lines are removed so the output only contains Polygons.
+    """
+    # Prepare test data
+    # a squarish polygon with a narrow triangle excluded to the right
+    squarish = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (9, 5), (10, 10)])
+    # a narrow triangle that fits in the squarish polygon and will collapse to a line
+    narrow_triangle = shapely.Polygon([(10, 10), (9, 5), (10, 0), (10, 10)])
+    input = [squarish, narrow_triangle]
+    output_path = tmp_path / f"{__name__}_input.png"
+    test_helper.plot([squarish, narrow_triangle], output_path)
+
+    # Test
+    result = simplify_topo.simplify_topo(input, tolerance=1, algorithm="lang")
+
+    output_path = tmp_path / f"{__name__}_result.png"
+    test_helper.plot(result, output_path)
+
+    # Check result
+    assert result is not None
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(input)
+    for idx, geom_result in enumerate(result):
+        if idx == 0:
+            assert geom_result == shapely.Polygon(
+                [(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)]
+            )
+        elif idx == 1:
+            assert geom_result is None
