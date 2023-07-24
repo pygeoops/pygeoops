@@ -55,6 +55,11 @@ def test_collect():
         [poly, multipoly]
     )
 
+    # Test arraylike input
+    # --------------------
+    assert pygeoops.collect(gpd.GeoSeries([point, line, poly])) == geometrycoll
+    assert pygeoops.collect(np.array([point, line, poly])) == geometrycoll
+
 
 def test_collection_extract():
     # Test None input
@@ -132,27 +137,27 @@ def test_explode():
     # ------------------------
     point = shapely.Point((0, 0))
     multipoint = shapely.MultiPoint([point, point])
-    assert pygeoops.explode(point) == [point]
-    assert pygeoops.explode(multipoint) == [point, point]
+    assert pygeoops.explode(point).tolist() == [point]
+    assert pygeoops.explode(multipoint).tolist() == [point, point]
 
     # Test dealing with linestrings
     # -----------------------------
     line = shapely.LineString([(0, 0), (0, 1)])
     multiline = shapely.MultiLineString([line, line])
-    assert pygeoops.explode(line) == [line]
-    assert pygeoops.explode(multiline) == [line, line]
+    assert pygeoops.explode(line).tolist() == [line]
+    assert pygeoops.explode(multiline).tolist() == [line, line]
 
     # Test dealing with Polygons
     # --------------------------
     poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
     multipoly = shapely.MultiPolygon([poly, poly])
-    assert pygeoops.explode(poly) == [poly]
-    assert pygeoops.explode(multipoly) == [poly, poly]
+    assert pygeoops.explode(poly).tolist() == [poly]
+    assert pygeoops.explode(multipoly).tolist() == [poly, poly]
 
     # Test geometrycollection
     # -----------------------
     geometrycoll = shapely.GeometryCollection([point, line, poly])
-    assert pygeoops.explode(geometrycoll) == [point, line, poly]
+    assert pygeoops.explode(geometrycoll).tolist() == [point, line, poly]
 
 
 def test_remove_inner_rings():
