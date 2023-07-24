@@ -4,6 +4,7 @@ Tests on simplify.
 """
 
 import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
 
@@ -124,17 +125,34 @@ def test_simplify_basic_lang():
     assert len(geom_simplified.geoms) == 6
 
 
-def test_simplify_input_arr():
+@pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+def test_simplify_input_geometries(input_type):
     """Test simplify of an array of linestrings."""
-    linestrings = [shapely.LineString([(0, 0), (10, 10), (20, 20)])] * 2
-    simplified_lines = pygeoops.simplify(
-        geometry=linestrings, algorithm="lang", tolerance=1
-    )
-    assert simplified_lines is not None
-    assert len(simplified_lines) == 2
-    for test_idx, simplified_line in enumerate(simplified_lines):
+    # Prepare test data
+    input = [shapely.LineString([(0, 0), (10, 10), (20, 20)])] * 2
+    start_idx = 0
+    if input_type == "geoseries":
+        # For geoseries, also check if the indexers are retained!
+        start_idx = 5
+        input = gpd.GeoSeries(
+            input, index=[index + start_idx for index in range(len(input))]
+        )
+    elif input_type == "ndarray":
+        input = np.array(input)
+
+    # Run test
+    result = pygeoops.simplify(geometry=input, algorithm="lang", tolerance=1)
+
+    # Check result
+    assert result is not None
+    if input_type == "geoseries":
+        assert isinstance(result, gpd.GeoSeries)
+    else:
+        assert isinstance(result, np.ndarray)
+    assert len(result) == 2
+    for test_idx, simplified_line in enumerate(result):
         assert isinstance(simplified_line, shapely.LineString)
-        assert len(simplified_line.coords) < len(linestrings[test_idx].coords)
+        assert len(simplified_line.coords) < len(input[start_idx + test_idx].coords)
         assert len(simplified_line.coords) == 2
 
 

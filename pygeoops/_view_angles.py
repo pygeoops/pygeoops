@@ -25,9 +25,9 @@ def view_angles(
     |view_angles|
 
     Args:
-        viewpoint (Geometry or arraylike): the point that is being viewed from.
-        visible_geom (Geometry or arraylike): the visible geometry to calculate the view
-            angles to. Only singlepart geometries are supported.
+        viewpoint (Geometry, GeoSeries or arraylike): the point being viewed from.
+        visible_geom (Geometry, GeoSeries or arraylike): the visible geometry to
+            calculate the view angles to. Only singlepart geometries are supported.
 
     Returns:
         Tuple or array of floats with for each viewpoint/visible_geom combination the

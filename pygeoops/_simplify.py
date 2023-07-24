@@ -6,8 +6,9 @@ Module containing utilities to simplify geometries.
 import logging
 from typing import Optional, Union
 
-import geopandas as gpd
+from geopandas import GeoSeries
 import numpy as np
+from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 import shapely.coords
@@ -28,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 def simplify(
-    geometry: Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None],
+    geometry,
     tolerance: float,
     algorithm: str = "rdp",
     lookahead: int = 8,
     preserve_topology: bool = True,
     preserve_common_boundaries=False,
     keep_points_on: Optional[BaseGeometry] = None,
-) -> Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]:
+) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
     """
     Simplify the geometry/geometries.
 
@@ -63,8 +64,8 @@ def simplify(
         Exception: [description]
 
     Returns:
-        Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]: the simplified
-            version of the geometry.
+        Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]: the
+            simplified version of the input geometry/geometries.
     """
     if geometry is None:
         return None
@@ -86,19 +87,21 @@ def simplify(
 
     # If input is arraylike, apply to all elements
     if hasattr(geometry, "__len__"):
-        result = [
-            _simplify(
-                geometry=geom,
-                tolerance=tolerance,
-                algorithm=algorithm,
-                lookahead=lookahead,
-                preserve_topology=preserve_topology,
-                keep_points_on=keep_points_on,
-            )
-            for geom in geometry
-        ]
-        if isinstance(geometry, gpd.GeoSeries):
-            result = gpd.GeoSeries(result, index=geometry.index, crs=geometry.crs)
+        result = np.array(
+            [
+                _simplify(
+                    geometry=geom,
+                    tolerance=tolerance,
+                    algorithm=algorithm,
+                    lookahead=lookahead,
+                    preserve_topology=preserve_topology,
+                    keep_points_on=keep_points_on,
+                )
+                for geom in geometry
+            ]
+        )
+        if isinstance(geometry, GeoSeries):
+            result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
         return result
     else:
         return _simplify(

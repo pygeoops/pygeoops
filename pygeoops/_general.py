@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
@@ -11,10 +11,10 @@ from pygeoops._types import GeometryType, PrimitiveType
 
 
 def collect(
-    geometries: Union[BaseGeometry, List[BaseGeometry], None],
+    geometries,
 ) -> Optional[BaseGeometry]:
     """
-    Collects a list of geometries to one geometry.
+    Collects a list of geometries to one (multi)geometry.
 
     Elements in the list that are None or empty geometries are dropped.
 
@@ -24,15 +24,14 @@ def collect(
         GeometryCollection.
 
     Args:
-        geometries (List[BaseGeometry]): arraylike list of geometries to collect to one
-            geometry.
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
 
     Raises:
         ValueError: raises an exception if one of the input geometries is of an
             unknown type.
 
     Returns:
-        BaseGeometry: the result
+        BaseGeometry: the result.
     """
     # If geometry_list is None or no list, just return itself
     if geometries is None:
@@ -151,7 +150,7 @@ def _collection_extract(
         raise ValueError(f"Invalid/unsupported geometry(type): {geometry}")
 
 
-def explode(geometry: Optional[BaseGeometry]) -> Optional[List[BaseGeometry]]:
+def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]:
     """
     Dump all (multi)geometries in the input to one list of single geometries.
 
@@ -159,16 +158,16 @@ def explode(geometry: Optional[BaseGeometry]) -> Optional[List[BaseGeometry]]:
         geometry (BaseGeometry, optional): geometry to explode.
 
     Returns:
-        Optional[List[BaseGeometry]]: a list of simple geometries or None if the input
+        Optional[NDArray[BaseGeometry]]: array of simple geometries or None if the input
             was None.
 
     """
     if geometry is None:
         return None
     elif isinstance(geometry, BaseMultipartGeometry):
-        return list(geometry.geoms)
+        return np.array(geometry.geoms)
     else:
-        return [geometry]
+        return np.array([geometry])
 
 
 """

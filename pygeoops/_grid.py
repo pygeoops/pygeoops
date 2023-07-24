@@ -5,32 +5,24 @@ Module containing utilities to create/manipulate grids.
 
 import logging
 import math
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
+import numpy as np
 
-import geopandas as gpd
-import pyproj
+from numpy.typing import NDArray
+from geopandas import GeoDataFrame
 import shapely
 import shapely.ops
-
-#####################################################################
-# First define/init some general variables/constants
-#####################################################################
+from shapely import Polygon
 
 # Get a logger...
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
-
-#####################################################################
-# Grid tile helpers
-#####################################################################
 
 
 def create_grid(
     total_bounds: Tuple[float, float, float, float],
     nb_columns: int,
     nb_rows: int,
-    crs: Union[pyproj.CRS, int, str, None],
-) -> gpd.GeoDataFrame:
+) -> NDArray[Polygon]:
     """
     Creates a grid with tiles of the width and height specified.
 
@@ -39,24 +31,22 @@ def create_grid(
             created.
         nb_columns (int): number of columns the grid should have.
         nb_rows (int): number of rows the grid should have.
-        crs (Union[pyproj.CRS, int, str, None]): the projection to create the grid in.
 
     Returns:
-        gpd.GeoDataFrame: geodataframe with the grid.
+        NDArray[Polygon]: ndarray with tiles.
     """
     xmin, ymin, xmax, ymax = total_bounds
     width = (xmax - xmin) / nb_columns
     height = (ymax - ymin) / nb_rows
 
-    return create_grid3(total_bounds=total_bounds, width=width, height=height, crs=crs)
+    return create_grid3(total_bounds=total_bounds, width=width, height=height)
 
 
 def create_grid3(
     total_bounds: Tuple[float, float, float, float],
     width: float,
     height: float,
-    crs: Union[pyproj.CRS, int, str, None],
-) -> gpd.GeoDataFrame:
+) -> NDArray[Polygon]:
     """
     Creates a grid with tiles of the width and height specified.
 
@@ -65,12 +55,11 @@ def create_grid3(
             created.
         width (float): width of the tiles.
         height (float): height of the tiles.
-        crs (Union[pyproj.CRS, int, str, None]): the projection to create the grid in.
         number_decimals (int, optional): the number of decimals the coordinates of the
             grid will have. Defaults to None, so no rounding.
 
     Returns:
-        gpd.GeoDataFrame: geodataframe with the grid.
+        NDArray[Polygon]: ndarray with tiles.
     """
 
     xmin, ymin, xmax, ymax = total_bounds
@@ -104,15 +93,14 @@ def create_grid3(
         cell_left += width
         cell_right += width
 
-    return gpd.GeoDataFrame(geometry=polygons, crs=crs)
+    return np.array(polygons)
 
 
 def create_grid2(
     total_bounds: Tuple[float, float, float, float],
     nb_squarish_tiles: int,
-    crs: Union[pyproj.CRS, int, str, None],
     nb_squarish_tiles_max: Optional[int] = None,
-) -> gpd.GeoDataFrame:
+) -> NDArray[Polygon]:
     """
     Creates a grid and tries to approximate the number of cells asked as good as
     possible with grid cells that as close to square as possible.
@@ -121,11 +109,10 @@ def create_grid2(
         total_bounds (Tuple[float, float, float, float]): bounds of the grid to be
             created.
         nb_squarish_cells (int): about the number of cells wanted.
-        crs (pyproj.CRS, int, str, optional): the projection to create the grid in.
         nb_squarish_tiles_max (int, optional): the maximum number of cells.
 
     Returns:
-        gpd.GeoDataFrame: geodataframe with the grid.
+        NDArray[Polygon]: ndarray with tiles.
     """
     # Check input
     if nb_squarish_tiles <= 0:
@@ -164,24 +151,23 @@ def create_grid2(
 
     # Now we know everything to create the grid
     return create_grid(
-        total_bounds=total_bounds, nb_columns=nb_columns, nb_rows=nb_rows, crs=crs
+        total_bounds=total_bounds, nb_columns=nb_columns, nb_rows=nb_rows
     )
 
 
-def split_tiles(
-    input_tiles: gpd.GeoDataFrame, nb_tiles_wanted: int
-) -> gpd.GeoDataFrame:
+def split_tiles(input_tiles: GeoDataFrame, nb_tiles_wanted: int) -> GeoDataFrame:
     """
     Split the tiles in the input tiles so the number of tiles approaches
-    nb_tiles_wanted specified as close as possible.
+    nb_tiles_wanted specified as close as possible. For tiles that are split, any values
+    in additional attribute columns in the GeoDataFrame will be retainedin the result.
 
     Args:
-        input_tiles (gpd.GeoDataFrame): the input tiles to split.
+        input_tiles (GeoDataFrame): the input tiles to split.
         nb_tiles_wanted (int): the number of tiles wanted in the result.
 
     Returns:
-        gpd.GeoDataFrame: tiles that are the result of splitting input_tiles and
-        approaching nb_tiles_wanted as close as possible.
+        GeoDataFrame: tiles that are the result of splitting input tiles and approaching
+            nb_tiles_wanted as close as possible.
     """
     nb_tiles = len(input_tiles)
     if nb_tiles >= nb_tiles_wanted:
@@ -253,5 +239,5 @@ def split_tiles(
         for tile_split_part in curr_tiles_being_split:
             result_tiles.append(tile._replace(geometry=tile_split_part))
 
-    # We should be ready...
-    return gpd.GeoDataFrame(data=result_tiles, crs=input_tiles.crs)
+    # We should be ready
+    return GeoDataFrame(data=result_tiles, crs=input_tiles.crs)

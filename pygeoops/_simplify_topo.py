@@ -26,12 +26,12 @@ def simplify_topo(
     algorithm: str = "rdp",
     lookahead: int = 8,
     keep_points_on: Optional[BaseGeometry] = None,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
+) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
     """
     Applies simplify while retaining common boundaries between all input geometries.
 
     Args:
-        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+        geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
         tolerance (float): tolerance to use for simplify:
             * "rdp": distance to use as tolerance
             * "lang": distance to use as tolerance
