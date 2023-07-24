@@ -9,6 +9,7 @@
   - grid utility functions: `create_grid`, `split_tiles`
   - general geometry utility functions: `collect`, `collection_extract`, `explode`, `remove_inner_rings`
 - Copy/move topologic simplify (preserve common boundaries) from geofilops to pygeoops (#24)
+- Add tweak to LANG algorithm to avoid the (large) minimum retained points in output (#30)
 - Add support for `GeoSeries` as input and output for functions where this is appropriate (#26)
 - Return results in pygeoops as `NDArray[BaseGeometry]` instead of list[BaseGeometry]` like shapely2 does (#25)
 - Use ruff as linter instead of flake8 (#22) 
