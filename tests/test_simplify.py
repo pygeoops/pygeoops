@@ -3,25 +3,12 @@
 Tests on simplify.
 """
 
+import geopandas as gpd
 import pytest
 import shapely
 
 import pygeoops
 import test_helper
-
-
-def test_simplify_arr():
-    """Test simplify of an array of linestrings."""
-    linestrings = [shapely.LineString([(0, 0), (10, 10), (20, 20)])] * 2
-    simplified_lines = pygeoops.simplify(
-        geometry=linestrings, algorithm="lang", tolerance=1
-    )
-    assert simplified_lines is not None
-    assert len(simplified_lines) == 2
-    for test_idx, simplified_line in enumerate(simplified_lines):
-        assert isinstance(simplified_line, shapely.LineString)
-        assert len(simplified_line.coords) < len(linestrings[test_idx].coords)
-        assert len(simplified_line.coords) == 2
 
 
 def test_simplify_basic_lang():
@@ -137,6 +124,43 @@ def test_simplify_basic_lang():
     assert len(geom_simplified.geoms) == 6
 
 
+def test_simplify_input_arr():
+    """Test simplify of an array of linestrings."""
+    linestrings = [shapely.LineString([(0, 0), (10, 10), (20, 20)])] * 2
+    simplified_lines = pygeoops.simplify(
+        geometry=linestrings, algorithm="lang", tolerance=1
+    )
+    assert simplified_lines is not None
+    assert len(simplified_lines) == 2
+    for test_idx, simplified_line in enumerate(simplified_lines):
+        assert isinstance(simplified_line, shapely.LineString)
+        assert len(simplified_line.coords) < len(linestrings[test_idx].coords)
+        assert len(simplified_line.coords) == 2
+
+
+@pytest.mark.parametrize("preserve_common_boundaries", [True, False])
+def test_simplify_input_geoseries(preserve_common_boundaries: bool):
+    """Test simplify of a geoseries of linestrings."""
+    line1 = shapely.LineString([(0, 0), (10, 10), (20, 20)])
+    line2 = shapely.LineString([(0, 0), (10, 0), (20, 0)])
+    lines_gs = gpd.GeoSeries([line1, line2, line2])
+    lines_gs = lines_gs.drop(index=1)
+    simplified_lines_gs = pygeoops.simplify(
+        geometry=lines_gs,
+        algorithm="lang",
+        tolerance=1,
+        preserve_common_boundaries=preserve_common_boundaries,
+    )
+    assert simplified_lines_gs is not None
+    assert isinstance(simplified_lines_gs, gpd.GeoSeries)
+    assert len(simplified_lines_gs) == len(lines_gs)
+    assert simplified_lines_gs.index.to_list() == lines_gs.index.to_list()
+    for test_idx, simplified_line in simplified_lines_gs.items():
+        assert isinstance(simplified_line, shapely.LineString)
+        assert len(simplified_line.coords) < len(lines_gs.geometry[test_idx].coords)
+        assert len(simplified_line.coords) == 2
+
+
 def test_simplify_invalid_geometry():
     # Test Polygon simplification, with invalid exterior ring
     poly = shapely.Polygon(
@@ -218,6 +242,18 @@ def test_simplify_invalid_params():
             algorithm="invalid!",
         )
 
+    expected_error = (
+        "The combination of preserve_common_boundaries=True and "
+        "preserve_topology=False is not supported."
+    )
+    with pytest.raises(ValueError, match=expected_error):
+        pygeoops.simplify(
+            geometry=shapely.LineString([(0, 0), (10, 10), (20, 20)]),
+            tolerance=1,
+            preserve_topology=False,
+            preserve_common_boundaries=True,
+        )
+
 
 @pytest.mark.parametrize("algorithm, tolerance", [("lang", 2), ("rdp", 2), ("vw", 15)])
 def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
@@ -273,7 +309,7 @@ def test_simplify_preservetopology_lang():
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
-    # If preserve_topology True, the original polygon is returned...
+    # If preserve_topology True, the original polygon is returned
     geom_simplified = pygeoops.simplify(
         geometry=poly,
         algorithm="lang",
@@ -284,7 +320,7 @@ def test_simplify_preservetopology_lang():
     assert isinstance(geom_simplified, shapely.Polygon)
     assert poly.equals(geom_simplified) is True
 
-    # If preserve_topology True, the original polygon is returned...
+    # If preserve_topology False, the polygon becomes None
     geom_simplified = pygeoops.simplify(
         geometry=poly,
         algorithm="lang",

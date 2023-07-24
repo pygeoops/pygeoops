@@ -6,6 +6,7 @@ Module containing utilities to simplify geometries.
 import logging
 from typing import Optional, Union
 
+import geopandas as gpd
 import numpy as np
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
@@ -21,18 +22,20 @@ except ImportError:
 import pygeoops._general as general
 from pygeoops._general import PrimitiveType
 from pygeoops import _simplify_lang as simplify_lang
+from pygeoops import _simplify_topo as simplify_topo
 
 logger = logging.getLogger(__name__)
 
 
 def simplify(
-    geometry: Union[BaseGeometry, np.ndarray, list, None],
+    geometry: Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None],
     tolerance: float,
     algorithm: str = "rdp",
     lookahead: int = 8,
     preserve_topology: bool = True,
+    preserve_common_boundaries=False,
     keep_points_on: Optional[BaseGeometry] = None,
-) -> Union[BaseGeometry, np.ndarray, list, None]:
+) -> Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]:
     """
     Simplify the geometry.
 
@@ -50,19 +53,36 @@ def simplify(
             in a moving window. Used for LANG algorithm. Defaults to 8.
         preserve_topology (bool, optional): True to (try to) return valid
             geometries as result. Defaults to True.
+        preserve_common_bounderies (bool, optional): True to (try to) maintain common
+            boundaries between all geometries in the input geometry list.
+            Defaults to False.
         keep_points_on (BaseGeometry], optional): point of the geometry to
             that intersect with these geometries are not removed. Defaults to None.
 
     Raises:
         Exception: [description]
-        Exception: [description]
-        Exception: [description]
 
     Returns:
-        BaseGeometry: The simplified version of the geometry.
+        Union[BaseGeometry, np.ndarray, list, gpd.GeoSeries, None]: the simplified
+            version of the geometry.
     """
     if geometry is None:
         return None
+
+    # If common boundaries need to be preserved, use topologic implementation
+    if preserve_common_boundaries:
+        if not preserve_topology:
+            raise ValueError(
+                "The combination of preserve_common_boundaries=True and "
+                "preserve_topology=False is not supported."
+            )
+        return simplify_topo.simplify_topo(
+            geometry=geometry,
+            tolerance=tolerance,
+            algorithm=algorithm,
+            lookahead=lookahead,
+            keep_points_on=keep_points_on,
+        )
 
     # Check if input is arraylike
     if hasattr(geometry, "__len__"):
@@ -78,6 +98,8 @@ def simplify(
             )
             for geom in geometry
         ]
+        if isinstance(geometry, gpd.GeoSeries):
+            result = gpd.GeoSeries(result, index=geometry.index, crs=geometry.crs)
         return result
     else:
         return _simplify(
