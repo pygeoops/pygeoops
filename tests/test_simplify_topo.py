@@ -32,6 +32,10 @@ def test_simplify_topo(algorithm):
 
 
 def test_simplify_topo_ducktype_GeoSeries():
+    """
+    Test returning a GeoSeries when input is a GeoSeries + make sure the indexes from
+    the input GeoSeries are retained!
+    """
     # Prepare test data
     poly1 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)])
     poly2 = shapely.Polygon([(10, 10), (0, 10), (0, 0), (11, 0), (10, 10)])
@@ -96,7 +100,8 @@ def test_simplify_topo_mixedtypes():
         if geom_input.geom_type == "Polygon":
             assert geom_result == geom_input
         else:
-            # The point from the polygon in inserted in the line to snap topologies
+            # A point from the polygon is inserted in the line to snap topology
+            # boundaries!
             exp_line = shapely.LineString([(10, 10), (0, 10), (0, 0), (10, 0), (11, 0)])
             assert geom_result == exp_line
 
