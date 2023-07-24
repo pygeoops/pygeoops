@@ -8,6 +8,7 @@ dependencies:
   - geopandas
   - pygeos
   - shapely >1
+  - topojson
   # testing
   - matplotlib
   - pytest

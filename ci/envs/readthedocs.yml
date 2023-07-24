@@ -7,6 +7,7 @@ dependencies:
   # required
   - geopandas
   - shapely >1
+  - topojson
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
   - sphinx <6
