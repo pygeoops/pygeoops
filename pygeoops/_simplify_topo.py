@@ -8,10 +8,10 @@ from typing import Optional, Union
 
 import geopandas as gpd
 import numpy as np
+import shapely
 from shapely.geometry.base import BaseGeometry
-import topojson
-
 from shapely import geometry as sh_geom
+import topojson
 
 import pygeoops
 from pygeoops import GeometryType, PrimitiveType
@@ -107,17 +107,40 @@ def simplify_topo(
             else:
                 topo.output["arcs"][index] = list(topoline_simpl)
 
-    topo_simpl_gdf = topo.to_gdf(crs=geometry.crs)
+    crs = None
+    if isinstance(geometry, gpd.GeoSeries):
+        crs = geometry.crs
+    topo_simpl_gdf = topo.to_gdf(crs=crs)
     topo_simpl_gdf.geometry = topo_simpl_gdf.geometry.make_valid()
 
-    # If the input was of a single geometry type, make sure output stays that way
-    geometry_types_orig = geometry.geom_type.unique()
-    geometry_types_simpl = topo_simpl_gdf.geometry.geom_type.unique()
-    if len(geometry_types_orig) == 1 and len(geometry_types_simpl) > 1:
-        topo_simpl_gdf.geometry = pygeoops.collection_extract(
-            topo_simpl_gdf.geometry.array,
-            GeometryType(geometry_types_orig[0]).to_primitivetype,
+    # If the input was of a single geometry type, filter the result so it stays that way
+    if isinstance(geometry, gpd.GeoSeries):
+        types_orig = geometry.geom_type.unique()
+    else:
+        types_orig = np.unique(shapely.get_type_id(geometry))
+    try:
+        primitive_types_orig = list(
+            {GeometryType(type).to_primitivetype.name for type in types_orig}
         )
+    except Exception:
+        # Geometry or GeometryCollection don't have a primitive type, so exception. In
+        # this case all types of gometries are possible, so no need to filter the result
+        primitive_types_orig = None
+
+    if primitive_types_orig is not None and len(primitive_types_orig) == 1:
+        # If output contains different types, extract only the desired type.
+        geometry_types_simpl = topo_simpl_gdf.geometry.geom_type.unique()
+        primitive_types_simpl = list(
+            {GeometryType(type).to_primitivetype.name for type in geometry_types_simpl}
+        )
+        if (
+            len(primitive_types_simpl) > 1
+            or primitive_types_orig[0] != primitive_types_simpl[0]
+        ):
+            topo_simpl_gdf.geometry = pygeoops.collection_extract(
+                topo_simpl_gdf.geometry.array,
+                PrimitiveType(primitive_types_orig[0]),
+            )
 
     # Ready
     if isinstance(geometry, gpd.GeoSeries):
@@ -131,7 +154,7 @@ def geometry_collection_extract(
 ) -> gpd.GeoSeries:
     """
     # Apply the collection_extract
-    return gpd.GeoSeries(
+    return pd.GeoSeries(
         [geometry_util.collection_extract(geom, primitivetype) for geom in geoseries])
     """
     # Apply the collection_extract
