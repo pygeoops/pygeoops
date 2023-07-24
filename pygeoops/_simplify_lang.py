@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def simplify_coords_lang(
     coords: Union[np.ndarray, list, shapely.coords.CoordinateSequence],
     tolerance: float,
-    lookahead: int,
+    lookahead: int = 8,
 ) -> Union[np.ndarray, list]:
     """
     Simplify a line using lang algorithm.
@@ -108,9 +108,7 @@ def simplify_coords_lang_idx(
     else:
         window_size = min(lookahead, nb_points - 1)
 
-    # mask = np.ones(nb_points), dtype='bool')
-    mask = np.zeros(nb_points, dtype="bool")
-    mask[0] = True
+    mask = np.ones(nb_points, dtype="bool")
     window_start = 0
     window_end = window_size
 
@@ -119,7 +117,7 @@ def simplify_coords_lang_idx(
     while ready is False:
         # Check if all points between window_start and window_end are within
         # tolerance distance to the line (window_start, window_end).
-        all_points_in_tolerance = True
+        points_outside_tolerance_found = False
         for i in range(window_start + 1, window_end):
             distance = point_line_distance(
                 line_arr[i, 0],
@@ -131,21 +129,26 @@ def simplify_coords_lang_idx(
             )
             # If distance is nan (= linepoint1 == linepoint2) or > tolerance
             if distance > tolerance:
-                all_points_in_tolerance = False
+                points_outside_tolerance_found = True
                 break
 
-        # If not all the points are within the tolerance distance...
-        if not all_points_in_tolerance:
+        # Points outside tolerance distance found, so make window smaller
+        if points_outside_tolerance_found:
             # Move window_end to previous point, and try again
             window_end -= 1
         else:
-            # All points are within the tolerance, so they can be masked
-            mask[window_end] = True
-            # mask[window_start+1:window_end-1] = False
+            # There are no more points in the window, so move window
+            if window_start + 1 == window_end:
+                window_start = window_end
+            else:
+                # Because all points still in the window are in tolerance, mask them
+                mask[window_start + 1 : window_end] = False
 
-            # Move the window forward
-            window_start = window_end
-            if window_start == nb_points - 1:
+                # Move window, but keep current window_end in the next window so it also
+                # has a possibility to be masked.
+                # Remark: this is a change compared to standard LANG algorithm!
+                window_start = window_end - 1
+            if window_start >= nb_points - 1:
                 ready = True
             window_end = window_start + window_size
             if window_end >= nb_points:
