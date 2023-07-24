@@ -16,6 +16,9 @@
 ### Deprecations and compatibility notes
 
 - results are now returned as `NDArray[BaseGeometry]` instead of `list[BaseGeometry]` like shapely2 does (#25)
+- for the the `create_grid` functions (#28):
+    - they now return `NDArray[BaseGeometry]` instead of `GeoDataFrame`
+    - the `crs` parameter has been removed
 
 ## 0.1.1 (2023-04-12)
 
