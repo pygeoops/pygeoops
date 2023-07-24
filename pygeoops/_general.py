@@ -1,5 +1,8 @@
 from typing import List, Optional, Union
 
+from geopandas import GeoSeries
+import numpy as np
+from numpy.typing import NDArray
 import pyproj
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
@@ -84,30 +87,51 @@ def collect(
 
 
 def collection_extract(
-    geometry: Optional[BaseGeometry], primitivetype: PrimitiveType
-) -> Optional[BaseGeometry]:
+    geometry, primitivetype: PrimitiveType
+) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
     """
-    Extracts the geometries from the input geom that comply with the
+    Extracts the parts from the input geometry/geometries that comply with the
     primitive_type specified and returns them as (Multi)geometry.
 
     Args:
-        geometry (BaseGeometry): geometry to extract the polygons
-            from.
-        primitivetype (GeometryPrimitiveTypes): the primitive type to extract
-            from the input geom.
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+        primitivetype (GeometryPrimitiveTypes): the primitive type to extract from the
+            input geometry.
 
     Raises:
-        Exception: if in_geom is an unsupported geometry type or the primitive
+        ValueError: if in_geom is an unsupported geometry type or the primitive
             type is invalid.
 
     Returns:
-        BaseGeometry: List of primitive geometries, only
-            containing the primitive type specified.
+        Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
+            geometries containing only parts of the primitive type specified.
     """
     # Extract the polygons from the multipolygon, but store them as multipolygons anyway
     if geometry is None:
         return None
-    elif isinstance(geometry, (shapely.MultiPoint, shapely.Point)):
+
+    # If input is not arraylike, apply once, otherwise apply to all elements
+    if not hasattr(geometry, "__len__"):
+        return _collection_extract(geometry=geometry, primitivetype=primitivetype)
+    else:
+        result = np.array(
+            [
+                _collection_extract(geometry=geom, primitivetype=primitivetype)
+                for geom in geometry
+            ]
+        )
+        if isinstance(geometry, GeoSeries):
+            result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
+        return result
+
+
+def _collection_extract(
+    geometry: Optional[BaseGeometry], primitivetype: PrimitiveType
+) -> Optional[BaseGeometry]:
+    if geometry is None:
+        return None
+
+    if isinstance(geometry, (shapely.MultiPoint, shapely.Point)):
         if primitivetype == PrimitiveType.POINT:
             return geometry
     elif isinstance(geometry, (shapely.LineString, shapely.MultiLineString)):
@@ -125,9 +149,6 @@ def collection_extract(
             return collect(returngeoms)
     else:
         raise ValueError(f"Invalid/unsupported geometry(type): {geometry}")
-
-    # Nothing found yet, so return None
-    return None
 
 
 def explode(geometry: Optional[BaseGeometry]) -> Optional[List[BaseGeometry]]:

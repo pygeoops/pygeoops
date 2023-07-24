@@ -3,6 +3,8 @@
 Tests for functionalities in vector_util, regarding geometry operations.
 """
 
+import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
 
@@ -58,6 +60,7 @@ def test_collection_extract():
     # Test None input
     # ---------------
     assert pygeoops.collection_extract(None, PrimitiveType.POINT) is None
+    assert pygeoops.collection_extract([None], PrimitiveType.POINT) == [None]
 
     # Test dealing with points
     # ------------------------
@@ -78,6 +81,46 @@ def test_collection_extract():
     assert pygeoops.collection_extract(
         geometrycoll, PrimitiveType.POLYGON
     ) == shapely.GeometryCollection([poly, multipoly])
+
+
+@pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+def test_collection_extract_arraylike(input_type):
+    """
+    Test collection_extract with several geometries as input.
+    """
+    # Prepare test data
+    point = shapely.Point((0, 0))
+    multipoint = shapely.MultiPoint([point, point])
+    line = shapely.LineString([(0, 0), (0, 1)])
+    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = shapely.MultiPolygon([poly, poly])
+    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    input = [point, multipoint, line, poly, multipoly, geometrycoll]
+    start_idx = 0
+    if input_type == "geoseries":
+        # For geoseries, also check if the indexers are retained!
+        start_idx = 5
+        input = gpd.GeoSeries(
+            input, index=[index + start_idx for index in range(len(input))]
+        )
+    elif input_type == "ndarray":
+        input = np.array(input)
+
+    # Run test
+    result = pygeoops.collection_extract(input, primitivetype=PrimitiveType.POINT)
+
+    # Check result
+    assert result is not None
+    if input_type == "geoseries":
+        assert isinstance(result, gpd.GeoSeries)
+    else:
+        assert isinstance(result, np.ndarray)
+    assert result[start_idx] == point
+    assert result[start_idx + 1] == multipoint
+    assert result[start_idx + 2] is None
+    assert result[start_idx + 3] is None
+    assert result[start_idx + 4] is None
+    assert result[start_idx + 5] == point
 
 
 def test_explode():

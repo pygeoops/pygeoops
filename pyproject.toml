@@ -17,8 +17,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "shapely>1",
     "geopandas",
+    "shapely>1",
+    "topojson",
 ]
 keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
 
