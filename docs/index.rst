@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. currentmodule:: pygeoops
+
 PyGeoOps |version|
 ====================
 
@@ -12,8 +14,7 @@ Examples are:
   - :meth:`~simplify` with some advanced extra options:
     - choice in simplification algorithms: Lang (+ a variant), Ramer Douglas Peuker, Visvalingal Whyatt
     - specify points/locations where points should not be removed by the simplification
-    - topologic simplification: common boundaries between input features should stay
-      common
+    - topologic simplification: common boundaries between input features should stay common
   - :meth:`~centerline` (medialaxis) calculation of polygons
   - :meth:`~view_angles` calculation: the angles a polygon is visible from a certain
     view point
