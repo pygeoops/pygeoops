@@ -90,7 +90,7 @@ def simplify_topo(
     assert topolines_simpl is not None
 
     # Copy the results of the simplified lines back to the topology arcs
-    if algorithm == "lang":
+    if algorithm in ["lang", "lang+"]:
         # For LANG, a simple copy is OK
         assert isinstance(topolines_simpl, shapely.MultiLineString)
         topo.output["arcs"] = [list(geom.coords) for geom in topolines_simpl.geoms]
