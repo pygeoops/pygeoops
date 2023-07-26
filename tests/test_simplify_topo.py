@@ -60,8 +60,8 @@ def test_simplify_topo_ducktype_GeoSeries():
 
 def test_simplify_topo_warning_on_cast():
     """
-    Test handling of following warning in simplify_topo: 
-        topojson\core\dedup.py:107: 
+    Test handling of following warning in simplify_topo:
+        topojson/core/dedup.py:107:
         RuntimeWarning: invalid value encountered in cast
         data["bookkeeping_shared_arcs"] = array_bk_sarcs.astype(np.int64).tolist()
     """
@@ -70,7 +70,7 @@ def test_simplify_topo_warning_on_cast():
     poly2 = shapely.Polygon([(10, 0), (20, 0), (20, 10), (10, 10), (10, 0)])
     poly3 = shapely.Polygon([(20, 0), (30, 0), (30, 10), (20, 10), (20, 0)])
     input = [poly1, poly2, poly3]
-    
+
     # Test
     with warnings.catch_warnings():
         message = "invalid value encountered in cast.*"
