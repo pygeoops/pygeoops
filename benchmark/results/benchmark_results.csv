@@ -1,6 +1,9 @@
 run_datetime,package,package_version,operation,operation_descr,secs_taken,run_details
 2023-07-21 17:36:24.768576,pygeoops,0.2.0,simplify_rdp_geopandas,simplify_rdp_geopandas on agri parcel layer BEFL (~50000 polygons),2.255002,
-2023-07-21 17:40:23.149696,pygeoops,0.2.0,simplify_rdp,simplify rdp on agri parcel layer BEFL (~50000 polygons),12.721008,
-2023-07-21 17:57:18.330536,pygeoops,0.2.0,simplify_rdp_keep_points_on,simplify_rdp_keep_points_on on agri parcel layer BEFL (~50000 polygons),163.773342,
-2023-07-22 03:25:32.288835,pygeoops,0.2.0,simplify_rdp_keep_points_on,simplify_rdp_keep_points_on on agri parcel layer BEFL (~50000 polygons),16.005067,
-2023-07-25 02:17:22.960194,pygeoops,0.2.0a2,simplify_lang,simplify_lang on agri parcel layer BEFL (~50000 polygons),20.742281,
+2023-07-21 17:40:23.149696,pygeoops,0.2.0,simplify_rdp,simplify rdp on agri parcel layer BEFL (~50000 polygons),7.312318,
+2023-07-21 17:57:18.330536,pygeoops,0.2.0,simplify_rdp_keep_points_on,simplify_rdp_keep_points_on on agri parcel layer BEFL (~50000 polygons),158.773342,
+2023-07-26 16:00:39.930208,pygeoops,0.2.0a2,simplify_lang,simplify_lang on agri parcel layer BEFL (~50000 polygons),12.821298,
+2023-07-26 16:01:18.433676,pygeoops,0.2.0a2,simplify_lang_plus,simplify_lang_plus on agri parcel layer BEFL (~50000 polygons),22.137436,
+2023-07-26 16:01:34.108649,pygeoops,0.2.0a2,simplify_rdp,simplify_rdp on agri parcel layer BEFL (~50000 polygons),7.312318,
+2023-07-26 16:01:36.952312,pygeoops,0.2.0a2,simplify_rdp_geopandas,simplify_rdp_geopandas on agri parcel layer BEFL (~50000 polygons),2.26547,
+2023-07-26 16:01:46.749073,pygeoops,0.2.0a2,simplify_rdp_keep_points_on,simplify_rdp_keep_points_on on agri parcel layer BEFL (~50000 polygons),9.23427,

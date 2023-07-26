@@ -7,6 +7,7 @@ def main():
         modules_to_run=["benchmarks_pygeoops"],
         functions_to_run=[
             "simplify_lang",
+            "simplify_lang_plus",
             # "simplify_rdp",
             # "simplify_rdp_keep_points_on",
         ],

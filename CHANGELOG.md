@@ -5,18 +5,26 @@
 ### Improvements
 
 - Copy/move geometry utility functions from geofileops to pygeoops (#20)
-  - extended `simplify` function (support for different algorithmns, exclude points from removal)
+  - extended `simplify` function (support for different algorithmns, exclude
+    points/locations from removal by the simplification)
   - grid utility functions: `create_grid`, `split_tiles`
-  - general geometry utility functions: `collect`, `collection_extract`, `explode`, `remove_inner_rings`
-- Copy/move topologic simplify (preserve common boundaries) from geofilops to pygeoops (#24)
-- Add support for `GeoSeries` as input and output for functions where this is appropriate (#26)
-- Return results in pygeoops as `NDArray[BaseGeometry]` instead of list[BaseGeometry]` like shapely2 does (#25)
+  - general geometry utility functions: `collect`, `collection_extract`, `explode`,
+    `remove_inner_rings`
+- Copy/move topologic simplify (preserve common boundaries) from geofilops to pygeoops
+  (#24)
+- Add alternative to LANG algorithm ("lang2") that avoids the (large) minimum retained
+  points in output (#30)
+- Add support for `GeoSeries` as input and output for functions where this is
+  appropriate (#26)
+- Return results in pygeoops as `NDArray[BaseGeometry]` instead of list[BaseGeometry]`
+  like shapely2 does (#25)
 - Use ruff as linter instead of flake8 (#22) 
 
 ### Deprecations and compatibility notes
 
-- results are now returned as `NDArray[BaseGeometry]` instead of `list[BaseGeometry]` like shapely2 does (#25)
-- for the the `create_grid` functions (#28):
+- Results are now returned as `NDArray[BaseGeometry]` instead of `list[BaseGeometry]`
+  like shapely2 does (#25)
+- Changes in the `create_grid` functions, compared to the geofileops version (#28):
     - they now return `NDArray[BaseGeometry]` instead of `GeoDataFrame`
     - the `crs` parameter has been removed
 
