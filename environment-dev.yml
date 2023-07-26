@@ -8,12 +8,15 @@ dependencies:
   - geopandas-base
   - shapely >1
   - topojson
+  # benchmark
+  - geofileops
   # testing
   - matplotlib
   - pytest
   - pytest-cov
   # linting
   - black
+  - mypy
   - pre-commit
   - ruff
   # docs
