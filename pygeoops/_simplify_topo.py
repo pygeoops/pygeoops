@@ -134,18 +134,10 @@ def simplify_topo(
         primitive_types_orig = None
 
     if primitive_types_orig is not None and len(primitive_types_orig) == 1:
-        # If output contains different types, extract only the desired type.
-        geometry_types_simpl = topo_simpl_gdf.geometry.geom_type.unique()
-        primitive_types_simpl = list(
-            {GeometryType(type).to_primitivetype.name for type in geometry_types_simpl}
+        # Extract only the desired type from simplified output
+        topo_simpl_gdf.geometry = pygeoops.collection_extract(
+            topo_simpl_gdf.geometry, PrimitiveType(primitive_types_orig[0])
         )
-        if (
-            len(primitive_types_simpl) > 1
-            or primitive_types_orig[0] != primitive_types_simpl[0]
-        ):
-            topo_simpl_gdf.geometry = pygeoops.collection_extract(
-                topo_simpl_gdf.geometry.array, PrimitiveType(primitive_types_orig[0])
-            )
 
     # Return result in the appropriate type
     # -------------------------------------
