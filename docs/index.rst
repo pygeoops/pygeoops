@@ -6,10 +6,22 @@
 PyGeoOps |version|
 ====================
 
-This library offers some extra algorithms to use on shapely geometries that are not
-available yet in shapely.
+PyGeoOps provides some less common or extended spatial algorithms and utility functions.
 
-Examples are extra simplification algorithms, calculation of centerlines,...
+Examples are:
+  - :meth:`~simplify` with some advanced extra options:
+    - choice in simplification algorithms: Lang (+ a variant), Ramer Douglas Peuker, 
+      Visvalingal Whyatt
+    - specify points/locations where points should not be removed by the simplification
+    - topologic simplification: common boundaries between input features should stay
+      common
+  - :meth:`~centerline` (medialaxis) calculation of polygons
+  - :meth:`~view_angles` calculation: the angles a polygon is visible from a certain
+    view point
+  - utility functions to create and split grids (:meth:`~create_grid`,
+    :meth:`~split_tiles`)
+  - general utility functions on geometries like :meth:`~remove_inner_rings`,
+    :meth:`~explode`,...
 
 
 .. toctree::
