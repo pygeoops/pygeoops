@@ -10,7 +10,7 @@ A full list of functionalities can be found in the
 
 As a quick start, here are some examples on how PyGeoOps can be used.
 
-Determine a centerline for a list of shapely polygons
+Determine a :meth:`~centerline` for a list of shapely polygons
 -----------------------------------------------------
 
 .. code-block:: python
@@ -25,7 +25,7 @@ Determine a centerline for a list of shapely polygons
 |centerline_L_shape|
 
 
-Determine view angles for a viewpoint towards a geopandas GeoDataFrame
+Determine :meth:`~view_angles` for a viewpoint towards a geopandas GeoDataFrame
 ----------------------------------------------------------------------
 
 .. code-block:: python

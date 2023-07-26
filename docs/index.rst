@@ -10,8 +10,7 @@ PyGeoOps provides some less common or extended spatial algorithms and utility fu
 
 Examples are:
   - :meth:`~simplify` with some advanced extra options:
-    - choice in simplification algorithms: Lang (+ a variant), Ramer Douglas Peuker, 
-      Visvalingal Whyatt
+    - choice in simplification algorithms: Lang (+ a variant), Ramer Douglas Peuker, Visvalingal Whyatt
     - specify points/locations where points should not be removed by the simplification
     - topologic simplification: common boundaries between input features should stay
       common
