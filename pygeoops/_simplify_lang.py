@@ -112,7 +112,7 @@ def simplify_coords_lang_idx(
     else:
         window_size = min(lookahead, nb_points - 1)
 
-    mask = np.ones(nb_points, dtype="bool")
+    mask_idx_to_keep = np.ones(nb_points, dtype="bool")
     window_start = 0
     window_end = window_size
 
@@ -140,12 +140,12 @@ def simplify_coords_lang_idx(
             # Move window_end to previous point, and try again
             window_end -= 1
         else:
-            # No point outside tolerance found... so mask points in window and move on.
-
+            # No point outside tolerance found, so mask points in window and move
+            # window_start.
             if not simplify_lookahead_points:
                 # In the standard lang implementation the next window always starts with
                 # the end point of the previous window.
-                mask[window_start + 1 : window_end] = False
+                mask_idx_to_keep[window_start + 1 : window_end] = False
                 window_start = window_end
             else:
                 # To be able to also mask the "lookahead points", this code path doesn't
@@ -167,12 +167,12 @@ def simplify_coords_lang_idx(
                 #     already masked, but this also increases the effective tolerance
 
                 # Check if there are points in tolerance in the window
-                if not mask[window_start + 1 : window_end].any():
+                if not mask_idx_to_keep[window_start + 1 : window_end].any():
                     # No points within tolerance found, so move window forward
                     window_start = window_end
                 else:
                     # There are points found, so mask them, but don't move window_start
-                    mask[window_start + 1 : window_end] = False
+                    mask_idx_to_keep[window_start + 1 : window_end] = False
 
             if window_start >= nb_points - 1 or window_end >= nb_points - 1:
                 break
@@ -181,7 +181,7 @@ def simplify_coords_lang_idx(
                 window_end = nb_points - 1
 
     # Prepare result: convert the mask to a list of indices of points to keep.
-    idx_to_keep_arr = mask.nonzero()[0]
+    idx_to_keep_arr = mask_idx_to_keep.nonzero()[0]
 
     # If input was np.ndarray, return np.ndarray, otherwise list
     if isinstance(coords, (np.ndarray, shapely.coords.CoordinateSequence)):
