@@ -5,6 +5,7 @@ Module containing utilities regarding operations on geoseries.
 
 import logging
 from typing import Optional, Union
+import warnings
 
 from geopandas import GeoSeries
 import numpy as np
@@ -74,7 +75,12 @@ def simplify_topo(
     if not isinstance(geometry, (GeoSeries, list)):
         geometries = geometry.tolist()
 
-    topo = topojson.Topology(data=geometries, prequantize=False)
+    with warnings.catch_warnings():
+        message = "invalid value encountered in cast.*"
+        warnings.filterwarnings(
+            action="ignore", category=RuntimeWarning, message=message
+        )
+        topo = topojson.Topology(data=geometries, prequantize=False)
 
     # Simplify all arcs/vectors/boundaries of the topologies
     # ------------------------------------------------------
