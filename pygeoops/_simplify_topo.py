@@ -52,6 +52,7 @@ def simplify_topo(
     """
     if geometry is None:
         return None
+    algorithm = algorithm.lower()
 
     # If input isn't arraylike or if the arraylike only has one element, just apply
     # simplify as creating a topology first is useless.

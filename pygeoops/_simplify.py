@@ -47,9 +47,11 @@ def simplify(
             * "lang": distance to use as tolerance
             * "vw": area to use as tolerance
         algorithm (str, optional): algorithm to use. Defaults to "rdp".
-            * "rdp": Ramer Douglas Peuker
-            * "lang": Lang
-            * "vw": Visvalingal Whyatt
+            * "rdp": Ramer Douglas Peuker algorithm
+            * "lang": Lang algorithm
+            * "lang+": Lang-based algorithm, but without limit of having at least
+              nb_input_coordinates/lookahead points in the simplified output.
+            * "vw": Visvalingal Whyatt algorithm
         lookahead (int, optional): the number of points to consider for removing
             in a moving window. Used for LANG algorithm. Defaults to 8.
         preserve_topology (bool, optional): True to (try to) return valid
@@ -69,6 +71,7 @@ def simplify(
     """
     if geometry is None:
         return None
+    algorithm = algorithm.lower()
 
     # If common boundaries need to be preserved, use topologic implementation
     if preserve_common_boundaries:
@@ -125,6 +128,10 @@ def _simplify(
     # Init:
     if geometry is None:
         return None
+
+    # Check algorythm
+    algorithm = algorithm.lower()
+    simplify_lookahead_points = False
     if algorithm in ["rdp", "vw"]:
         if not HAS_SIMPLIFICATION:
             raise ImportError(
@@ -133,127 +140,39 @@ def _simplify(
             )
     elif algorithm == "lang":
         pass
+    elif "lang+":
+        simplify_lookahead_points = True
     else:
-        raise ValueError(f"Unsupported algorythm specified: {algorithm}")
-
-    # Define some inline funtions
-    # Apply the simplification (can result in multipolygons)
-    def simplify_polygon(
-        polygon: shapely.Polygon, keep_points_on: Optional[BaseGeometry]
-    ) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
-        # First simplify exterior ring
-        assert polygon.exterior is not None
-        exterior_simplified = simplify_coords(polygon.exterior.coords, keep_points_on)
-
-        # If topology needs to be preserved, keep original ring if simplify results in
-        # None or not enough points
-        if preserve_topology is True and (
-            exterior_simplified is None or len(exterior_simplified) < 3
-        ):
-            exterior_simplified = polygon.exterior.coords
-
-        # Now simplify interior rings
-        interiors_simplified = []
-        for interior in polygon.interiors:
-            interior_simplified = simplify_coords(interior.coords, keep_points_on)
-
-            # If simplified version is ring, add it
-            if interior_simplified is not None and len(interior_simplified) >= 3:
-                interiors_simplified.append(interior_simplified)
-            elif preserve_topology is True:
-                # If result is no ring, but topology needs to be preserved,
-                # add original ring
-                interiors_simplified.append(interior.coords)
-
-        result_poly = shapely.Polygon(exterior_simplified, interiors_simplified)
-
-        # Extract only polygons as result + try to make valid
-        result_poly = general.collection_extract(
-            shapely.make_valid(result_poly), primitivetype=PrimitiveType.POLYGON
-        )
-
-        # If the result is None and the topology needs to be preserved, return
-        # original polygon
-        if preserve_topology is True and result_poly is None:
-            return polygon
-
-        return result_poly
-
-    def simplify_linestring(
-        linestring: shapely.LineString, keep_points_on: Optional[BaseGeometry]
-    ) -> shapely.LineString:
-        # If the linestring cannot be simplified, return it
-        if linestring is None or len(linestring.coords) <= 2:
-            return linestring
-
-        # Simplify
-        coords_simplified = simplify_coords(linestring.coords, keep_points_on)
-
-        # If preserve_topology is True and the result is no line anymore, return
-        # original line
-        if preserve_topology is True and (
-            coords_simplified is None or len(coords_simplified) < 2
-        ):
-            return linestring
-        else:
-            return shapely.LineString(coords_simplified)
-
-    def simplify_coords(
-        coords: Union[np.ndarray, shapely.coords.CoordinateSequence],
-        keep_points_on: Optional[BaseGeometry],
-    ) -> np.ndarray:
-        if isinstance(coords, shapely.coords.CoordinateSequence):
-            coords = np.asarray(coords)
-        # Determine the indexes of the coordinates to keep after simplification
-        if algorithm == "rdp":
-            coords_simplify_idx = simplification.simplify_coords_idx(coords, tolerance)
-        elif algorithm == "vw":
-            coords_simplify_idx = simplification.simplify_coords_vw_idx(
-                coords, tolerance
-            )
-        elif algorithm == "lang":
-            coords_simplify_idx = simplify_lang.simplify_coords_lang_idx(
-                coords, tolerance, lookahead=lookahead
-            )
-        else:
-            raise ValueError(f"Unsupported algorithm: {algorithm}")
-
-        coords_on_border_idx = []
-        if keep_points_on is not None:
-            # Check if there are coordinates that would be removed that should be kept
-            shapely.prepare(keep_points_on)
-            coords_to_drop_mask = np.ones(len(coords), dtype=int)
-            coords_to_drop_mask[coords_simplify_idx] = 0
-            coords_to_drop_idx = coords_to_drop_mask.nonzero()[0]
-
-            coords_points = shapely.points(coords[coords_to_drop_idx])
-            coords_to_drop_on_border = keep_points_on.intersects(coords_points)
-            coords_on_border_idx = coords_to_drop_idx[coords_to_drop_on_border]
-
-        # Extracts coordinates that need to be kept
-        coords_to_keep = coords_simplify_idx
-        if len(coords_on_border_idx) > 0:
-            coords_to_keep = np.concatenate(
-                [coords_to_keep, coords_on_border_idx], dtype=np.int64
-            )
-            coords_to_keep = np.sort(coords_to_keep)
-
-        return coords[coords_to_keep]
+        raise ValueError(f"Unsupported algorithm specified: {algorithm}")
 
     # Loop over the rings, and simplify them one by one...
     # If the geometry is None, just return...
-    if geometry is None:
-        raise ValueError("geom input parameter should not be None")
-    elif isinstance(geometry, shapely.Point):
+    if isinstance(geometry, shapely.Point):
         # Point cannot be simplified
         return geometry
     elif isinstance(geometry, shapely.MultiPoint):
         # MultiPoint cannot be simplified
         return geometry
     elif isinstance(geometry, shapely.LineString):
-        result_geom = simplify_linestring(geometry, keep_points_on)
+        result_geom = simplify_linestring(
+            linestring=geometry,
+            tolerance=tolerance,
+            algorithm=algorithm,
+            lookahead=lookahead,
+            simplify_lookahead_points=simplify_lookahead_points,
+            preserve_topology=preserve_topology,
+            keep_points_on=keep_points_on,
+        )
     elif isinstance(geometry, shapely.Polygon):
-        result_geom = simplify_polygon(geometry, keep_points_on)
+        result_geom = simplify_polygon(
+            polygon=geometry,
+            tolerance=tolerance,
+            algorithm=algorithm,
+            lookahead=lookahead,
+            simplify_lookahead_points=simplify_lookahead_points,
+            preserve_topology=preserve_topology,
+            keep_points_on=keep_points_on,
+        )
     elif isinstance(geometry, BaseMultipartGeometry):
         # If it is a multi-part, recursively call simplify for all parts.
         simplified_geometries = [
@@ -272,3 +191,147 @@ def _simplify(
         raise ValueError(f"Unsupported geometrytype: {geometry}")
 
     return shapely.make_valid(result_geom)
+
+
+# Apply the simplification (can result in multipolygons)
+def simplify_polygon(
+    polygon: shapely.Polygon,
+    tolerance: float,
+    algorithm: str,
+    lookahead: int,
+    simplify_lookahead_points: bool,
+    preserve_topology: bool,
+    keep_points_on: Optional[BaseGeometry],
+) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
+    # First simplify exterior ring
+    assert polygon.exterior is not None
+    exterior_simplified = simplify_coords(
+        polygon.exterior.coords,
+        tolerance=tolerance,
+        algorithm=algorithm,
+        lookahead=lookahead,
+        simplify_lookahead_points=simplify_lookahead_points,
+        keep_points_on=keep_points_on,
+    )
+
+    # If topology needs to be preserved, keep original ring if simplify results in
+    # None or not enough points
+    if preserve_topology is True and (
+        exterior_simplified is None or len(exterior_simplified) < 3
+    ):
+        exterior_simplified = polygon.exterior.coords
+
+    # Now simplify interior rings
+    interiors_simplified = []
+    for interior in polygon.interiors:
+        interior_simplified = simplify_coords(
+            coords=interior.coords,
+            tolerance=tolerance,
+            algorithm=algorithm,
+            lookahead=lookahead,
+            simplify_lookahead_points=simplify_lookahead_points,
+            keep_points_on=keep_points_on,
+        )
+
+        # If simplified version is ring, add it
+        if interior_simplified is not None and len(interior_simplified) >= 3:
+            interiors_simplified.append(interior_simplified)
+        elif preserve_topology is True:
+            # If result is no ring, but topology needs to be preserved,
+            # add original ring
+            interiors_simplified.append(interior.coords)
+
+    result_poly = shapely.Polygon(exterior_simplified, interiors_simplified)
+
+    # Extract only polygons as result + try to make valid
+    result_poly = general.collection_extract(
+        shapely.make_valid(result_poly), primitivetype=PrimitiveType.POLYGON
+    )
+
+    # If the result is None and the topology needs to be preserved, return
+    # original polygon
+    if preserve_topology and result_poly is None:
+        return polygon
+
+    return result_poly
+
+
+def simplify_linestring(
+    linestring: shapely.LineString,
+    tolerance: float,
+    algorithm: str,
+    lookahead: int,
+    simplify_lookahead_points: bool,
+    preserve_topology: bool,
+    keep_points_on: Optional[BaseGeometry],
+) -> shapely.LineString:
+    # If the linestring cannot be simplified, return it
+    if linestring is None or len(linestring.coords) <= 2:
+        return linestring
+
+    # Simplify
+    coords_simplified = simplify_coords(
+        coords=linestring.coords,
+        tolerance=tolerance,
+        algorithm=algorithm,
+        lookahead=lookahead,
+        simplify_lookahead_points=simplify_lookahead_points,
+        keep_points_on=keep_points_on,
+    )
+
+    # If preserve_topology is True and the result is no line anymore, return
+    # original line
+    if preserve_topology is True and (
+        coords_simplified is None or len(coords_simplified) < 2
+    ):
+        return linestring
+    else:
+        return shapely.LineString(coords_simplified)
+
+
+def simplify_coords(
+    coords: Union[np.ndarray, shapely.coords.CoordinateSequence],
+    tolerance: float,
+    algorithm: str,
+    lookahead: int,
+    simplify_lookahead_points: bool,
+    keep_points_on: Optional[BaseGeometry],
+) -> np.ndarray:
+    if isinstance(coords, shapely.coords.CoordinateSequence):
+        coords = np.asarray(coords)
+    # Determine the indexes of the coordinates to keep after simplification
+    if algorithm == "rdp":
+        coords_simplify_idx = simplification.simplify_coords_idx(coords, tolerance)
+    elif algorithm == "vw":
+        coords_simplify_idx = simplification.simplify_coords_vw_idx(coords, tolerance)
+    elif algorithm in ["lang", "lang+"]:
+        coords_simplify_idx = simplify_lang.simplify_coords_lang_idx(
+            coords=coords,
+            tolerance=tolerance,
+            lookahead=lookahead,
+            simplify_lookahead_points=simplify_lookahead_points,
+        )
+    else:
+        raise ValueError(f"Unsupported algorithm specified: {algorithm}")
+
+    coords_on_border_idx = []
+    if keep_points_on is not None:
+        # Check if there are coordinates that would be removed that should be kept
+        shapely.prepare(keep_points_on)
+        coords_to_drop_mask = np.ones(len(coords), dtype=int)
+        coords_to_drop_mask[coords_simplify_idx] = 0
+        coords_to_drop_idx = coords_to_drop_mask.nonzero()[0]
+
+        coords_points = shapely.points(coords[coords_to_drop_idx])
+        coords_to_drop_on_border = keep_points_on.intersects(coords_points)
+        coords_on_border_idx = coords_to_drop_idx[coords_to_drop_on_border]
+
+    # Extracts coordinates that need to be kept
+    coords_to_keep = coords_simplify_idx
+    if len(coords_on_border_idx) > 0:
+        coords_to_keep = np.concatenate(
+            [coords_to_keep, coords_on_border_idx], dtype=np.int64
+        )
+        coords_to_keep = np.sort(coords_to_keep)
+
+    return coords[coords_to_keep]

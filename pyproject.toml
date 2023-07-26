@@ -30,10 +30,6 @@ keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
 [tool.black]
 line-length = 88
 
-[tool.pyright]
-reportGeneralTypeIssues = false
-reportOptionalMemberAccess = false
-
 [tool.pytest.ini_options]
 pythonpath = "."
 testpaths = [

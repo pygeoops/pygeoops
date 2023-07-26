@@ -253,11 +253,11 @@ def test_simplify_invalid_geometry():
 
 
 def test_simplify_invalid_params():
-    with pytest.raises(ValueError, match="Unsupported algorythm specified: invalid!"):
+    with pytest.raises(ValueError, match="Unsupported algorithm specified: invalid"):
         pygeoops.simplify(
             geometry=shapely.LineString([(0, 0), (10, 10), (20, 20)]),
             tolerance=1,
-            algorithm="invalid!",
+            algorithm="invalid_algorithm",
         )
 
     expected_error = (

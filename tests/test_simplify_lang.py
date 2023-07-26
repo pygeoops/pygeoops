@@ -10,7 +10,7 @@ import shapely
 from pygeoops import _simplify_lang as simplify_lang
 
 
-def test_simplify_coords_lang_tweak_avoid_large_minimum_result():
+def test_simplify_coords_lang_simplify_lookahead_points():
     """
     In the standard lang algorithm the window_end is never masked, so with e.g.
     lookahead=3 the simplified version still has minimally ~33% of the input points.
@@ -27,7 +27,10 @@ def test_simplify_coords_lang_tweak_avoid_large_minimum_result():
 
     # Run test
     coords_simplified = simplify_lang.simplify_coords_lang(
-        coords=linestring.coords, tolerance=1, lookahead=lookahead
+        coords=linestring.coords,
+        tolerance=1,
+        lookahead=lookahead,
+        simplify_lookahead_points=True,
     )
 
     # Check result
