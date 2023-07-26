@@ -318,8 +318,8 @@ def simplify_coords(
     if keep_points_on is not None:
         # Check if there are coordinates that would be removed that should be kept
         shapely.prepare(keep_points_on)
-        coords_to_drop_mask = np.ones(len(coords), dtype=int)
-        coords_to_drop_mask[coords_simplify_idx] = 0
+        coords_to_drop_mask = np.ones(len(coords), dtype=bool)
+        coords_to_drop_mask[coords_simplify_idx] = False
         coords_to_drop_idx = coords_to_drop_mask.nonzero()[0]
 
         coords_points = shapely.points(coords[coords_to_drop_idx])
