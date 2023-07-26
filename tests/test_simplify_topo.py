@@ -168,3 +168,43 @@ def test_simplify_topo_result_mixed(tmp_path):
             )
         elif idx == 1:
             assert geom_result is None
+
+
+def test_simplify_topo_result_GeometryCollection(tmp_path):
+    """
+    Test with Polygons as input where an island in a polygon collapses to a lines
+    because of the simplification, resulting in a GeometryCollection.
+    In this case the line is removed from the GeometryCollection so the output only
+    contains Polygons.
+    This tests a specific case because GeometryCollection doesn't have a primitive type.
+    """
+    # Prepare test data
+    # Polygon with a narrow triangle as a hole
+    poly_narrow_hole = shapely.Polygon(
+        shell=[(10, 10), (0, 10), (0, 0), (10, 0), (10, 10)],
+        holes=[[(5, 5), (1, 5), (1, 4), (5, 5)]],
+    )
+    # Standard polygon
+    poly = shapely.Polygon([(30, 10), (20, 10), (20, 0), (30, 0), (30, 10)])
+    input = [poly_narrow_hole, poly]
+    output_path = tmp_path / f"{__name__}_input.png"
+    test_helper.plot([poly_narrow_hole, poly], output_path)
+
+    # Test
+    result = simplify_topo.simplify_topo(input, tolerance=1, algorithm="lang")
+
+    output_path = tmp_path / f"{__name__}_result.png"
+    test_helper.plot(result, output_path)
+
+    # Check result
+    assert result is not None
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(input)
+    for idx, geom_result in enumerate(result):
+        if idx == 0:
+            assert (
+                geom_result.normalize()
+                == shapely.Polygon(poly_narrow_hole.exterior).normalize()
+            )
+        elif idx == 1:
+            assert geom_result.normalize() == poly.normalize()
