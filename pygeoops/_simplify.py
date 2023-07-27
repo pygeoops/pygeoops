@@ -211,10 +211,14 @@ def simplify_polygon(
         keep_points_on=keep_points_on,
     )
 
-    # If topology needs to be preserved, keep original ring if simplify results is
-    # None or not enough points
-    if preserve_topology and (exterior_simpl is None or len(exterior_simpl) < 3):
-        exterior_simpl = polygon.exterior.coords
+    # If simplify result is None or not enough points
+    if exterior_simpl is None or len(exterior_simpl) < 3:
+        if preserve_topology:
+            # If topology needs to be preserved, keep original ring
+            exterior_simpl = polygon.exterior.coords
+        else:
+            # No use to continue... result is None polygon
+            return None
 
     # Now simplify interior rings
     interiors_simpl = []
@@ -274,12 +278,15 @@ def simplify_linestring(
         keep_points_on=keep_points_on,
     )
 
-    # If preserve_topology is True and the result is no line anymore, return
-    # original line
-    if preserve_topology and (coords_simpl is None or len(coords_simpl) < 2):
-        return linestring
-    else:
-        return shapely.LineString(coords_simpl)
+    # If the result is no line anymore
+    if coords_simpl is None or len(coords_simpl) < 2:
+        if preserve_topology:
+            # If preserve_topology is True, return original line
+            return linestring
+        else:
+            return None
+
+    return shapely.LineString(coords_simpl)
 
 
 def simplify_coords(
@@ -296,6 +303,8 @@ def simplify_coords(
     if algorithm == "rdp":
         coords_simplify_idx = simplification.simplify_coords_idx(coords, tolerance)
     elif algorithm == "vw":
+        # The simplification library also has a topology preserving variant of vw, but
+        # it doesn't support returning indexes, so is not used.
         coords_simplify_idx = simplification.simplify_coords_vw_idx(coords, tolerance)
     elif algorithm in ["lang", "lang+"]:
         coords_simplify_idx = simplify_lang.simplify_coords_lang_idx(

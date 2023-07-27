@@ -8,7 +8,7 @@ from pygeoops import _simplify_topo as simplify_topo
 import test_helper
 
 
-@pytest.mark.parametrize("algorithm", ["rdp", "lang"])
+@pytest.mark.parametrize("algorithm", ["rdp", "lang", "lang+"])
 def test_simplify_topo(algorithm):
     # Skip test if algorithm != "lang" and simplification is not available
     if algorithm != "lang":

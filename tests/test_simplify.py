@@ -273,7 +273,9 @@ def test_simplify_invalid_params():
         )
 
 
-@pytest.mark.parametrize("algorithm, tolerance", [("lang", 2), ("rdp", 2), ("vw", 15)])
+@pytest.mark.parametrize(
+    "algorithm, tolerance", [("lang", 2), ("lang+", 2), ("rdp", 2), ("vw", 15)]
+)
 def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
     # Skip test if simplification is not available
     if algorithm != "lang":
@@ -322,19 +324,22 @@ def test_simplify_None():
     assert result == [None]
 
 
-def test_simplify_preservetopology_lang():
+@pytest.mark.parametrize(
+    "algorithm, tolerance", [("lang", 10), ("lang+", 10), ("vw", 50)]
+)
+def test_simplify_preservetopology(algorithm, tolerance):
     # Test Polygon lookahead -1
     poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[[(2, 2), (2, 8), (8, 8), (8, 2), (2, 2)]],
     )
+
     # If preserve_topology True, the original polygon is returned
     geom_simplified = pygeoops.simplify(
         geometry=poly,
-        algorithm="lang",
-        tolerance=10,
+        algorithm=algorithm,
+        tolerance=tolerance,
         preserve_topology=True,
-        lookahead=-1,
     )
     assert isinstance(geom_simplified, shapely.Polygon)
     assert poly.equals(geom_simplified) is True
@@ -342,9 +347,8 @@ def test_simplify_preservetopology_lang():
     # If preserve_topology False, the polygon becomes None
     geom_simplified = pygeoops.simplify(
         geometry=poly,
-        algorithm="lang",
-        tolerance=10,
+        algorithm=algorithm,
+        tolerance=tolerance,
         preserve_topology=False,
-        lookahead=-1,
     )
     assert geom_simplified is None
