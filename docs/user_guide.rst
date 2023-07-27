@@ -10,8 +10,8 @@ A full list of functionalities can be found in the
 
 As a quick start, here are some examples on how PyGeoOps can be used.
 
-Determine the :meth:`~centerline` for some polygons
----------------------------------------------------
+Determine the :meth:`~centerline` for polygons
+----------------------------------------------
 
 .. code-block:: python
 
@@ -25,8 +25,8 @@ Determine the :meth:`~centerline` for some polygons
 |centerline_L_shape|
 
 
-Determine :meth:`~view_angles` for a viewpoint towards some polygons
---------------------------------------------------------------------
+Determine :meth:`~view_angles` from a viewpoint towards polygons
+----------------------------------------------------------------
 
 .. code-block:: python
     
