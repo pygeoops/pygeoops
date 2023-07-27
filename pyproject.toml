@@ -20,6 +20,7 @@ dependencies = [
     "geopandas",
     "shapely>1",
     "topojson",
+    "simplification",
 ]
 keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
 

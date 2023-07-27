@@ -14,4 +14,4 @@ dependencies:
   - pydata-sphinx-theme
   - pip:
     - sphinx-automodapi ==0.13
-    - simplification
+    - simplification  # optional dependency
