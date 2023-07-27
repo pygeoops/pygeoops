@@ -13,4 +13,4 @@ dependencies:
   - pytest
   - pytest-cov
   - pip:
-    - simplification
+    - simplification  # optional dependency
