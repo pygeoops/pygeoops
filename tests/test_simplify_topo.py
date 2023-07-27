@@ -10,8 +10,8 @@ import test_helper
 
 @pytest.mark.parametrize("algorithm", ["rdp", "lang", "lang+"])
 def test_simplify_topo(algorithm):
-    # Skip test if algorithm != "lang" and simplification is not available
-    if algorithm != "lang":
+    # Skip test for algorithms that needs simplification lib when it is not available
+    if algorithm in ["rdp", "vw"]:
         _ = pytest.importorskip("simplification")
 
     # Prepare test data

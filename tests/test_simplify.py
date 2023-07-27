@@ -277,8 +277,8 @@ def test_simplify_invalid_params():
     "algorithm, tolerance", [("lang", 2), ("lang+", 2), ("rdp", 2), ("vw", 15)]
 )
 def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
-    # Skip test if simplification is not available
-    if algorithm != "lang":
+    # Skip test for algorithms that needs simplification lib when it is not available
+    if algorithm in ["rdp", "vw"]:
         _ = pytest.importorskip("simplification")
 
     # Prepare test data
@@ -328,6 +328,10 @@ def test_simplify_None():
     "algorithm, tolerance", [("lang", 10), ("lang+", 10), ("vw", 50)]
 )
 def test_simplify_preservetopology(algorithm, tolerance):
+    # Skip test for algorithms that needs simplification lib when it is not available
+    if algorithm in ["rdp", "vw"]:
+        _ = pytest.importorskip("simplification")
+
     # Test Polygon lookahead -1
     poly = shapely.Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
