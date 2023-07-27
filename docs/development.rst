@@ -10,7 +10,7 @@ be as well.
 Create development environment
 ------------------------------
 
-The first step would be Now, if you fork the |pygeoops git repository|, you should be able to run/debug the code.
+The first step would be to fork the |pygeoops git repository|.
 
 If you don't have the conda package manager installed yet, here is a link to the 
 `miniforge installer`_
@@ -22,6 +22,8 @@ dependencies::
     conda env create -f environment-dev.yml
     conda activate pygeoops-dev
 
+
+Now you should be able to run the code.
 
 .. _miniforge installer : https://github.com/conda-forge/miniforge#miniforge3
 
