@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pygeoops"
-version = "0.2.0"
+version = "0.2.0.post0"
 authors = [
   { name="Pieter Roggemans", email="pieter.roggemans@gmail.com" },
 ]
@@ -20,9 +20,12 @@ dependencies = [
     "geopandas",
     "shapely>1",
     "topojson",
-    "simplification",
 ]
 keywords = ["GIS", "cartography", "pandas", "shapely", "geopandas"]
+
+[project.optional-dependencies]
+# development dependency groups
+full = ["simplification"]
 
 [project.urls]
 "Homepage" = "https://github.com/pygeoops/pygeoops"
