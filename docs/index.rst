@@ -11,6 +11,7 @@ PyGeoOps |version|
 PyGeoOps provides some less common or extended spatial algorithms and utility functions.
 
 Examples are:
+
 * :meth:`~simplify` with some advanced extra options:
 
   * choice in simplification algorithms: Lang (+ a variant), Ramer Douglas Peuker, Visvalingal Whyatt
