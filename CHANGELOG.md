@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 0.3.0 (???)
+
+### Improvements
+
+- Add functions `difference_all`, `difference_all_tiled` and `empty` (#42)
+
+### Bug fixes
+
+### Deprecations and compatibility notes
+
 ## 0.2.0 (2023-07-27)
 
 ### Improvements
