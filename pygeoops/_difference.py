@@ -17,8 +17,11 @@ def difference_all_tiled(
     keep_geom_type: Union[bool, int] = False,
 ) -> BaseGeometry:
     """
-    Subtracts one or more geometries from another geometry. For complex geometries, the
-    input geometry will be tiled to increase performance.
+    Subtracts all geometries in geometries_to_subtract from the input geometry.
+
+    For complex geometries, the input geometry will be tiled to increase performance.
+    Because of this, the output geometry can contain extra collinear points in its
+    boundary.
 
     Args:
         geometry (geometry): single geometry to substract geometries from.
@@ -120,7 +123,7 @@ def difference_all(
     keep_geom_type: Union[bool, int] = False,
 ) -> BaseGeometry:
     """
-    Subtracts one or more geometries from another geometry.
+    Subtracts all geometries in geometries_to_subtract from the input geometry.
 
     Args:
         geometry (geometry): single geometry to subtract geometries from.
