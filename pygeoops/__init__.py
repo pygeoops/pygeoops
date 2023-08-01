@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pygeoops._difference import *  # noqa: F403
 from pygeoops._centerline import *  # noqa: F403
 from pygeoops._general import *  # noqa: F403
 from pygeoops._grid import *  # noqa: F403

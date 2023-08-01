@@ -62,18 +62,21 @@ def test_collect():
 
 
 def test_collection_extract():
+    """
+    Base tests
+    """
     # Test None input
     # ---------------
-    assert pygeoops.collection_extract(None, PrimitiveType.POINT) is None
-    assert pygeoops.collection_extract([None], PrimitiveType.POINT) == [None]
+    assert pygeoops.collection_extract(None, 0) is None
+    assert pygeoops.collection_extract([None], 0) == [None]
 
     # Test dealing with points
     # ------------------------
     point = shapely.Point((0, 0))
     multipoint = shapely.MultiPoint([point, point])
-    assert pygeoops.collection_extract(point, PrimitiveType.POINT) == point
-    assert pygeoops.collection_extract(multipoint, PrimitiveType.POINT) == multipoint
-    assert pygeoops.collection_extract(multipoint, PrimitiveType.POLYGON) is None
+    assert pygeoops.collection_extract(point, 0) == point
+    assert pygeoops.collection_extract(multipoint, 0) == multipoint
+    assert pygeoops.collection_extract(multipoint, 2) is None
 
     # Test dealing with mixed geometries
     # ----------------------------------
@@ -81,11 +84,80 @@ def test_collection_extract():
     poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
     multipoly = shapely.MultiPolygon([poly, poly])
     geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    assert pygeoops.collection_extract(geometrycoll, 0) == point
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.POINT) == point
+    assert pygeoops.collection_extract(geometrycoll, 1) == line
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.LINESTRING) == line
+    assert pygeoops.collection_extract(geometrycoll, 2) == shapely.GeometryCollection(
+        [poly, multipoly]
+    )
     assert pygeoops.collection_extract(
         geometrycoll, PrimitiveType.POLYGON
     ) == shapely.GeometryCollection([poly, multipoly])
+    assert pygeoops.collection_extract(geometrycoll, -1) == geometrycoll
+
+    # Test dealing with deeper nested geometries
+    # ------------------------------------------
+    assert pygeoops.collection_extract(
+        shapely.GeometryCollection(geometrycoll), -1
+    ) == shapely.GeometryCollection(geometrycoll)
+
+
+def test_collection_extract_backwards_compatibility():
+    """
+    Test if it still works with PrimitiveType parameter
+    """
+    # Test None input
+    # ---------------
+    assert pygeoops.collection_extract(None, primitivetype=PrimitiveType.POINT) is None
+    assert pygeoops.collection_extract([None], primitivetype=PrimitiveType.POINT) == [
+        None
+    ]
+
+    # Test dealing with points
+    # ------------------------
+    point = shapely.Point((0, 0))
+    multipoint = shapely.MultiPoint([point, point])
+    assert (
+        pygeoops.collection_extract(point, primitivetype=PrimitiveType.POINT) == point
+    )
+    assert (
+        pygeoops.collection_extract(multipoint, primitivetype=PrimitiveType.POINT)
+        == multipoint
+    )
+    assert (
+        pygeoops.collection_extract(multipoint, primitivetype=PrimitiveType.POLYGON)
+        is None
+    )
+
+    # Test dealing with mixed geometries
+    # ----------------------------------
+    line = shapely.LineString([(0, 0), (0, 1)])
+    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = shapely.MultiPolygon([poly, poly])
+    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    assert (
+        pygeoops.collection_extract(geometrycoll, primitivetype=PrimitiveType.POINT)
+        == point
+    )
+    assert (
+        pygeoops.collection_extract(
+            geometrycoll, primitivetype=PrimitiveType.LINESTRING
+        )
+        == line
+    )
+    assert pygeoops.collection_extract(
+        geometrycoll, primitivetype=PrimitiveType.POLYGON
+    ) == shapely.GeometryCollection([poly, multipoly])
+
+    # Invalid parameters/combinations
+    # -------------------------------
+    with pytest.raises(
+        ValueError, match="primitivetype is deprecated, only specify keep_geom_type"
+    ):
+        pygeoops.collection_extract(
+            geometrycoll, keep_geom_type=1, primitivetype=PrimitiveType.POINT
+        )
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
@@ -112,7 +184,7 @@ def test_collection_extract_geometries(input_type):
         input = np.array(input)
 
     # Run test
-    result = pygeoops.collection_extract(input, primitivetype=PrimitiveType.POINT)
+    result = pygeoops.collection_extract(input, keep_geom_type=0)
 
     # Check result
     assert result is not None
@@ -126,6 +198,28 @@ def test_collection_extract_geometries(input_type):
     assert result[start_idx + 3] is None
     assert result[start_idx + 4] is None
     assert result[start_idx + 5] == point
+
+
+def test_collection_extract_invalid_params():
+    with pytest.raises(ValueError, match="Invalid value for keep_geom_type"):
+        pygeoops.collection_extract(shapely.Point((0, 0)), keep_geom_type=5)
+        pygeoops.collection_extract(shapely.Point((0, 0)), keep_geom_type=-5)
+    with pytest.raises(ValueError, match="keep_geom_type should be specified"):
+        pygeoops.collection_extract(shapely.Point((0, 0)), keep_geom_type=None)
+    with pytest.raises(ValueError, match="Invalid type for keep_geom_type"):
+        pygeoops.collection_extract(shapely.Point((0, 0)), keep_geom_type="invalid")
+
+
+def test_empty():
+    assert pygeoops.empty(None) is None
+    assert pygeoops.empty(-1) == shapely.GeometryCollection()
+    assert pygeoops.empty(0) == shapely.Point()
+    assert pygeoops.empty(1) == shapely.LineString()
+    assert pygeoops.empty(2) == shapely.Polygon()
+
+    with pytest.raises(ValueError, match="Invalid dimension specified"):
+        pygeoops.empty(-2)
+        pygeoops.empty(3)
 
 
 def test_explode():

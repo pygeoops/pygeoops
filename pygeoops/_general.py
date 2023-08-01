@@ -1,4 +1,5 @@
 from typing import Optional, Union
+import warnings
 
 from geopandas import GeoSeries
 import numpy as np
@@ -86,7 +87,9 @@ def collect(
 
 
 def collection_extract(
-    geometry, primitivetype: PrimitiveType
+    geometry,
+    keep_geom_type: Union[int, PrimitiveType, None] = None,
+    primitivetype: Optional[PrimitiveType] = None,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
     """
     Extracts the parts from the input geometry/geometries that comply with the
@@ -94,8 +97,10 @@ def collection_extract(
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
-        primitivetype (GeometryPrimitiveTypes): the primitive type to extract from the
-            input geometry.
+        keep_geom_type (Union[int, PrimitiveType]): the type of geometries to keep in
+            the output. Either a PrimitiveType or and int with one of the following
+            values: -1: all, 0: points, 1: lines, 2: polygons.
+        primitivetype (PrimitiveType): deprecated, use keep_geom_type.
 
     Raises:
         ValueError: if in_geom is an unsupported geometry type or the primitive
@@ -105,17 +110,38 @@ def collection_extract(
         Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
             geometries containing only parts of the primitive type specified.
     """
-    # Extract the polygons from the multipolygon, but store them as multipolygons anyway
+    if primitivetype is not None:
+        warnings.warn(
+            "primitivetype parameter is deprecated, use keep_geom_type. Will be "
+            "removed in a later version.",
+            FutureWarning,
+            stacklevel=2,
+        )
     if geometry is None:
         return None
+    if keep_geom_type is not None and primitivetype is not None:
+        raise ValueError("primitivetype is deprecated, only specify keep_geom_type")
+    if keep_geom_type is None:
+        if primitivetype is not None:
+            keep_geom_type = primitivetype.value - 1
+        else:
+            raise ValueError("keep_geom_type should be specified")
+    elif isinstance(keep_geom_type, PrimitiveType):
+        keep_geom_type = keep_geom_type.value - 1
+    elif isinstance(keep_geom_type, (int, np.integer)):
+        if keep_geom_type not in [-1, 0, 1, 2]:
+            raise ValueError(f"Invalid value for keep_geom_type: {keep_geom_type}")
+    else:
+        raise ValueError(f"Invalid type for keep_geom_type: {type(keep_geom_type)}")
+    assert keep_geom_type is not None
 
     # If input is not arraylike, apply once, otherwise apply to all elements
     if not hasattr(geometry, "__len__"):
-        return _collection_extract(geometry=geometry, primitivetype=primitivetype)
+        return _collection_extract(geometry=geometry, keep_geom_type=keep_geom_type)
     else:
         result = np.array(
             [
-                _collection_extract(geometry=geom, primitivetype=primitivetype)
+                _collection_extract(geometry=geom, keep_geom_type=keep_geom_type)
                 for geom in geometry
             ]
         )
@@ -125,29 +151,65 @@ def collection_extract(
 
 
 def _collection_extract(
-    geometry: Optional[BaseGeometry], primitivetype: PrimitiveType
+    geometry: Optional[BaseGeometry], keep_geom_type: int
 ) -> Optional[BaseGeometry]:
     if geometry is None:
         return None
+    if keep_geom_type == -1:
+        return geometry
 
     if isinstance(geometry, (shapely.MultiPoint, shapely.Point)):
-        if primitivetype == PrimitiveType.POINT:
+        if keep_geom_type == 0:
             return geometry
     elif isinstance(geometry, (shapely.LineString, shapely.MultiLineString)):
-        if primitivetype == PrimitiveType.LINESTRING:
+        if keep_geom_type == 1:
             return geometry
     elif isinstance(geometry, (shapely.MultiPolygon, shapely.Polygon)):
-        if primitivetype == PrimitiveType.POLYGON:
+        if keep_geom_type == 2:
             return geometry
     elif isinstance(geometry, shapely.GeometryCollection):
         returngeoms = [
-            collection_extract(geometry, primitivetype=primitivetype)
+            collection_extract(geometry, keep_geom_type=keep_geom_type)
             for geometry in shapely.GeometryCollection(geometry).geoms
         ]
         if len(returngeoms) > 0:
             return collect(returngeoms)
     else:
         raise ValueError(f"Invalid/unsupported geometry(type): {geometry}")
+
+    return None
+
+
+def empty(dimension: int) -> Optional[BaseGeometry]:
+    """
+    Generate an empty geometry of the type specified.
+
+    Args:
+        dimension (int): Dimension of the empty geometry to return. Possible values:
+            - None: None returned
+            - -1: empty GeometryCollection
+            - 0: empty Point
+            - 1: empty LineString
+            - 2: empty Polygon
+
+    Raises:
+        ValueError: Invalid dimension specified
+
+    Returns:
+        Optional[BaseGeometry]: empty geometry or None.
+    """
+    if dimension is None:
+        return None
+    elif dimension == -1:
+        return shapely.GeometryCollection()
+    elif dimension == 0:
+        return shapely.Point()
+    elif dimension == 1:
+        return shapely.LineString()
+    elif dimension == 2:
+        return shapely.Polygon()
+    else:
+        raise ValueError(f"Invalid dimension specified: {dimension}")
 
 
 def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]:
