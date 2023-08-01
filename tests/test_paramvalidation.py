@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import shapely
 
@@ -15,11 +16,12 @@ def test_keep_geom_type2dimension():
     assert paramvalidation.keep_geom_type2dimension(True, shapely.Polygon()) == 2
     assert paramvalidation.keep_geom_type2dimension(False, shapely.Polygon()) == -1
 
-    # int input
+    # int/inlike input
     assert paramvalidation.keep_geom_type2dimension(-1, shapely.Polygon()) == -1
     assert paramvalidation.keep_geom_type2dimension(0, shapely.Polygon()) == 0
     assert paramvalidation.keep_geom_type2dimension(1, shapely.Polygon()) == 1
     assert paramvalidation.keep_geom_type2dimension(2, shapely.Polygon()) == 2
+    assert paramvalidation.keep_geom_type2dimension(np.int32(2), shapely.Polygon()) == 2
 
     # Test invalid values
     with pytest.raises(ValueError, match="Invalid value for keep_geom_type"):

@@ -1,4 +1,5 @@
 from typing import Union
+import numpy as np
 
 import shapely
 
@@ -29,10 +30,10 @@ def keep_geom_type2dimension(keep_geom_type: Union[bool, int], geometry) -> int:
         else:
             # Keep the dimension of the input
             return shapely.get_dimensions(geometry)
-    elif isinstance(keep_geom_type, int):
+    elif isinstance(keep_geom_type, (int, np.integer)):
         # If it is already an int, just validate the value is valid
         if keep_geom_type not in (-1, 0, 1, 2):
             raise ValueError(f"Invalid value for keep_geom_type: {keep_geom_type}")
         return keep_geom_type
     else:
-        raise ValueError(f"Invalid type for keep_geom_type: {keep_geom_type}")
+        raise ValueError(f"Invalid type for keep_geom_type: {type(keep_geom_type)}")

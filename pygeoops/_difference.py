@@ -201,10 +201,9 @@ def _split_if_needed(
             nb_squarish_tiles=math.ceil(num_coords / num_coords_max),
         )
         geom_split = shapely.intersection(geometry, grid)
-        if shapely.get_dimensions(geometry) == 2:
-            geom_split = pygeoops.collection_extract(
-                geom_split, pygeoops.PrimitiveType.POLYGON
-            )
+        input_dimension = shapely.get_dimensions(geometry)
+        if input_dimension > 0:
+            geom_split = pygeoops.collection_extract(geom_split, input_dimension)
         geom_split = geom_split[~shapely.is_empty(geom_split)]
         return geom_split
 
@@ -253,20 +252,13 @@ def _difference_intersecting(
     shapely.prepare(geometry)
     idx_to_diff = np.nonzero(shapely.intersects(geometry, geometry_to_subtract))[0]
     if len(idx_to_diff) > 0:
-        # Apply difference on the relevant input geometries
+        # Apply difference on the relevant input geometries.
         to_subtract_arr = np.repeat(geometry_to_subtract, len(idx_to_diff))
         subtracted = shapely.difference(geometry[idx_to_diff], to_subtract_arr)
 
         # Only keep geometries of the correct dimension.
-        if output_dimensions is not None:
-            if output_dimensions == 2:
-                subtracted = pygeoops.collection_extract(
-                    subtracted, pygeoops.PrimitiveType.POLYGON
-                )
-            elif output_dimensions == 1:
-                subtracted = pygeoops.collection_extract(
-                    subtracted, pygeoops.PrimitiveType.LINESTRING
-                )
+        if output_dimensions is not None and output_dimensions > 0:
+            subtracted = pygeoops.collection_extract(subtracted, output_dimensions)
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()
