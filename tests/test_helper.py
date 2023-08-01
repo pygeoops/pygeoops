@@ -17,6 +17,10 @@ from shapely.geometry.base import BaseGeometry
 
 _data_dir = Path(__file__).parent.resolve() / "data"
 
+RUNS_LOCAL = True
+if "GITHUB_ACTIONS" in os.environ:
+    RUNS_LOCAL = False
+
 
 class TestData:
     crs_epsg = 31370

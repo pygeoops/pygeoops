@@ -5,6 +5,27 @@ import shapely
 
 import pygeoops
 from pygeoops import _difference as difference
+import test_helper
+
+
+def test_difference_all():
+    # None or empty input
+    assert pygeoops.difference_all(None, None) is None
+    assert pygeoops.difference_all(shapely.LineString(), None) == shapely.LineString()
+    assert pygeoops.difference_all(shapely.Point(), None) == shapely.Point()
+    assert pygeoops.difference_all(shapely.Polygon(), None) == shapely.Polygon()
+
+    # Single element inputs
+    small = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
+    large = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    assert pygeoops.difference_all(small, large) == shapely.difference(small, large)
+    assert pygeoops.difference_all(large, small) == shapely.difference(large, small)
+
+    # Subtract multiple geometries from single geometry
+    small2 = shapely.Polygon([(45, 0), (50, 0), (50, 5), (45, 5), (45, 0)])
+    assert pygeoops.difference_all(large, [small, small2]) == shapely.difference(
+        shapely.difference(large, small), small2
+    )
 
 
 def test_difference_all_tiled():
@@ -69,7 +90,10 @@ def test_difference_all_tiled_complex_poly():
     # Result should be about the same, and it should be significantly faster
     assert result_pygeoops.area < poly_complex.area - 400
     assert abs(result_pygeoops.area - result_shapely.area) < 1
-    assert secs_taken_diff_all * 2 < secs_taken_diff
+
+    # Speed tests only locally, not on CI
+    if test_helper.RUNS_LOCAL:
+        assert secs_taken_diff_all * 2 < secs_taken_diff
 
 
 def test_difference_all_tiled_invalid_params():
@@ -115,12 +139,27 @@ def test_difference_intersecting():
     difference_intersecting should, for the cases it supports, return the same values as
     shapely.difference.
     """
+    # None or empty input
+    assert difference._difference_intersecting(None, None) is None
+    assert (
+        difference._difference_intersecting(shapely.LineString(), None)
+        == shapely.LineString()
+    )
+    assert difference._difference_intersecting(shapely.Point(), None) == shapely.Point()
+    assert (
+        difference._difference_intersecting(shapely.Polygon(), None)
+        == shapely.Polygon()
+    )
+
     # Single geometry, single geometry_to_subtract
     large = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
     small = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
     assert difference._difference_intersecting(large, small) == shapely.difference(
         large, small
     )
+
+    # Specify keep_geom_type -> only keep points with polygon input -> empty
+    assert difference._difference_intersecting(large, small, keep_geom_type=0) is None
 
     # List of input geometries, 1 geometry to subtract
     assert (
@@ -175,5 +214,6 @@ def test_difference_intersecting_speed():
     _ = difference._difference_intersecting(poly_split, poly_substract)
     secs_taken_diff_intersecting = (datetime.now() - start).total_seconds()
 
-    if secs_taken_diff > 0:
+    # Speed tests only locally, not on CI
+    if test_helper.RUNS_LOCAL and secs_taken_diff > 0:
         assert secs_taken_diff_intersecting * 2 < secs_taken_diff

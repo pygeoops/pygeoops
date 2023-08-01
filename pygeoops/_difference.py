@@ -1,6 +1,6 @@
 import concurrent.futures
 import math
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -211,7 +211,7 @@ def _split_if_needed(
 def _difference_intersecting(
     geometry,
     geometry_to_subtract: BaseGeometry,
-    output_dimensions: Optional[int] = None,
+    keep_geom_type: int = -1,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry]]:
     """
     Subtracts one geometry from one or more geometies. An intersects is called before
@@ -221,8 +221,8 @@ def _difference_intersecting(
         geometry (geometry or arraylike): geometry/geometries to subtract from.
         geometry_to_subtract (geometry): single geometry to subtract.
         keep_geom_type (Union[bool, int], optional): True to retain only geometries in
-            the output of the type/dimension of the input. If int, you specify the
-            geometry type/dimension to retain: 0: points, 1: lines, 2: polygons.
+            the output of the type/dimension of the input. If int, specify the geometry
+            type/dimension to retain: -1: all, 0: points, 1: lines, 2: polygons.
             Defaults to False.
 
     Returns:
@@ -256,9 +256,9 @@ def _difference_intersecting(
         to_subtract_arr = np.repeat(geometry_to_subtract, len(idx_to_diff))
         subtracted = shapely.difference(geometry[idx_to_diff], to_subtract_arr)
 
-        # Only keep geometries of the correct dimension.
-        if output_dimensions is not None and output_dimensions > 0:
-            subtracted = pygeoops.collection_extract(subtracted, output_dimensions)
+        # Only keep geometries of the specified dimension.
+        if keep_geom_type > -1:
+            subtracted = pygeoops.collection_extract(subtracted, keep_geom_type)
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()

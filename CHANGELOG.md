@@ -10,6 +10,9 @@
 
 ### Deprecations and compatibility notes
 
+- Parameter `primitivetype` of `collection_extract()` is deprecated and replaced by
+  `keep_geom_type` (#42)
+
 ## 0.2.0 (2023-07-27)
 
 ### Improvements

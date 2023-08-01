@@ -1,4 +1,5 @@
 from typing import Optional, Union
+import warnings
 
 from geopandas import GeoSeries
 import numpy as np
@@ -87,7 +88,7 @@ def collect(
 
 def collection_extract(
     geometry,
-    keep_geom_type: Optional[int] = None,
+    keep_geom_type: Union[int, PrimitiveType, None] = None,
     primitivetype: Optional[PrimitiveType] = None,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
     """
@@ -96,8 +97,9 @@ def collection_extract(
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
-        keep_geom_type (int): the type of geometries to keep in the output. The
-            following values are supported: -1: all, 0: points, 1: lines, 2: polygons.
+        keep_geom_type (Union[int, PrimitiveType]): the type of geometries to keep in
+            the output. Either a PrimitiveType or and int with one of the following
+            values: -1: all, 0: points, 1: lines, 2: polygons.
         primitivetype (PrimitiveType): deprecated, use keep_geom_type.
 
     Raises:
@@ -108,8 +110,17 @@ def collection_extract(
         Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
             geometries containing only parts of the primitive type specified.
     """
+    if primitivetype is not None:
+        warnings.warn(
+            "primitivetype parameter is deprecated, use keep_geom_type. Will be "
+            "removed in a later version.",
+            FutureWarning,
+            stacklevel=2,
+        )
     if geometry is None:
         return None
+    if keep_geom_type is not None and primitivetype is not None:
+        raise ValueError("primitivetype is deprecated, only specify keep_geom_type")
     if keep_geom_type is None:
         if primitivetype is not None:
             keep_geom_type = primitivetype.value - 1
@@ -121,7 +132,7 @@ def collection_extract(
         if keep_geom_type not in [-1, 0, 1, 2]:
             raise ValueError(f"Invalid value for keep_geom_type: {keep_geom_type}")
     else:
-        raise ValueError(f"Invalid type for keep_geom_type: {keep_geom_type}")
+        raise ValueError(f"Invalid type for keep_geom_type: {type(keep_geom_type)}")
     assert keep_geom_type is not None
 
     # If input is not arraylike, apply once, otherwise apply to all elements

@@ -21,7 +21,6 @@ except ImportError:
     HAS_SIMPLIFICATION = False
 
 import pygeoops._general as general
-from pygeoops._general import PrimitiveType
 from pygeoops import _simplify_lang as simplify_lang
 from pygeoops import _simplify_topo as simplify_topo
 
@@ -244,7 +243,7 @@ def simplify_polygon(
 
     # Extract only polygons as result + try to make valid
     result_poly = general.collection_extract(
-        shapely.make_valid(result_poly), primitivetype=PrimitiveType.POLYGON
+        shapely.make_valid(result_poly), keep_geom_type=2
     )
 
     # If the result is None and the topology needs to be preserved, return
