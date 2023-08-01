@@ -150,6 +150,38 @@ def _collection_extract(
         raise ValueError(f"Invalid/unsupported geometry(type): {geometry}")
 
 
+def empty(dimension: int) -> Optional[BaseGeometry]:
+    """
+    Generate an empty geometry of the type specified.
+
+    Args:
+        dimension (int): Dimension of the empty geometry to return. Possible values:
+            - None: None returned
+            - -1: empty GeometryCollection
+            - 0: empty Point
+            - 1: empty LineString
+            - 2: empty Polygon
+
+    Raises:
+        ValueError: Invalid dimension specified
+
+    Returns:
+        Optional[BaseGeometry]: empty geometry or None.
+    """
+    if dimension is None:
+        return None
+    elif dimension == -1:
+        return shapely.GeometryCollection()
+    elif dimension == 0:
+        return shapely.Point()
+    elif dimension == 1:
+        return shapely.LineString()
+    elif dimension == 2:
+        return shapely.Polygon()
+    else:
+        raise ValueError(f"Invalid dimension specified: {dimension}")
+
+
 def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]:
     """
     Dump all (multi)geometries in the input to one list of single geometries.

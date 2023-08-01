@@ -128,6 +128,18 @@ def test_collection_extract_geometries(input_type):
     assert result[start_idx + 5] == point
 
 
+def test_empty():
+    assert pygeoops.empty(None) is None
+    assert pygeoops.empty(-1) == shapely.GeometryCollection()
+    assert pygeoops.empty(0) == shapely.Point()
+    assert pygeoops.empty(1) == shapely.LineString()
+    assert pygeoops.empty(2) == shapely.Polygon()
+
+    with pytest.raises(ValueError, match="Invalid dimension specified"):
+        pygeoops.empty(-2)
+        pygeoops.empty(3)
+
+
 def test_explode():
     # Test dealing with None/empty input
     # ----------------------------------
