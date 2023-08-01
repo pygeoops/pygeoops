@@ -10,22 +10,65 @@ import test_helper
 
 def test_difference_all():
     # None or empty input
+    # -------------------
     assert pygeoops.difference_all(None, None) is None
     assert pygeoops.difference_all(shapely.LineString(), None) == shapely.LineString()
     assert pygeoops.difference_all(shapely.Point(), None) == shapely.Point()
     assert pygeoops.difference_all(shapely.Polygon(), None) == shapely.Polygon()
 
     # Single element inputs
+    # ---------------------
     small = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
-    large = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    large = shapely.Polygon([(0, 2), (50, 2), (50, 50), (0, 50), (0, 2)])
     assert pygeoops.difference_all(small, large) == shapely.difference(small, large)
     assert pygeoops.difference_all(large, small) == shapely.difference(large, small)
+    line = shapely.LineString([(0, 0), (50, 0)])
+    assert pygeoops.difference_all(line, small) == shapely.difference(line, small)
 
     # Subtract multiple geometries from single geometry
+    # -------------------------------------------------
     small2 = shapely.Polygon([(45, 0), (50, 0), (50, 5), (45, 5), (45, 0)])
     assert pygeoops.difference_all(large, [small, small2]) == shapely.difference(
         shapely.difference(large, small), small2
     )
+    assert pygeoops.difference_all(line, [small, small2]) == shapely.difference(
+        shapely.difference(line, small), small2
+    )
+    collection = shapely.GeometryCollection([line, large])
+    assert pygeoops.difference_all(collection, [small, small2]) == shapely.difference(
+        shapely.difference(collection, small), small2
+    )
+
+    # Tests with keep_geom_type
+    # -------------------------
+    # No keep_geom_type: collection (LineString + Polygon)
+    assert isinstance(
+        pygeoops.difference_all(collection, [small, small2]), shapely.GeometryCollection
+    )
+    # keep_geom_type=True: collection (LineString + Polygon), because input: collection
+    assert isinstance(
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=True),
+        shapely.GeometryCollection,
+    )
+    # keep_geom_type=2: Polygon
+    assert isinstance(
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=2),
+        shapely.Polygon,
+    )
+    # keep_geom_type=1: LineString
+    assert isinstance(
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=1),
+        shapely.LineString,
+    )
+    # keep_geom_type=0: None
+    assert (
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=0) is None
+    )
+
+
+def test_difference_all_invalid():
+    with pytest.raises(ValueError, match="geometry should be a shapely geometry, not"):
+        pygeoops.difference_all([shapely.Polygon(), shapely.Polygon()], shapely.Point())
 
 
 def test_difference_all_tiled():

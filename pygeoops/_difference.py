@@ -164,8 +164,8 @@ def difference_all(
         if shapely.intersects(geom_diff, geom_to_subtract):
             geom_diff = shapely.difference(geom_diff, geom_to_subtract)
 
-            # Only keep geometries of the correct dimension.
-            if output_dimensions >= 1:
+            # Only keep geometries of the asked type/dimension.
+            if output_dimensions >= 0:
                 geom_diff = pygeoops.collection_extract(geom_diff, output_dimensions)
 
             shapely.prepare(geom_diff)
