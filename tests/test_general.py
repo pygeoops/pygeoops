@@ -254,6 +254,27 @@ def test_explode():
     assert pygeoops.explode(geometrycoll).tolist() == [point, line, poly]
 
 
+def test_get_dimensions2():
+    # Test for one geometry
+    assert pygeoops.get_dimensions2(shapely.Point()) == 0
+    assert pygeoops.get_dimensions2(shapely.GeometryCollection()) == -1
+
+    # Test with list of all different types
+    input = [
+        shapely.Point(),
+        shapely.MultiPoint(),
+        shapely.LineString(),
+        shapely.MultiLineString(),
+        shapely.Polygon(),
+        shapely.MultiPolygon(),
+        shapely.GeometryCollection(),
+    ]
+    expected = [0, 0, 1, 1, 2, 2, -1]
+
+    result = pygeoops.get_dimensions2(input)
+    assert result.tolist() == expected
+
+
 def test_remove_inner_rings():
     # Test with None input
     assert pygeoops.remove_inner_rings(None, min_area_to_keep=1, crs=None) is None

@@ -257,6 +257,47 @@ def force_geometrytype(
 """
 
 
+def get_dimensions2(geometry):
+    """
+    Determines for each input geometry individually which is the dimension similar to
+    that geometry.
+
+    Returns the following:
+      - Point, MultiPoint: 0
+      - LineString, MultiLineString: 1
+      - Polygon, MultiPolygon: 2
+      - GeometryCollection: -1
+
+    Args:
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+
+    Raises:
+        ValueError: if in_geom is an unsupported geometry type or the primitive
+            type is invalid.
+
+    Returns:
+        Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
+            geometries containing only parts of the primitive type specified.
+    """
+    # If input is a list
+    if hasattr(geometry, "__len__"):
+        # Determine which are geometry collections
+        types = shapely.get_type_id(geometry)
+        collections_mask = types == 7
+        # Determine the "standard" dimensions
+        dimensions = shapely.get_dimensions(geometry)
+
+        # Overwrite dimensions with -1 for geometrycollections
+        dimensions[collections_mask] = -1
+    else:
+        if isinstance(geometry, shapely.GeometryCollection):
+            dimensions = -1
+        else:
+            dimensions = shapely.get_dimensions(geometry)
+
+    return dimensions
+
+
 def remove_inner_rings(
     geometry: Union[shapely.Polygon, shapely.MultiPolygon, None],
     min_area_to_keep: float,

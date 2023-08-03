@@ -1,10 +1,13 @@
 from typing import Union
 import numpy as np
 
-import shapely
+import pygeoops
+from shapely.geometry.base import BaseGeometry
 
 
-def keep_geom_type2dimension(keep_geom_type: Union[bool, int], geometry) -> int:
+def keep_geom_type2dimension(
+    keep_geom_type: Union[bool, int], geometry: BaseGeometry
+) -> int:
     """
     Checks and interpretes a keep_geom_type parameter and returns the appropriate
     geometry type dimension.
@@ -24,12 +27,8 @@ def keep_geom_type2dimension(keep_geom_type: Union[bool, int], geometry) -> int:
         # If input is a bool, determine dimension
         if not keep_geom_type:
             return -1
-        elif isinstance(geometry, shapely.GeometryCollection):
-            # For a geometry collection input, keep everything
-            return -1
-        else:
-            # Keep the dimension of the input
-            return shapely.get_dimensions(geometry)
+
+        return pygeoops.get_dimensions2(geometry)
     elif isinstance(keep_geom_type, (int, np.integer)):
         # If it is already an int, just validate the value is valid
         if keep_geom_type not in (-1, 0, 1, 2):
