@@ -5,7 +5,7 @@
 ### Improvements
 
 - Add functions `difference_all`, `difference_all_tiled` and `empty` (#42)
-- Add function `get_dimensions2` (#)
+- Add function `get_dimensions2` (#43)
 
 ### Bug fixes
 
