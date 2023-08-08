@@ -5,6 +5,7 @@
 ### Improvements
 
 - Add functions `difference_all`, `difference_all_tiled` and `empty` (#42)
+- Use simplify of shapely when possible as it is faster (#44)
 
 ### Bug fixes
 
