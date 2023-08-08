@@ -55,8 +55,8 @@ def simplify_topo(
         return None
     algorithm = algorithm.lower()
 
-    # If input isn't arraylike or if the arraylike only has one element, just apply
-    # simplify as creating a topology first is useless.
+    # If input isn't arraylike or if the arraylike only has one element, creating a
+    # topology first is useless.
     if not hasattr(geometry, "__len__") or len(geometry) <= 1:
         return pygeoops.simplify(
             geometry=geometry,
@@ -85,14 +85,21 @@ def simplify_topo(
     # Simplify all arcs/vectors/boundaries of the topologies
     # ------------------------------------------------------
     topolines = shapely.MultiLineString(topo.output["arcs"])
-    topolines_simpl = pygeoops.simplify(
-        geometry=topolines,
-        tolerance=tolerance,
-        algorithm=algorithm,
-        lookahead=lookahead,
-        keep_points_on=keep_points_on,
-        preserve_topology=True,
-    )
+
+    # If the algorithm is rdp and no keep_points_on, use shapely
+    if algorithm == "rdp" and keep_points_on is None:
+        topolines_simpl = shapely.simplify(
+            geometry=topolines, tolerance=tolerance, preserve_topology=True
+        )
+    else:
+        topolines_simpl = pygeoops.simplify(
+            geometry=topolines,
+            tolerance=tolerance,
+            algorithm=algorithm,
+            lookahead=lookahead,
+            keep_points_on=keep_points_on,
+            preserve_topology=True,
+        )
     assert topolines_simpl is not None
 
     # Copy the results of the simplified lines back to the topology arcs
