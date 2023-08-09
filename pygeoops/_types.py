@@ -141,6 +141,18 @@ class PrimitiveType(enum.Enum):
         return super()._missing_(value)
 
     @property
+    def dimensions(self) -> int:
+        """Get the number of dimensions of the type."""
+        if self is PrimitiveType.POINT:
+            return 0
+        elif self is PrimitiveType.LINESTRING:
+            return 1
+        elif self is PrimitiveType.POLYGON:
+            return 2
+        else:
+            raise ValueError(f"no dimensions implemented for: {self}")
+
+    @property
     def to_multitype(self) -> GeometryType:
         """Get the corresponding multitype."""
         if self is PrimitiveType.POINT:

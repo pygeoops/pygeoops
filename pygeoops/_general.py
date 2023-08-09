@@ -93,7 +93,7 @@ def collection_extract(
 ) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
     """
     Extracts the parts from the input geometry/geometries that comply with the
-    primitive_type specified and returns them as (Multi)geometry.
+    geom type specified and returns them as (Multi)geometry.
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
@@ -103,8 +103,8 @@ def collection_extract(
         primitivetype (PrimitiveType): deprecated, use keep_geom_type.
 
     Raises:
-        ValueError: if in_geom is an unsupported geometry type or the primitive
-            type is invalid.
+        ValueError: if geometry is an unsupported geometry type or keep_geom_type is
+            invalid.
 
     Returns:
         Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
@@ -112,8 +112,8 @@ def collection_extract(
     """
     if primitivetype is not None:
         warnings.warn(
-            "primitivetype parameter is deprecated, use keep_geom_type. Will be "
-            "removed in a later version.",
+            "The primitivetype parameter is deprecated and will be removed in a later "
+            "version. Please use keep_geom_type.",
             FutureWarning,
             stacklevel=2,
         )
@@ -123,11 +123,11 @@ def collection_extract(
         raise ValueError("primitivetype is deprecated, only specify keep_geom_type")
     if keep_geom_type is None:
         if primitivetype is not None:
-            keep_geom_type = primitivetype.value - 1
+            keep_geom_type = primitivetype.dimensions
         else:
             raise ValueError("keep_geom_type should be specified")
     elif isinstance(keep_geom_type, PrimitiveType):
-        keep_geom_type = keep_geom_type.value - 1
+        keep_geom_type = keep_geom_type.dimensions
     elif isinstance(keep_geom_type, (int, np.integer)):
         if keep_geom_type not in [-1, 0, 1, 2]:
             raise ValueError(f"Invalid value for keep_geom_type: {keep_geom_type}")
@@ -180,36 +180,37 @@ def _collection_extract(
     return None
 
 
-def empty(dimension: int) -> Optional[BaseGeometry]:
+def empty(dimensions: int) -> Optional[BaseGeometry]:
     """
     Generate an empty geometry of the type specified.
 
     Args:
-        dimension (int): Dimension of the empty geometry to return. Possible values:
-            - None: None returned
-            - -1: empty GeometryCollection
-            - 0: empty Point
-            - 1: empty LineString
-            - 2: empty Polygon
+        dimensions (int): Number of dimensions the type of the empty geometry should
+            represent. Possible values:
+                - None: None returned
+                - -1: empty GeometryCollection
+                - 0: empty Point
+                - 1: empty LineString
+                - 2: empty Polygon
 
     Raises:
-        ValueError: Invalid dimension specified
+        ValueError: Invalid number of dimensions specified.
 
     Returns:
         Optional[BaseGeometry]: empty geometry or None.
     """
-    if dimension is None:
+    if dimensions is None:
         return None
-    elif dimension == -1:
+    elif dimensions == -1:
         return shapely.GeometryCollection()
-    elif dimension == 0:
+    elif dimensions == 0:
         return shapely.Point()
-    elif dimension == 1:
+    elif dimensions == 1:
         return shapely.LineString()
-    elif dimension == 2:
+    elif dimensions == 2:
         return shapely.Polygon()
     else:
-        raise ValueError(f"Invalid dimension specified: {dimension}")
+        raise ValueError(f"Invalid number of dimensions specified: {dimensions}")
 
 
 def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]:
@@ -259,8 +260,8 @@ def force_geometrytype(
 
 def get_dimensions2(geometry):
     """
-    Determines for each input geometry individually which is the dimension similar to
-    that geometry.
+    Determines for each input geometry individually which is the number of dimensions
+    the geometry represents.
 
     Returns the following:
       - Point, MultiPoint: 0
@@ -272,8 +273,7 @@ def get_dimensions2(geometry):
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
 
     Raises:
-        ValueError: if in_geom is an unsupported geometry type or the primitive
-            type is invalid.
+        ValueError: if geometry is an unsupported geometry type.
 
     Returns:
         Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
