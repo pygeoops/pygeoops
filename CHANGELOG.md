@@ -4,15 +4,8 @@
 
 ### Improvements
 
-- Add functions `difference_all`, `difference_all_tiled` and `empty` (#42)
-- Add function `get_dimensions2` (#43)
-
-### Bug fixes
-
-### Deprecations and compatibility notes
-
-- Parameter `primitivetype` of `collection_extract()` is deprecated and replaced by
-  `keep_geom_type` (#42)
+- Add functions `difference_all`, `difference_all_tiled` and `empty` (#42, #43)
+- Add function `get_primitivetype_id` (#43)
 
 ## 0.2.0 (2023-07-27)
 

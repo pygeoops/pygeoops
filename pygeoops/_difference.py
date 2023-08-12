@@ -8,7 +8,7 @@ import shapely
 from shapely.geometry.base import BaseGeometry
 
 import pygeoops
-from pygeoops import _paramvalidation as paramvalidation
+from pygeoops import _paramvalidation as valid
 
 
 def difference_all_tiled(
@@ -28,7 +28,7 @@ def difference_all_tiled(
         geometries_to_subtract (geometry or arraylike): geometries to substract.
         keep_geom_type (Union[bool, int], optional): True to retain only geometries in
             the output of the type/dimension of the input. If int, you specify the
-            geometry type/dimension to retain: 0: points, 1: lines, 2: polygons.
+            primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
 
     Returns:
@@ -48,7 +48,7 @@ def difference_all_tiled(
         geometries_to_subtract = np.array([geometries_to_subtract])
 
     # Determine type dimension of input + what the output type should
-    output_dimensions = paramvalidation.keep_geom_type2dimension(
+    output_primitivetype_id = valid.keep_geom_type2primitivetype_id(
         keep_geom_type, geometry
     )
 
@@ -85,7 +85,7 @@ def difference_all_tiled(
                     difference_all,
                     geom_diff[idx],
                     geometries_to_subtract[geoms_to_subtract_idx],
-                    keep_geom_type=output_dimensions,
+                    keep_geom_type=output_primitivetype_id,
                 )
                 futures[future] = idx
 
@@ -97,7 +97,7 @@ def difference_all_tiled(
             geom_diff[idx] = difference_all(
                 geom_diff[idx],
                 geometries_to_subtract[geoms_to_subtract_idx],
-                keep_geom_type=output_dimensions,
+                keep_geom_type=output_primitivetype_id,
             )
 
     # Drop empty results
@@ -105,10 +105,7 @@ def difference_all_tiled(
 
     # Prepare result and return it
     if len(geom_diff) == 0:
-        if isinstance(geometry, shapely.GeometryCollection):
-            result = pygeoops.empty(-1)
-        else:
-            result = pygeoops.empty(shapely.get_dimensions(geometry))
+        result = pygeoops.empty(shapely.get_type_id(geometry))
     elif len(geom_diff) == 1:
         result = geom_diff[0]
     else:
@@ -130,7 +127,7 @@ def difference_all(
         geometries_to_subtract (geometry or arraylike): geometries to substract.
         keep_geom_type (Union[bool, int], optional): True to retain only geometries in
             the output of the type/dimension of the input. If int, specify the geometry
-            type/dimension to retain: -1: all, 0: points, 1: lines, 2: polygons.
+            primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
 
     Returns:
@@ -150,7 +147,7 @@ def difference_all(
         geometries_to_subtract = np.array([geometries_to_subtract])
 
     # Determine type dimension of input + what the output type should
-    output_dimensions = paramvalidation.keep_geom_type2dimension(
+    output_primitivetype_id = valid.keep_geom_type2primitivetype_id(
         keep_geom_type, geometry
     )
 
@@ -165,14 +162,11 @@ def difference_all(
     for idx in geoms_to_subtract_idx:
         geom_to_subtract = geometries_to_subtract[idx]
         if shapely.intersects(geom_diff, geom_to_subtract):
+            shapely.prepare(geom_diff)
             geom_diff = shapely.difference(geom_diff, geom_to_subtract)
 
-            # Only keep geometries of the asked type/dimension.
-            if output_dimensions >= 0:
-                geom_diff = pygeoops.collection_extract(geom_diff, output_dimensions)
-
-            shapely.prepare(geom_diff)
-
+            # Only keep geometries of the asked primitivetype.
+            geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
             if shapely.is_empty(geom_diff):
                 break
 
@@ -204,9 +198,9 @@ def _split_if_needed(
             nb_squarish_tiles=math.ceil(num_coords / num_coords_max),
         )
         geom_split = shapely.intersection(geometry, grid)
-        input_dimension = shapely.get_dimensions(geometry)
-        if input_dimension > 0:
-            geom_split = pygeoops.collection_extract(geom_split, input_dimension)
+        input_primitivetype_id = pygeoops.get_primitivetype_id(geometry)
+        assert isinstance(input_primitivetype_id, (int, np.integer))
+        geom_split = pygeoops.collection_extract(geom_split, input_primitivetype_id)
         geom_split = geom_split[~shapely.is_empty(geom_split)]
         return geom_split
 
@@ -214,7 +208,7 @@ def _split_if_needed(
 def _difference_intersecting(
     geometry,
     geometry_to_subtract: BaseGeometry,
-    keep_geom_type: int = -1,
+    primitivetype_id: int = 0,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry]]:
     """
     Subtracts one geometry from one or more geometies. An intersects is called before
@@ -223,10 +217,8 @@ def _difference_intersecting(
     Args:
         geometry (geometry or arraylike): geometry/geometries to subtract from.
         geometry_to_subtract (geometry): single geometry to subtract.
-        keep_geom_type (Union[bool, int], optional): True to retain only geometries in
-            the output of the type/dimension of the input. If int, specify the geometry
-            type/dimension to retain: -1: all, 0: points, 1: lines, 2: polygons.
-            Defaults to False.
+        primitivetype_id (int, optional): specify the primitivetype_id to retain:
+            0: all, 1: points, 2: lines, 3: polygons. Defaults to 0.
 
     Returns:
         geometry or arraylike: geometry or array of geometries with the
@@ -260,8 +252,8 @@ def _difference_intersecting(
         subtracted = shapely.difference(geometry[idx_to_diff], to_subtract_arr)
 
         # Only keep geometries of the specified dimension.
-        if keep_geom_type > -1:
-            subtracted = pygeoops.collection_extract(subtracted, keep_geom_type)
+        if primitivetype_id > -1:
+            subtracted = pygeoops.collection_extract(subtracted, primitivetype_id)
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()

@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 import shapely.coords
+import pygeoops
 
 try:
     import simplification.cutil as simplification
@@ -243,7 +244,7 @@ def simplify_polygon(
 
     # Extract only polygons as result + try to make valid
     result_poly = general.collection_extract(
-        shapely.make_valid(result_poly), keep_geom_type=2
+        shapely.make_valid(result_poly), primitivetype=pygeoops.PrimitiveType.POLYGON
     )
 
     # If the result is None and the topology needs to be preserved, return
