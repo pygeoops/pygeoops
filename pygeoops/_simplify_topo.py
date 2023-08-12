@@ -101,6 +101,7 @@ def simplify_topo(
             preserve_topology=True,
         )
     assert topolines_simpl is not None
+    assert isinstance(topolines_simpl, BaseGeometry)
 
     # Copy the results of the simplified lines back to the topology arcs
     if algorithm in ["lang", "lang+"]:

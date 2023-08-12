@@ -10,6 +10,8 @@ dependencies:
   - topojson
   # benchmark
   - geofileops
+  - pandas
+  - pandas-stubs
   # testing
   - matplotlib
   - pytest

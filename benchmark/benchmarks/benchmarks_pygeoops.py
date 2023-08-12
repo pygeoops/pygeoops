@@ -14,8 +14,8 @@ os.environ["USE_PYGEOS"] = "0"
 import geopandas as gpd  # noqa: E402
 import shapely  # noqa: E402
 
-from benchmarker import RunResult  # noqa: E402
-from benchmarks import testdata  # noqa: E402
+from benchmark.benchmarker import RunResult  # noqa: E402
+from benchmark.benchmarks import testdata  # noqa: E402
 import pygeoops  # noqa: E402
 
 logger = logging.getLogger(__name__)
