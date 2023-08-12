@@ -20,11 +20,11 @@ from pygeoops import _paramvalidation as valid
         (np.int32(3), shapely.Polygon(), 3),
     ],
 )
-def test_keep_geom_type2dimension(keep_geom_type, geometry, exp_id):
+def test_keep_geom_type2primitivetype_id(keep_geom_type, geometry, exp_id):
     assert valid.keep_geom_type2primitivetype_id(keep_geom_type, geometry) == exp_id
 
 
-def test_keep_geom_type2dimension_invalid():
+def test_keep_geom_type2primitivetype_id_invalid():
     # Test invalid values
     with pytest.raises(ValueError, match="Invalid value for keep_geom_type"):
         valid.keep_geom_type2primitivetype_id(4, shapely.Polygon())

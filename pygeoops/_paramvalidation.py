@@ -22,7 +22,7 @@ def keep_geom_type2primitivetype_id(
     Returns:
         int: the primitivetype id to keep: 0: all, 1: points, 2: lines, 3: polygons.
     """
-    # Determine type dimension of input + what the output type should
+    # Determine primitivetype of input + what the output type should be
     if isinstance(keep_geom_type, bool):
         # If input is a bool with False value, keep everything
         if not keep_geom_type:

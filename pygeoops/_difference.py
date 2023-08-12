@@ -27,7 +27,7 @@ def difference_all_tiled(
         geometry (geometry): single geometry to substract geometries from.
         geometries_to_subtract (geometry or arraylike): geometries to substract.
         keep_geom_type (Union[bool, int], optional): True to retain only geometries in
-            the output of the type/dimension of the input. If int, you specify the
+            the output of the primitivetype of the input. If int, you specify the
             primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
 
@@ -67,7 +67,7 @@ def difference_all_tiled(
     for idx in geoms_to_subtract_idx:
         geom_to_subtract = geometries_to_subtract[idx]
         geom_diff = _difference_intersecting(
-            geom_diff, geom_to_subtract, output_dimensions=output_dimensions
+            geom_diff, geom_to_subtract, output_primitivetype_id=output_primitivetype_id
         )
 
         # Drop empty results
@@ -126,7 +126,7 @@ def difference_all(
         geometry (geometry): single geometry to subtract geometries from.
         geometries_to_subtract (geometry or arraylike): geometries to substract.
         keep_geom_type (Union[bool, int], optional): True to retain only geometries in
-            the output of the type/dimension of the input. If int, specify the geometry
+            the output of the primitivetype of the input. If int, specify the geometry
             primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
 
@@ -251,9 +251,8 @@ def _difference_intersecting(
         to_subtract_arr = np.repeat(geometry_to_subtract, len(idx_to_diff))
         subtracted = shapely.difference(geometry[idx_to_diff], to_subtract_arr)
 
-        # Only keep geometries of the specified dimension.
-        if primitivetype_id > -1:
-            subtracted = pygeoops.collection_extract(subtracted, primitivetype_id)
+        # Only keep geometries of the specified primitivetype.
+        subtracted = pygeoops.collection_extract(subtracted, primitivetype_id)
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()
