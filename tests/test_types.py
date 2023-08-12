@@ -28,7 +28,7 @@ def test_geometrytype_is_multitype():
     assert GeometryType.MULTILINESTRING.is_multitype
     assert not GeometryType.POINT.is_multitype
     assert GeometryType.MULTIPOINT.is_multitype
-    assert GeometryType.GEOMETRY.is_multitype
+    assert not GeometryType.GEOMETRY.is_multitype
     assert GeometryType.GEOMETRYCOLLECTION.is_multitype
 
 
@@ -43,6 +43,12 @@ def test_geometrytype_name_camelcase():
     assert GeometryType.GEOMETRY.name_camelcase == "Geometry"
     assert GeometryType.GEOMETRYCOLLECTION.name_camelcase == "GeometryCollection"
 
+    # A MISSING geometry type doesn't have a name_camelcase
+    with pytest.raises(
+        ValueError, match="No camelcase name implemented for GeometryType.MISSING"
+    ):
+        GeometryType.MISSING.name_camelcase
+
 
 def test_geometrytype_to_primitivetype():
     # Test to_primitivetype
@@ -52,12 +58,14 @@ def test_geometrytype_to_primitivetype():
     assert GeometryType.MULTILINESTRING.to_primitivetype is PrimitiveType.LINESTRING
     assert GeometryType.POINT.to_primitivetype is PrimitiveType.POINT
     assert GeometryType.MULTIPOINT.to_primitivetype is PrimitiveType.POINT
+    assert GeometryType.GEOMETRY.to_primitivetype is PrimitiveType.GEOMETRY
+    assert GeometryType.GEOMETRYCOLLECTION.to_primitivetype is PrimitiveType.GEOMETRY
 
-    # A geometry collection doesn't have a primitive type
+    # A MISSING geometry type doesn't have a primitive type
     with pytest.raises(
-        Exception, match="GeometryType.GEOMETRYCOLLECTION doesn't have a primitive type"
+        ValueError, match="No primitivetype implemented for GeometryType.MISSING"
     ):
-        GeometryType.GEOMETRYCOLLECTION.to_primitivetype
+        GeometryType.MISSING.to_primitivetype
 
 
 def test_geometrytype_to_multitype():
@@ -68,10 +76,16 @@ def test_geometrytype_to_multitype():
     assert GeometryType.MULTILINESTRING.to_multitype is GeometryType.MULTILINESTRING
     assert GeometryType.POINT.to_multitype is GeometryType.MULTIPOINT
     assert GeometryType.MULTIPOINT.to_multitype is GeometryType.MULTIPOINT
-    assert GeometryType.GEOMETRY.to_multitype is GeometryType.GEOMETRY
+    assert GeometryType.GEOMETRY.to_multitype is GeometryType.GEOMETRYCOLLECTION
     assert (
         GeometryType.GEOMETRYCOLLECTION.to_multitype is GeometryType.GEOMETRYCOLLECTION
     )
+
+    # A MISSING geometry type doesn't have a multitype
+    with pytest.raises(
+        ValueError, match="No multitype implemented for GeometryType.MISSING"
+    ):
+        GeometryType.MISSING.to_multitype
 
 
 def test_geometrytype_to_singletype():
@@ -85,11 +99,18 @@ def test_geometrytype_to_singletype():
     assert GeometryType.GEOMETRY.to_singletype is GeometryType.GEOMETRY
     assert GeometryType.GEOMETRYCOLLECTION.to_singletype is GeometryType.GEOMETRY
 
+    # A MISSING geometry type doesn't have a singletype
+    with pytest.raises(
+        ValueError, match="No singletype implemented for GeometryType.MISSING"
+    ):
+        GeometryType.MISSING.to_singletype
+
 
 def test_primitivetype():
     assert PrimitiveType(3) is PrimitiveType.POLYGON
     assert PrimitiveType(2) is PrimitiveType.LINESTRING
     assert PrimitiveType(1) is PrimitiveType.POINT
+    assert PrimitiveType(0) is PrimitiveType.GEOMETRY
     assert PrimitiveType("PoLyGoN") is PrimitiveType.POLYGON
     assert PrimitiveType(PrimitiveType.POLYGON) is PrimitiveType.POLYGON
 
@@ -98,9 +119,11 @@ def test_primitivetype_to_multitype():
     assert PrimitiveType.POLYGON.to_multitype is GeometryType.MULTIPOLYGON
     assert PrimitiveType.LINESTRING.to_multitype is GeometryType.MULTILINESTRING
     assert PrimitiveType.POINT.to_multitype is GeometryType.MULTIPOINT
+    assert PrimitiveType.GEOMETRY.to_multitype is GeometryType.GEOMETRYCOLLECTION
 
 
 def test_primitivetype_to_singletype():
     assert PrimitiveType.POLYGON.to_singletype is GeometryType.POLYGON
     assert PrimitiveType.LINESTRING.to_singletype is GeometryType.LINESTRING
     assert PrimitiveType.POINT.to_singletype is GeometryType.POINT
+    assert PrimitiveType.GEOMETRY.to_singletype is GeometryType.GEOMETRY

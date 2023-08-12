@@ -2,30 +2,32 @@ import numpy as np
 import pytest
 import shapely
 
-from pygeoops import _paramvalidation as paramvalidation
+from pygeoops import _paramvalidation as valid
 
 
-def test_keep_geom_type2dimension():
-    # Boolean input
-    assert (
-        paramvalidation.keep_geom_type2dimension(True, shapely.GeometryCollection())
-        == -1
-    )
-    assert paramvalidation.keep_geom_type2dimension(True, shapely.Point()) == 0
-    assert paramvalidation.keep_geom_type2dimension(True, shapely.LineString()) == 1
-    assert paramvalidation.keep_geom_type2dimension(True, shapely.Polygon()) == 2
-    assert paramvalidation.keep_geom_type2dimension(False, shapely.Polygon()) == -1
+@pytest.mark.parametrize(
+    "keep_geom_type, geometry, exp_id",
+    [
+        (True, shapely.GeometryCollection(), 0),
+        (True, shapely.Point(), 1),
+        (True, shapely.LineString(), 2),
+        (True, shapely.Polygon(), 3),
+        (False, shapely.Polygon(), 0),
+        (0, shapely.Polygon(), 0),
+        (1, shapely.Polygon(), 1),
+        (2, shapely.Polygon(), 2),
+        (3, shapely.Polygon(), 3),
+        (np.int32(3), shapely.Polygon(), 3),
+    ],
+)
+def test_keep_geom_type2primitivetype_id(keep_geom_type, geometry, exp_id):
+    assert valid.keep_geom_type2primitivetype_id(keep_geom_type, geometry) == exp_id
 
-    # int/inlike input
-    assert paramvalidation.keep_geom_type2dimension(-1, shapely.Polygon()) == -1
-    assert paramvalidation.keep_geom_type2dimension(0, shapely.Polygon()) == 0
-    assert paramvalidation.keep_geom_type2dimension(1, shapely.Polygon()) == 1
-    assert paramvalidation.keep_geom_type2dimension(2, shapely.Polygon()) == 2
-    assert paramvalidation.keep_geom_type2dimension(np.int32(2), shapely.Polygon()) == 2
 
+def test_keep_geom_type2primitivetype_id_invalid():
     # Test invalid values
     with pytest.raises(ValueError, match="Invalid value for keep_geom_type"):
-        paramvalidation.keep_geom_type2dimension(3, shapely.Polygon())
-        paramvalidation.keep_geom_type2dimension(-2, shapely.Polygon())
+        valid.keep_geom_type2primitivetype_id(4, shapely.Polygon())
+        valid.keep_geom_type2primitivetype_id(-1, shapely.Polygon())
     with pytest.raises(ValueError, match="Invalid type for keep_geom_type"):
-        paramvalidation.keep_geom_type2dimension("bad_type", shapely.Polygon())
+        valid.keep_geom_type2primitivetype_id("bad_type", shapely.Polygon())
