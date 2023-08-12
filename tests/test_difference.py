@@ -50,19 +50,19 @@ def test_difference_all():
         pygeoops.difference_all(collection, [small, small2], keep_geom_type=True),
         shapely.GeometryCollection,
     )
-    # keep_geom_type=2: Polygon
+    # keep_geom_type=3: Polygon
     assert isinstance(
-        pygeoops.difference_all(collection, [small, small2], keep_geom_type=2),
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=3),
         shapely.Polygon,
     )
-    # keep_geom_type=1: LineString
+    # keep_geom_type=2: LineString
     assert isinstance(
-        pygeoops.difference_all(collection, [small, small2], keep_geom_type=1),
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=2),
         shapely.LineString,
     )
-    # keep_geom_type=0: None
+    # keep_geom_type=1: Point -> None
     assert (
-        pygeoops.difference_all(collection, [small, small2], keep_geom_type=0) is None
+        pygeoops.difference_all(collection, [small, small2], keep_geom_type=1) is None
     )
 
 
@@ -202,7 +202,7 @@ def test_difference_intersecting():
     )
 
     # Specify keep_geom_type -> only keep points with polygon input -> empty
-    assert difference._difference_intersecting(large, small, keep_geom_type=0) is None
+    assert difference._difference_intersecting(large, small, primitivetype_id=1) is None
 
     # List of input geometries, 1 geometry to subtract
     assert (
