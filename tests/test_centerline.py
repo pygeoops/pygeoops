@@ -58,7 +58,7 @@ def test_centerline_box_geometries(tmp_path: Path, input_type):
             input, index=[index + start_idx for index in range(len(input))]
         )
     elif input_type == "ndarray":
-        input = np.array(input)
+        input = np.array(input)  # type: ignore[assignment]
 
     # Run test
     result = pygeoops.centerline(input)

@@ -1,2 +1,5 @@
 # Include the version.txt file
 include pygeoops/version.txt
+
+# Include the py.types so e.g. mypy knows pygeoops is typed
+include pygeoops/py.typed

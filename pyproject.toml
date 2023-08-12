@@ -34,6 +34,11 @@ full = ["simplification"]
 [tool.black]
 line-length = 88
 
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = "geopandas.*,matplotlib.*,setuptools.*,simplification.*,shapely.*,topojson.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 pythonpath = "."
 testpaths = [
