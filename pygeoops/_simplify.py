@@ -88,6 +88,12 @@ def simplify(
             keep_points_on=keep_points_on,
         )
 
+    # If the algorithm is rdp and no keep_points_on, use the faster shapely
+    if algorithm == "rdp" and keep_points_on is None:
+        return shapely.simplify(
+            geometry, tolerance=tolerance, preserve_topology=preserve_topology
+        )
+
     # If input is arraylike, apply to all elements
     if hasattr(geometry, "__len__"):
         result = np.array(
@@ -128,9 +134,15 @@ def _simplify(
     # Init:
     if geometry is None:
         return None
+    algorithm = algorithm.lower()
+
+    # If the algorithm is rdp and no keep_points_on, use shapely
+    if algorithm == "rdp" and keep_points_on is None:
+        return shapely.simplify(
+            geometry, tolerance=tolerance, preserve_topology=preserve_topology
+        )
 
     # Check algorythm
-    algorithm = algorithm.lower()
     simplify_lookahead_points = False
     if algorithm in ["rdp", "vw"]:
         if not HAS_SIMPLIFICATION:
