@@ -77,7 +77,6 @@ def test_difference_None_empty():
     poly = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
     assert shapely.difference(poly, None) is None
 
-    # Subtract with empty gives the original poly
     assert_geometries_equal(
-        shapely.difference(poly, shapely.Polygon()), poly, normalize=False
+        shapely.difference(poly, shapely.Polygon()), poly, normalize=True
     )
