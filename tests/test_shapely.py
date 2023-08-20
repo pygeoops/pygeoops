@@ -6,6 +6,7 @@ Some tests mainly meant to explore/show behaviour of some shapely functions.
 import numpy as np
 import pytest
 import shapely
+from shapely.testing import assert_geometries_equal
 
 
 def test_difference():
@@ -76,5 +77,6 @@ def test_difference_None_empty():
     poly = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
     assert shapely.difference(poly, None) is None
 
-    # Subtract with empty gives the original poly
-    assert shapely.difference(poly, shapely.Polygon()) == poly
+    assert_geometries_equal(
+        shapely.difference(poly, shapely.Polygon()), poly, normalize=True
+    )
