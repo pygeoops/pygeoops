@@ -345,20 +345,26 @@ def remove_inner_rings(
         )
 
 
-def subdivide(geometry: BaseGeometry, num_coords_max: int) -> NDArray[BaseGeometry]:
+def subdivide(
+    geometry: BaseGeometry, num_coords_max: int = 1000
+) -> NDArray[BaseGeometry]:
     """
     Divide the input geometry to smaller parts using rectilinear lines.
 
     Args:
-        geometry (geometry): the geometry to split.
-        num_coords_max (int): maximum number of coordinates targetted for each
-            subdivision. At the time of writing, this is the average number of
-            coordinates the subdividions will consist of.
+        geometry (geometry): the geometry to subdivide.
+        num_coords_max (int): number of coordinates per subdivision to aim for. In the
+            current implementation, num_coords_max will be the average number of
+            coordinates the subdividions will consist of. If <=0, no subdivision is
+            applied. Defaults to 1000.
 
     Returns:
         array of geometries: if geometry has < num_coords_max coordinates, the array
             will contain the input geometry. Otherwise it will contain subdivisions.
     """
+    if num_coords_max <= 0:
+        return np.array([geometry])
+
     shapely.prepare(geometry)
     num_coords = shapely.get_num_coordinates(geometry)
     if num_coords <= num_coords_max:
