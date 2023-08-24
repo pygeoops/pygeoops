@@ -24,4 +24,5 @@ methods implemented in PyGeoOps. All classes and function exposed in
    remove_inner_rings
    simplify
    split_tiles
+   subdivide
    view_angles

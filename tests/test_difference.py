@@ -147,36 +147,6 @@ def test_difference_all_tiled_invalid_params():
         )
 
 
-def test_split_if_needed():
-    # Test with complex polygon, it should be split!
-    # ----------------------------------------------
-    # Prepare a complex polygon to test with
-    poly_size = 1000
-    poly_distance = 50
-    lines = []
-    for off in range(0, poly_size, poly_distance):
-        lines.append(shapely.LineString([(off, 0), (off, poly_size)]))
-        lines.append(shapely.LineString([(0, off), (poly_size, off)]))
-
-    poly_complex = shapely.unary_union(shapely.MultiLineString(lines).buffer(2))
-    assert len(shapely.get_parts(poly_complex)) == 1
-    num_coordinates = shapely.get_num_coordinates(poly_complex)
-    assert num_coordinates == 3258
-
-    num_coords_max = 1000
-    poly_split = difference._split_if_needed(poly_complex, num_coords_max)
-    assert isinstance(poly_split, np.ndarray)
-    assert len(poly_split) == 4
-
-    # Test with standard polygon, should not be split
-    # -----------------------------------------------
-    poly_simple = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
-    num_coords_max = 1000
-    poly_split = difference._split_if_needed(poly_simple, num_coords_max)
-    assert isinstance(poly_split, np.ndarray)
-    assert len(poly_split) == 1
-
-
 def test_difference_intersecting():
     """
     difference_intersecting should, for the cases it supports, return the same values as
@@ -238,9 +208,9 @@ def test_difference_intersecting_speed():
 
     # Split the complex polygon
     num_coords_max = 800
-    poly_split = difference._split_if_needed(poly_complex, num_coords_max)
-    assert isinstance(poly_split, np.ndarray)
-    assert len(poly_split) == 30
+    poly_divided = pygeoops.subdivide(poly_complex, num_coords_max)
+    assert isinstance(poly_divided, np.ndarray)
+    assert len(poly_divided) == 30
 
     # Prepare polygon to subtract. For this test case it is given some complexity,
     # without being too large so it doesn't cover too much of the input geometry.
@@ -249,12 +219,12 @@ def test_difference_intersecting_speed():
 
     # Calculate difference using shapely
     start = datetime.now()
-    _ = shapely.difference(poly_split, poly_substract)
+    _ = shapely.difference(poly_divided, poly_substract)
     secs_taken_diff = (datetime.now() - start).total_seconds()
 
     # Calculate difference using pygeoops
     start = datetime.now()
-    _ = difference._difference_intersecting(poly_split, poly_substract)
+    _ = difference._difference_intersecting(poly_divided, poly_substract)
     secs_taken_diff_intersecting = (datetime.now() - start).total_seconds()
 
     # Speed tests only locally, not on CI

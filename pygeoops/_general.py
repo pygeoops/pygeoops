@@ -1,3 +1,4 @@
+import math
 from typing import Optional, Union
 
 from geopandas import GeoSeries
@@ -7,6 +8,7 @@ import pyproj
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 
+import pygeoops
 from pygeoops._types import GeometryType, PrimitiveType
 
 
@@ -341,3 +343,34 @@ def remove_inner_rings(
         raise ValueError(
             f"remove_inner_rings impossible on {geometry.geom_type}: {geometry}"
         )
+
+
+def subdivide(geometry: BaseGeometry, num_coords_max: int) -> NDArray[BaseGeometry]:
+    """
+    Divide the input geometry to smaller parts using rectilinear lines.
+
+    Args:
+        geometry (geometry): the geometry to split.
+        num_coords_max (int): maximum number of coordinates targetted for each
+            subdivision. At the time of writing, this is the average number of
+            coordinates the subdividions will consist of.
+
+    Returns:
+        array of geometries: if geometry has < num_coords_max coordinates, the array
+            will contain the input geometry. Otherwise it will contain subdivisions.
+    """
+    shapely.prepare(geometry)
+    num_coords = shapely.get_num_coordinates(geometry)
+    if num_coords <= num_coords_max:
+        return np.array([geometry])
+    else:
+        grid = pygeoops.create_grid2(
+            total_bounds=geometry.bounds,
+            nb_squarish_tiles=math.ceil(num_coords / num_coords_max),
+        )
+        geom_divided = shapely.intersection(geometry, grid)
+        input_primitivetype_id = pygeoops.get_primitivetype_id(geometry)
+        assert isinstance(input_primitivetype_id, (int, np.integer))
+        geom_divided = pygeoops.collection_extract(geom_divided, input_primitivetype_id)
+        geom_divided = geom_divided[~shapely.is_empty(geom_divided)]
+        return geom_divided

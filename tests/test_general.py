@@ -285,3 +285,33 @@ def test_remove_inner_rings_invalid_input():
         pygeoops.remove_inner_rings(
             shapely.LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
         )
+
+
+def test_subdivide():
+    # Test with complex polygon, it should be subdivided!
+    # ---------------------------------------------------
+    # Prepare a complex polygon to test with
+    poly_size = 1000
+    poly_distance = 50
+    lines = []
+    for off in range(0, poly_size, poly_distance):
+        lines.append(shapely.LineString([(off, 0), (off, poly_size)]))
+        lines.append(shapely.LineString([(0, off), (poly_size, off)]))
+
+    poly_complex = shapely.unary_union(shapely.MultiLineString(lines).buffer(2))
+    assert len(shapely.get_parts(poly_complex)) == 1
+    num_coordinates = shapely.get_num_coordinates(poly_complex)
+    assert num_coordinates == 3258
+
+    num_coords_max = 1000
+    poly_divided = pygeoops.subdivide(poly_complex, num_coords_max)
+    assert isinstance(poly_divided, np.ndarray)
+    assert len(poly_divided) == 4
+
+    # Test with standard polygon, should not be subdivided
+    # ----------------------------------------------------
+    poly_simple = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    num_coords_max = 1000
+    poly_divided = pygeoops.subdivide(poly_simple, num_coords_max)
+    assert isinstance(poly_divided, np.ndarray)
+    assert len(poly_divided) == 1
