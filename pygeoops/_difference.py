@@ -1,5 +1,4 @@
 import concurrent.futures
-import math
 from typing import Union
 
 import numpy as np
@@ -15,6 +14,7 @@ def difference_all_tiled(
     geometry: BaseGeometry,
     geometries_to_subtract,
     keep_geom_type: Union[bool, int] = False,
+    coords_per_tile: int = 1000,
 ) -> BaseGeometry:
     """
     Subtracts all geometries in geometries_to_subtract from the input geometry.
@@ -30,6 +30,8 @@ def difference_all_tiled(
             the output of the primitivetype of the input. If int, you specify the
             primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
+        coords_per_tile (int): The number of coordinates targetted for each tile to
+            consist of after tiling. Defaults to 1000.
 
     Returns:
         geometry: the geometry with the geometries_to_subtract subtracted from it.
@@ -41,15 +43,17 @@ def difference_all_tiled(
         raise ValueError(f"geometry should be a shapely geometry, not {geometry}")
     if geometry.is_empty:
         return geometry
-    if hasattr(geometries_to_subtract, "__len__"):
-        if not isinstance(geometries_to_subtract, np.ndarray):
-            geometries_to_subtract = np.array(geometries_to_subtract)
-    else:
-        geometries_to_subtract = np.array([geometries_to_subtract])
 
     # Determine type dimension of input + what the output type should
     output_primitivetype_id = valid.keep_geom_type2primitivetype_id(
         keep_geom_type, geometry
+    )
+
+    # Prepare geometries_to_subtract for efficient subtracting by exploding them
+    if not hasattr(geometries_to_subtract, "__len__"):
+        geometries_to_subtract = [geometries_to_subtract]
+    geometries_to_subtract = shapely.get_parts(
+        shapely.get_parts(geometries_to_subtract)
     )
 
     # Check which geometries_to_subtract intersect the geometry
@@ -60,7 +64,7 @@ def difference_all_tiled(
 
     # Split the input geometry if it has many points to speedup processing.
     # Max 1000 coordinates seems to work fine based on some testing.
-    geom_diff = _split_if_needed(geometry, 1000)
+    geom_diff = pygeoops.subdivide(geometry, coords_per_tile)
 
     """
     # Subtract all intersecting ones
@@ -161,8 +165,8 @@ def difference_all(
     geom_diff = geometry
     for idx in geoms_to_subtract_idx:
         geom_to_subtract = geometries_to_subtract[idx]
+        shapely.prepare(geom_diff)
         if shapely.intersects(geom_diff, geom_to_subtract):
-            shapely.prepare(geom_diff)
             geom_diff = shapely.difference(geom_diff, geom_to_subtract)
 
             # Only keep geometries of the asked primitivetype.
@@ -173,46 +177,16 @@ def difference_all(
     return geom_diff
 
 
-def _split_if_needed(
-    geometry: BaseGeometry, num_coords_max: int
-) -> NDArray[BaseGeometry]:
-    """
-    Split the input geometry to smaller pieces using a grid so the average number of
-    points per grid tile < num_coords_max.
-
-    Args:
-        geom (geometry): the geometry to split.
-        num_coords_max (int): maximum coordinates the input geometry should contain.
-
-    Returns:
-        array of geometries: if geometry has < num_coords_max coordinates, the array
-            will contain the input geometry. Otherwise it will have more elements.
-    """
-    shapely.prepare(geometry)
-    num_coords = shapely.get_num_coordinates(geometry)
-    if num_coords <= num_coords_max:
-        return np.array([geometry])
-    else:
-        grid = pygeoops.create_grid2(
-            total_bounds=geometry.bounds,
-            nb_squarish_tiles=math.ceil(num_coords / num_coords_max),
-        )
-        geom_split = shapely.intersection(geometry, grid)
-        input_primitivetype_id = pygeoops.get_primitivetype_id(geometry)
-        assert isinstance(input_primitivetype_id, (int, np.integer))
-        geom_split = pygeoops.collection_extract(geom_split, input_primitivetype_id)
-        geom_split = geom_split[~shapely.is_empty(geom_split)]
-        return geom_split
-
-
 def _difference_intersecting(
     geometry,
     geometry_to_subtract: BaseGeometry,
     primitivetype_id: int = 0,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry]]:
     """
-    Subtracts one geometry from one or more geometies. An intersects is called before
-    applying difference to speedup if this hasn't been done before.
+    Subtracts one geometry from one or more geometies.
+
+    An intersects is called before applying difference to speedup if this hasn't been
+    done before.
 
     Args:
         geometry (geometry or arraylike): geometry/geometries to subtract from.
