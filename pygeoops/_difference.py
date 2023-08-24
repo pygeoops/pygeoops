@@ -14,14 +14,18 @@ def difference_all_tiled(
     geometry: BaseGeometry,
     geometries_to_subtract,
     keep_geom_type: Union[bool, int] = False,
-    coords_per_tile: int = 1000,
+    subdivide_coords: int = 1000,
 ) -> BaseGeometry:
     """
     Subtracts all geometries in geometries_to_subtract from the input geometry.
 
-    For complex geometries, the input geometry will be tiled to increase performance.
-    Because of this, the output geometry can contain extra collinear points in its
-    boundary.
+    If the input geometry has many points, it can be subdivided in smaller parts
+    to potentially speed up processing as controlled by parameter `subdivide_coords`.
+    This will result in extra collinear points being added to the boundaries of the
+    output.
+
+    Note that the geometries_to_subtract won't be subdivided automatically, so if they
+    can contain complex geometries as well you can use `subdivide` on them.
 
     Args:
         geometry (geometry): single geometry to substract geometries from.
@@ -30,8 +34,11 @@ def difference_all_tiled(
             the output of the primitivetype of the input. If int, you specify the
             primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
-        coords_per_tile (int): The number of coordinates targetted for each tile to
-            consist of after tiling. Defaults to 1000.
+        subdivide_coords (int): if > 0, the input geometry will be
+            subdivided to parts with about this number of points to potentially speedup
+            processing. Subdividing can result in extra collinear points being added to
+            the boundaries of the output. If <= 0, no subdividing is applied.
+            Defaults to 1000.
 
     Returns:
         geometry: the geometry with the geometries_to_subtract subtracted from it.
@@ -64,7 +71,7 @@ def difference_all_tiled(
 
     # Split the input geometry if it has many points to speedup processing.
     # Max 1000 coordinates seems to work fine based on some testing.
-    geom_diff = pygeoops.subdivide(geometry, coords_per_tile)
+    geom_diff = pygeoops.subdivide(geometry, subdivide_coords)
 
     """
     # Subtract all intersecting ones

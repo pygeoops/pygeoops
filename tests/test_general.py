@@ -308,6 +308,12 @@ def test_subdivide():
     assert isinstance(poly_divided, np.ndarray)
     assert len(poly_divided) == 4
 
+    # Test with complex polygon, but num_coords_max = 0 -> not subdivided!
+    # --------------------------------------------------------------------
+    poly_divided = pygeoops.subdivide(poly_complex, 0)
+    assert isinstance(poly_divided, np.ndarray)
+    assert len(poly_divided) == 1
+
     # Test with standard polygon, should not be subdivided
     # ----------------------------------------------------
     poly_simple = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
