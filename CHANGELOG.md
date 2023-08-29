@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- Add functions `difference_all`, `difference_all_tiled` and `empty` (#42, #43)
+- Add functions `difference_all`, `difference_all_tiled` and `empty` (#42, #43, #52)
 - Add function `get_primitivetype_id` (#43)
 - Add function `subdivide` (#49)
 - Use `simplify` of `shapely` when possible as it is faster (#44)
