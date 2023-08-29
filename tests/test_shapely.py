@@ -69,6 +69,48 @@ def test_difference():
         _ = shapely.difference(geom_arr, geom_arr3)
 
 
+def test_difference_collection():
+    # Difference of geom: 1 polygon, geom: GeometryCollection of 2 disjoint polygons
+    # Result: 1 smaller polygon
+    geom = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    geom_collection = shapely.GeometryCollection(
+        [
+            shapely.Polygon([(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]),
+            shapely.Polygon([(40, 0), (50, 0), (50, 10), (40, 10), (40, 0)]),
+        ]
+    )
+    result = shapely.difference(geom, geom_collection)
+    assert result.area < geom.area
+
+    # Difference of geom: 1 polygon, geom: GeometryCollection of 2 adjacent polygons
+    # Result: 1 smaller polygon
+    geom = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    geom_collection = shapely.GeometryCollection(
+        [
+            shapely.Polygon([(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]),
+            shapely.Polygon([(10, 0), (20, 0), (20, 10), (10, 10), (10, 0)]),
+        ]
+    )
+    result = shapely.difference(geom, geom_collection)
+    assert result.area < geom.area
+
+    # Difference of geom: 1 polygon, geom: GeometryCollection of 2 overlapping polygons
+    # Result: TopologyException
+    geom = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    geom_collection = shapely.GeometryCollection(
+        [
+            shapely.Polygon([(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]),
+            shapely.Polygon([(5, 0), (20, 0), (20, 10), (5, 10), (5, 0)]),
+        ]
+    )
+    expected_error = (
+        "TopologyException: side location conflict at .*. This can occur if the input "
+        "geometry is invalid."
+    )
+    with pytest.raises(Exception, match=expected_error):
+        result = shapely.difference(geom, geom_collection)
+
+
 def test_difference_None_empty():
     assert shapely.difference(None, None) is None
     assert shapely.difference(shapely.Polygon(), None) is None
