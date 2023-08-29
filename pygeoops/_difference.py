@@ -59,9 +59,7 @@ def difference_all_tiled(
     # Prepare geometries_to_subtract for efficient subtracting by exploding them
     if not hasattr(geometries_to_subtract, "__len__"):
         geometries_to_subtract = [geometries_to_subtract]
-    geometries_to_subtract = shapely.get_parts(
-        shapely.get_parts(geometries_to_subtract)
-    )
+    geometries_to_subtract = shapely.get_parts(geometries_to_subtract)
 
     # Check which geometries_to_subtract intersect the geometry
     shapely.prepare(geometry)
