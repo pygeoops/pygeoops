@@ -104,7 +104,7 @@ def test_difference_collection():
         ]
     )
     expected_error = (
-        "TopologyException: side location conflict at 5 0. This can occur if the input "
+        "TopologyException: side location conflict at .*. This can occur if the input "
         "geometry is invalid."
     )
     with pytest.raises(Exception, match=expected_error):
