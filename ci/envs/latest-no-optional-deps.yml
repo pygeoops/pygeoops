@@ -2,7 +2,7 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - python =3.11
+  - python
   # required
   - geopandas-base >=0.12.1
   - shapely >1
