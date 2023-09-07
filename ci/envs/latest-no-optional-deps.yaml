@@ -2,8 +2,7 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - python =3.10
-  - pip
+  - python =3.11
   # required
   - geopandas-base >=0.12.1
   - shapely >1
@@ -12,5 +11,3 @@ dependencies:
   - matplotlib
   - pytest
   - pytest-cov
-  - pip:
-    - simplification  # optional dependency
