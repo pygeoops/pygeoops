@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python =3.10
   # required
-  - geopandas-base
+  - geopandas-base >=0.12.1
   - shapely >1
   - topojson
   # testing
