@@ -2,11 +2,12 @@ name: test
 channels:
   - conda-forge
 dependencies:
-  - python =3.10
+  - python
   - pip
   # required
-  - geopandas-base
-  - shapely >1
+  - geopandas-base =0.12.1
+  - pygeos
+  - shapely =2.0.1
   - topojson
   # testing
   - matplotlib

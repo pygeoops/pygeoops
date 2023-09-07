@@ -17,7 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "geopandas",
+    "geopandas>=0.12.1",
     "shapely>1",
     "topojson",
 ]
