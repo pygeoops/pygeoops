@@ -310,6 +310,8 @@ def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = Fa
             to a lower dimensionality, for example a one-point linestring, are dropped.
             Defaults to True.
         only_if_invalid (bool, optional): When True, `is_valid` is ran before applying
+            `make_valid` only for the geometries that need it. If many input geometries
+            are valid this is faster.
 
     Returns:
         geometry, GeoSeries or array_like: the valid version for each of the input
