@@ -181,6 +181,17 @@ def test_collection_extract_invalid_params():
     with pytest.raises(ValueError, match="Invalid type for primitivetype"):
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype="invalid")
 
+    # Test lists of different length for geometries vs. primitivetypes
+    with pytest.raises(
+        ValueError,
+        match="geometry and primitivetype are arraylike, so len must be equal",
+    ):
+        pygeoops.collection_extract([shapely.Point((0, 0))], primitivetype=[1, 2])
+    with pytest.raises(
+        ValueError, match="single geometry passed, but primitivetype is arraylike"
+    ):
+        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=[1, 2])
+
 
 def test_empty():
     assert pygeoops.empty(None) is None
