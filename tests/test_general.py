@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Tests for functionalities in vector_util, regarding geometry operations.
+Tests for functionalities in _general.
 """
 
 import geopandas as gpd
@@ -131,6 +130,7 @@ def test_collection_extract_geometries(input_type):
 
     # Check result
     assert result is not None
+    assert len(result) == len(input)
     if input_type == "geoseries":
         assert isinstance(result, gpd.GeoSeries)
     else:
@@ -261,6 +261,47 @@ def test_get_primitivetype_id():
 
     result = pygeoops.get_primitivetype_id(input)
     assert result.tolist() == expected
+
+
+@pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+@pytest.mark.parametrize("only_if_invalid", [True, False])
+@pytest.mark.parametrize(
+    "keep_collapsed, exp_geometrytype",
+    [(True, shapely.GeometryCollection), (False, shapely.MultiPolygon)],
+)
+def test_makevalid(input_type, keep_collapsed, only_if_invalid, exp_geometrytype):
+    # Prepare test data
+    # Apply to single Polygon, with area tolerance smaller than holes
+    multipoly = shapely.MultiPolygon(
+        [
+            shapely.Polygon([(0, 0), (0, 10), (10, 0), (10, 10), (0, 0)]),
+            shapely.Polygon([(1, 1), (2, 1), (3, 1)]),
+        ]
+    )
+    input = [multipoly, multipoly]
+    start_idx = 0
+    if input_type == "geoseries":
+        # For geoseries, also check if the indexers are retained!
+        start_idx = 5
+        input = gpd.GeoSeries(
+            input, index=[index + start_idx for index in range(len(input))]
+        )
+    elif input_type == "ndarray":
+        input = np.array(input)
+
+    result = pygeoops.make_valid(
+        input, keep_collapsed=keep_collapsed, only_if_invalid=only_if_invalid
+    )
+
+    # Check result
+    assert result is not None
+    assert len(result) == len(input)
+    if input_type == "geoseries":
+        assert isinstance(result, gpd.GeoSeries)
+    else:
+        assert isinstance(result, np.ndarray)
+    assert isinstance(result[start_idx], exp_geometrytype)
+    assert isinstance(result[start_idx + 1], exp_geometrytype)
 
 
 def test_remove_inner_rings():
