@@ -176,7 +176,7 @@ def test_collection_extract_invalid_params():
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=5)
     with pytest.raises(ValueError, match="Invalid value for primitivetype: -5"):
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=-5)
-    with pytest.raises(ValueError, match="Invalid type for primitivetype"):
+    with pytest.raises(ValueError, match="Invalid value for primitivetype: None"):
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=None)
     with pytest.raises(ValueError, match="Invalid type for primitivetype"):
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype="invalid")

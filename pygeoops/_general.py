@@ -112,16 +112,18 @@ def collection_extract(
     if geometry is None:
         return None
 
-    def to_primitivetype_id(type) -> int:
-        if isinstance(type, PrimitiveType):
-            type = type.value
-        elif isinstance(type, (int, np.integer)):
-            if type not in [0, 1, 2, 3]:
-                raise ValueError(f"Invalid value for primitivetype: {type}")
+    def to_primitivetype_id(prtype) -> int:
+        if isinstance(prtype, PrimitiveType):
+            prtype = prtype.value
+        elif isinstance(prtype, (int, np.integer)):
+            if prtype not in [0, 1, 2, 3]:
+                raise ValueError(f"Invalid value for primitivetype: {prtype}")
+        elif prtype is None:
+            raise ValueError("Invalid value for primitivetype: None")
         else:
-            raise ValueError(f"Invalid type for primitivetype: {type(type)}")
+            raise ValueError(f"Invalid type for primitivetype: {type(prtype)}")
 
-        return type
+        return prtype
 
     if not hasattr(primitivetype, "__len__"):
         primitivetype = to_primitivetype_id(primitivetype)
