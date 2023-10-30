@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.4.0 (???)
+
+### Improvements
+
+- Add support to extract different primitive types per geometry in `extract_collection` (#57)
+
 ## 0.3.0 (2023-09-07)
 
 ### Improvements
