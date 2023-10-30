@@ -97,12 +97,12 @@ def collection_extract(
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
-        primitivetype (Union[int, PrimitiveType]): the type of geometries to keep in
-            the output. Either a PrimitiveType or and int with one of the following
-            values: 0: all, 1: points, 2: lines, 3: polygons.
+        primitivetype (Union[int, PrimitiveType] or arraylike): the type of geometries
+            to keep in the output. Either one or an arraylike of PrimitiveType or an int
+            with one of the following values: 0: all, 1: points, 2: lines, 3: polygons.
 
     Raises:
-        ValueError: if geometry is an unsupported geometry type or primitivetype is
+        ValueError: if geometry is an unsupported geometry type or (a) primitivetype is
             invalid.
 
     Returns:
@@ -111,26 +111,60 @@ def collection_extract(
     """
     if geometry is None:
         return None
-    if isinstance(primitivetype, PrimitiveType):
-        primitivetype = primitivetype.value
-    elif isinstance(primitivetype, (int, np.integer)):
-        if primitivetype not in [0, 1, 2, 3]:
-            raise ValueError(f"Invalid value for primitivetype: {primitivetype}")
-    else:
-        raise ValueError(f"Invalid type for primitivetype: {type(primitivetype)}")
-    if primitivetype == 0:
-        return geometry
 
-    # If input is not arraylike, apply once, otherwise apply to all elements
+    def to_primitivetype_id(pri_type) -> int:
+        if isinstance(pri_type, PrimitiveType):
+            pri_type = pri_type.value
+        elif isinstance(pri_type, (int, np.integer)):
+            if pri_type not in [0, 1, 2, 3]:
+                raise ValueError(f"Invalid value for primitivetype: {pri_type}")
+        elif pri_type is None:
+            raise ValueError("Invalid value for primitivetype: None")
+        else:
+            raise ValueError(f"Invalid type for primitivetype: {type(pri_type)}")
+
+        return pri_type
+
+    # Valide + prepare primitivetype param
+    if isinstance(primitivetype, str) or not hasattr(primitivetype, "__len__"):
+        # Single primitive type
+        primitivetype = to_primitivetype_id(primitivetype)
+
+        # If we need to extract everything, we can just return the input
+        if primitivetype == 0:
+            return geometry
+
+        # Arraylike geometries, so convert primitivetype to a list of same length
+        if hasattr(geometry, "__len__"):
+            primitivetype = [primitivetype] * len(geometry)
+
+    else:
+        # Arraylike -> convert to list of primitivetype ids
+        primitivetype = [to_primitivetype_id(type) for type in primitivetype]
+
+        if hasattr(geometry, "__len__"):
+            # Number of primitive types specified should equal the number of geometries
+            if len(primitivetype) != len(geometry):
+                raise ValueError(
+                    "geometry and primitivetype are arraylike, so len must be equal"
+                )
+        else:
+            # A single geometry: not compatible with the arraylike pimitivetype!
+            raise ValueError("single geometry passed, but primitivetype is arraylike")
+
+    # Run the collection extraction
     if not hasattr(geometry, "__len__"):
+        # Single geometry.
         return _collection_extract(geometry=geometry, primitivetype_id=primitivetype)
     else:
+        # Arraylike geometries -> run on all of them
         result = np.array(
             [
-                _collection_extract(geometry=geom, primitivetype_id=primitivetype)
-                for geom in geometry
+                _collection_extract(geometry=geom, primitivetype_id=type)
+                for geom, type in zip(geometry, primitivetype)
             ]
         )
+        # If input is GeoSeries, recover index
         if isinstance(geometry, GeoSeries):
             result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
         return result
@@ -238,7 +272,7 @@ def get_primitivetype_id(geometry) -> Union[int, NDArray[np.number]]:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
 
     Returns:
-        Union[in, NDArray[np.number]]:  int or array of integers with for each input
+        Union[int, NDArray[np.number]]:  int or array of integers with for each input
             geometry its Primitivetype_id.
     """
     # If input is a list
