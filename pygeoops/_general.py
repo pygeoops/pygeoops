@@ -294,6 +294,46 @@ def get_primitivetype_id(geometry) -> Union[int, NDArray[np.number]]:
     return primitivetype_id
 
 
+def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = False):
+    """
+    Make the input geometry valid.
+
+    If the input geometry is already valid, it will be returned. If the geometry must be
+    split into multiple parts of the same type to be made valid, a multi-part geometry
+    will be returned. If the geometry must be split into multiple parts of different
+    types to be made valid, a GeometryCollection will be returned if
+    `keep_collapsed=True`.
+
+    Args:
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+        keep_collapsed (bool, optional): When False, geometry components that collapse
+            to a lower dimensionality, for example a one-point linestring, are dropped.
+            Defaults to True.
+        only_if_invalid (bool, optional): When True, `is_valid` is ran before applying
+
+    Returns:
+        geometry, GeoSeries or array_like: the valid version for each of the input
+            geometries.
+    """
+    if only_if_invalid:
+        is_valid = shapely.is_valid(geometry)
+        result = np.array(geometry)
+        if np.count_nonzero(~is_valid) > 0:
+            result[~is_valid] = shapely.make_valid(result[~is_valid])
+    else:
+        result = shapely.make_valid(geometry)
+
+    if not keep_collapsed:
+        primitivetype = pygeoops.get_primitivetype_id(geometry)
+        result = pygeoops.collection_extract(result, primitivetype=primitivetype)
+
+    # If input is GeoSeries, return one with same index
+    if isinstance(geometry, GeoSeries):
+        result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
+
+    return result
+
+
 def remove_inner_rings(
     geometry: Union[shapely.Polygon, shapely.MultiPolygon, None],
     min_area_to_keep: float,
