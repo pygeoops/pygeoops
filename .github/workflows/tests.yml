@@ -39,7 +39,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         dev: [false]
-        python: ["3.8", "3.9", "3.10", "3.11"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         env: ["latest"]
         include:
           - env: minimal-pygeos
@@ -67,7 +67,6 @@ jobs:
         with:
           micromamba-version: '1.4.9-0'
           environment-file: ci/envs/${{ matrix.env }}.yml
-          cache-environment: true
           create-args: >-
             python=${{ matrix.python }}
             ${{ matrix.extra }}
