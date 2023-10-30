@@ -106,7 +106,7 @@ def test_collection_extract():
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
 def test_collection_extract_geometries(input_type):
     """
-    Test collection_extract with several geometries as input.
+    Test collection_extract with several geometries as input and extracting only points.
     """
     # Prepare test data
     point = shapely.Point((0, 0))
@@ -141,6 +141,34 @@ def test_collection_extract_geometries(input_type):
     assert result[start_idx + 3] is None
     assert result[start_idx + 4] is None
     assert result[start_idx + 5] == point
+
+
+def test_collection_extract_geometries_primitivetypes():
+    """
+    Test collection_extract on geometrycollections as input and extract different
+    primitive types.
+    """
+    # Prepare test data
+    point = shapely.Point((0, 0))
+    line = shapely.LineString([(0, 0), (0, 1)])
+    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = shapely.MultiPolygon([poly, poly])
+    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    input = [geometrycoll] * 4
+    primitivetypes = [0, 1, 2, 3]
+
+    # Run test
+    result = pygeoops.collection_extract(input, primitivetype=primitivetypes)
+
+    # Check result
+    assert result is not None
+    assert result[0] == geometrycoll
+    assert result[1] == point
+    assert result[2] == line
+    assert isinstance(result[3], shapely.GeometryCollection)
+    assert len(result[3].geoms) == 2
+    assert result[3].geoms[0] == poly
+    assert result[3].geoms[1] == multipoly
 
 
 def test_collection_extract_invalid_params():
