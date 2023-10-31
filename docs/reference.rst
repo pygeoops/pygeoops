@@ -21,6 +21,7 @@ methods implemented in PyGeoOps. All classes and function exposed in
    difference_all_tiled
    empty
    explode
+   make_valid
    remove_inner_rings
    simplify
    split_tiles
