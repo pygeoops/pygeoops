@@ -6,6 +6,7 @@
 
 - Add support to extract different primitive types per geometry in `extract_collection` (#57)
 - Add `make_valid` with `keep_collapsed` parameter (#58)
+- Add support for 0 dim ndarray input (#60)
 
 ## 0.3.0 (2023-09-07)
 

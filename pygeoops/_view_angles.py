@@ -5,6 +5,8 @@ import numpy as np
 import shapely
 import shapely.geometry
 
+from pygeoops._general import _extract_0dim_ndarray
+
 
 def view_angles(
     viewpoint,
@@ -37,6 +39,9 @@ def view_angles(
     .. |view_angles| image:: ../_static/images/view_angles.png
         :alt: View angles returned by the function
     """
+    # Prepare inputs
+    visible_geom = _extract_0dim_ndarray(visible_geom)
+    viewpoint = _extract_0dim_ndarray(viewpoint)
 
     # If no param is a list, simple return
     visible_geom_is_arr = hasattr(visible_geom, "__len__")

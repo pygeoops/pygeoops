@@ -24,6 +24,7 @@ except ImportError:
 import pygeoops._general as general
 from pygeoops import _simplify_lang as simplify_lang
 from pygeoops import _simplify_topo as simplify_topo
+from pygeoops._general import _extract_0dim_ndarray
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ def simplify(
     """
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
     algorithm = algorithm.lower()
 
     # If common boundaries need to be preserved, use topologic implementation
@@ -134,6 +136,7 @@ def _simplify(
     # Init:
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
     algorithm = algorithm.lower()
 
     # If the algorithm is rdp and no keep_points_on, use shapely
