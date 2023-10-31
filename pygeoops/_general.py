@@ -38,6 +38,7 @@ def collect(
     # If geometry_list is None or no list, just return itself
     if geometries is None:
         return None
+    geometries = _extract_0dim_ndarray(geometries)
     if not hasattr(geometries, "__len__"):
         return geometries
 
@@ -87,6 +88,14 @@ def collect(
         raise ValueError(f"Unsupported geometry type: {result_collection_type}")
 
 
+def _extract_0dim_ndarray(geometry):
+    # If the geometry is a 0 dimension ndarray, return it as simple geometry
+    if isinstance(geometry, np.ndarray) and np.ndim(geometry) == 0:
+        return geometry.item()
+
+    return geometry
+
+
 def collection_extract(
     geometry,
     primitivetype: Union[int, PrimitiveType, None] = None,
@@ -111,6 +120,7 @@ def collection_extract(
     """
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
 
     def to_primitivetype_id(pri_type) -> int:
         if isinstance(pri_type, PrimitiveType):
@@ -126,7 +136,7 @@ def collection_extract(
         return pri_type
 
     # Valide + prepare primitivetype param
-    if isinstance(primitivetype, str) or not hasattr(primitivetype, "__len__"):
+    if not _is_arraylike(primitivetype):
         # Single primitive type
         primitivetype = to_primitivetype_id(primitivetype)
 
@@ -135,25 +145,25 @@ def collection_extract(
             return geometry
 
         # Arraylike geometries, so convert primitivetype to a list of same length
-        if hasattr(geometry, "__len__"):
+        if _is_arraylike(geometry):
             primitivetype = [primitivetype] * len(geometry)
 
     else:
         # Arraylike -> convert to list of primitivetype ids
         primitivetype = [to_primitivetype_id(type) for type in primitivetype]
 
-        if hasattr(geometry, "__len__"):
+        if _is_arraylike(geometry):
             # Number of primitive types specified should equal the number of geometries
             if len(primitivetype) != len(geometry):
                 raise ValueError(
                     "geometry and primitivetype are arraylike, so len must be equal"
                 )
         else:
-            # A single geometry: not compatible with the arraylike pimitivetype!
+            # A single geometry: not compatible with the arraylike primitivetype!
             raise ValueError("single geometry passed, but primitivetype is arraylike")
 
     # Run the collection extraction
-    if not hasattr(geometry, "__len__"):
+    if not _is_arraylike(geometry):
         # Single geometry.
         return _collection_extract(geometry=geometry, primitivetype_id=primitivetype)
     else:
@@ -167,6 +177,7 @@ def collection_extract(
         # If input is GeoSeries, recover index
         if isinstance(geometry, GeoSeries):
             result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
+
         return result
 
 
@@ -177,6 +188,11 @@ def _collection_extract(
         return None
     if primitivetype_id == -1:
         return geometry
+    if isinstance(geometry, np.ndarray) and np.ndim(geometry) == 0:
+        # geometry is a single-element ndarray: this is not supported
+        ValueError(
+            "input geometry is a 1-element ndarray, extract it using geometry.item()"
+        )
 
     if isinstance(geometry, (shapely.MultiPoint, shapely.Point)):
         if primitivetype_id == 1:
@@ -233,10 +249,7 @@ def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]
     """
     if geometry is None:
         return None
-    elif isinstance(geometry, BaseMultipartGeometry):
-        return np.array(geometry.geoms)
-    else:
-        return np.array([geometry])
+    return shapely.get_parts(geometry)
 
 
 """
@@ -272,18 +285,21 @@ def get_primitivetype_id(geometry) -> Union[int, NDArray[np.number]]:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
 
     Returns:
-        Union[int, NDArray[np.number]]:  int or array of integers with for each input
+        Union[int, NDArray[np.number]]: int or array of integers with for each input
             geometry its Primitivetype_id.
     """
-    # If input is a list
-    if hasattr(geometry, "__len__"):
+    # Prepare input
+    geometry = _extract_0dim_ndarray(geometry)
+
+    # If input is arraylike
+    if _is_arraylike(geometry):
         # Determine which are geometry collections
         types = shapely.get_type_id(geometry)
         collections_mask = types == 7
         # Determine the "standard" dimensions an add 1 to get primitive type id
         primitivetype_id = shapely.get_dimensions(geometry) + 1
 
-        # Overwrite dimensions with 0 for geometrycollections
+        # Overwrite primitivetype with 0 for geometrycollections
         primitivetype_id[collections_mask] = 0
     else:
         if isinstance(geometry, shapely.GeometryCollection):
@@ -292,6 +308,10 @@ def get_primitivetype_id(geometry) -> Union[int, NDArray[np.number]]:
             primitivetype_id = shapely.get_dimensions(geometry) + 1
 
     return primitivetype_id
+
+
+def _is_arraylike(a) -> bool:
+    return not isinstance(a, str) and hasattr(a, "__len__")
 
 
 def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = False):
@@ -317,21 +337,36 @@ def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = Fa
         geometry, GeoSeries or array_like: the valid version for each of the input
             geometries.
     """
+    # Prepare input
+    geometry = _extract_0dim_ndarray(geometry)
+
     if only_if_invalid:
         is_valid = shapely.is_valid(geometry)
+
+        # Apply make_valid only on the invalid geometries
         result = np.array(geometry)
         if np.count_nonzero(~is_valid) > 0:
-            result[~is_valid] = shapely.make_valid(result[~is_valid])
-    else:
-        result = shapely.make_valid(geometry)
+            result[~is_valid] = _make_valid(result[~is_valid], keep_collapsed)
+            result = _extract_0dim_ndarray(result)
 
-    if not keep_collapsed:
-        primitivetype = pygeoops.get_primitivetype_id(geometry)
-        result = pygeoops.collection_extract(result, primitivetype=primitivetype)
+    else:
+        result = _make_valid(geometry, keep_collapsed)
 
     # If input is GeoSeries, return one with same index
     if isinstance(geometry, GeoSeries):
-        result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
+        return GeoSeries(result, index=geometry.index, crs=geometry.crs)
+
+    return result
+
+
+def _make_valid(geometry, keep_collapsed: bool = True):
+    # Prepare input
+    geometry = _extract_0dim_ndarray(geometry)
+
+    result = shapely.make_valid(geometry)
+    if not keep_collapsed:
+        primitivetype = pygeoops.get_primitivetype_id(geometry)
+        result = pygeoops.collection_extract(result, primitivetype=primitivetype)
 
     return result
 
@@ -363,6 +398,7 @@ def remove_inner_rings(
         return None
     if crs is not None and isinstance(crs, str):
         crs = pyproj.CRS(crs)
+    geometry = _extract_0dim_ndarray(geometry)
 
     # Define function to treat simple polygons
     def remove_inner_rings_polygon(
@@ -438,6 +474,7 @@ def subdivide(
         array of geometries: if geometry has < num_coords_max coordinates, the array
             will contain the input geometry. Otherwise it will contain subdivisions.
     """
+    geometry = _extract_0dim_ndarray(geometry)
     if num_coords_max <= 0:
         return np.array([geometry])
 

@@ -98,6 +98,10 @@ def test_view_angles(descr, exp_angle_start, exp_angle_end, wkt):
     view_angles = pygeoops.view_angles(viewpoint, visible_geom)
     assert view_angles == (exp_angle_start, exp_angle_end)
 
+    # Also test with 0 dim ndarray input
+    view_angles = pygeoops.view_angles(np.array(viewpoint), np.array(visible_geom))
+    assert view_angles == (exp_angle_start, exp_angle_end)
+
 
 def test_view_angles_invalid_input():
     with pytest.raises(ValueError, match="viewpoint should be a point"):

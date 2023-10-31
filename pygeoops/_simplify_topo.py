@@ -16,6 +16,7 @@ import topojson
 
 import pygeoops
 from pygeoops import GeometryType, PrimitiveType
+from pygeoops._general import _extract_0dim_ndarray
 
 # Get a logger...
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ def simplify_topo(
     """
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
     algorithm = algorithm.lower()
 
     # If input isn't arraylike or if the arraylike only has one element, creating a

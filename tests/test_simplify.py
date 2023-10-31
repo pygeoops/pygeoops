@@ -314,6 +314,23 @@ def test_simplify_keep_points_on(tmp_path, algorithm, tolerance):
     assert poly_simpl_keep.area == poly_input.area
 
 
+@pytest.mark.parametrize("algorithm", ["lang", "lang+", "rdp", "vw"])
+def test_simplify_ndarray_0dim(algorithm):
+    # Skip test for algorithms that needs simplification lib when it is not available
+    if algorithm in ["rdp", "vw"]:
+        _ = pytest.importorskip("simplification")
+
+    # Prepare test data
+    poly_input = shapely.Polygon(
+        shell=[(0, 0), (0, 10), (5, 12), (10, 10), (10, 0), (5, 0), (0, 0)]
+    )
+    expected = pygeoops.simplify(poly_input, 1, algorithm=algorithm)
+
+    # Test simplify
+    result = pygeoops.simplify(np.array(poly_input), 1, algorithm=algorithm)
+    assert result == expected
+
+
 def test_simplify_None():
     # Test simplify on None geometry
     result = pygeoops.simplify(None, 1)

@@ -31,12 +31,22 @@ box_tests = [
 
 
 @pytest.mark.parametrize("test, poly_wkt, expected_centerline_wkt", box_tests)
+@pytest.mark.parametrize("input_0dim_array", [True, False])
 def test_centerline_box(
-    tmp_path: Path, test: str, poly_wkt: str, expected_centerline_wkt: str
+    tmp_path: Path,
+    test: str,
+    poly_wkt: str,
+    input_0dim_array: bool,
+    expected_centerline_wkt: str,
 ):
     """Some test with simple boxes."""
     poly = shapely.from_wkt(poly_wkt)
-    centerline = pygeoops.centerline(poly)
+
+    # Test
+    if input_0dim_array:
+        centerline = pygeoops.centerline(np.array(poly))
+    else:
+        centerline = pygeoops.centerline(poly)
     assert centerline is not None
     assert isinstance(centerline, BaseGeometry)
     output_path = tmp_path / f"test_centerline_box_{test}.png"

@@ -15,6 +15,9 @@ def test_difference_all():
     assert pygeoops.difference_all(shapely.LineString(), None) == shapely.LineString()
     assert pygeoops.difference_all(shapely.Point(), None) == shapely.Point()
     assert pygeoops.difference_all(shapely.Polygon(), None) == shapely.Polygon()
+    assert (
+        pygeoops.difference_all(np.array(shapely.Polygon()), None) == shapely.Polygon()
+    )
 
     # Single element inputs
     # ---------------------
@@ -24,6 +27,9 @@ def test_difference_all():
     assert pygeoops.difference_all(large, small) == shapely.difference(large, small)
     line = shapely.LineString([(0, 0), (50, 0)])
     assert pygeoops.difference_all(line, small) == shapely.difference(line, small)
+    assert pygeoops.difference_all(line, small) == shapely.difference(
+        np.array(line), np.array(small)
+    )
 
     # Subtract multiple geometries from single geometry
     # -------------------------------------------------
@@ -80,6 +86,10 @@ def test_difference_all_tiled():
     )
     assert pygeoops.difference_all_tiled(shapely.Point(), None) == shapely.Point()
     assert pygeoops.difference_all_tiled(shapely.Polygon(), None) == shapely.Polygon()
+    assert (
+        pygeoops.difference_all_tiled(np.array(shapely.Polygon()), None)
+        == shapely.Polygon()
+    )
 
     # Single element inputs
     small = shapely.Polygon([(0, 0), (5, 0), (5, 5), (0, 5), (0, 0)])
@@ -90,6 +100,9 @@ def test_difference_all_tiled():
     assert pygeoops.difference_all_tiled(large, small) == shapely.difference(
         large, small
     )
+    assert pygeoops.difference_all_tiled(
+        np.array(large), np.array(small)
+    ) == shapely.difference(large, small)
 
     # Subtract multiple geometries from single geometry
     small2 = shapely.Polygon([(45, 0), (50, 0), (50, 5), (45, 5), (45, 0)])
@@ -163,6 +176,10 @@ def test_difference_intersecting():
         difference._difference_intersecting(shapely.Polygon(), None)
         == shapely.Polygon()
     )
+    assert (
+        difference._difference_intersecting(np.array(shapely.Polygon()), None)
+        == shapely.Polygon()
+    )
 
     # Single geometry, single geometry_to_subtract
     large = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
@@ -170,6 +187,9 @@ def test_difference_intersecting():
     assert difference._difference_intersecting(large, small) == shapely.difference(
         large, small
     )
+    assert difference._difference_intersecting(
+        np.array(large), np.array(small)
+    ) == shapely.difference(large, small)
 
     # Specify keep_geom_type -> only keep points with polygon input -> empty
     assert difference._difference_intersecting(large, small, primitivetype_id=1) is None

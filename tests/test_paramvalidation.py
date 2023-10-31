@@ -18,6 +18,7 @@ from pygeoops import _paramvalidation as valid
         (2, shapely.Polygon(), 2),
         (3, shapely.Polygon(), 3),
         (np.int32(3), shapely.Polygon(), 3),
+        (0, np.array(shapely.Polygon()), 0),
     ],
 )
 def test_keep_geom_type2primitivetype_id(keep_geom_type, geometry, exp_id):

@@ -8,6 +8,7 @@ from shapely.geometry.base import BaseGeometry
 
 import pygeoops
 from pygeoops import _paramvalidation as valid
+from pygeoops._general import _extract_0dim_ndarray
 
 
 def difference_all_tiled(
@@ -46,7 +47,8 @@ def difference_all_tiled(
     # Check input params/init stuff
     if geometry is None:
         return None
-    elif not isinstance(geometry, BaseGeometry):
+    geometry = _extract_0dim_ndarray(geometry)
+    if not isinstance(geometry, BaseGeometry):
         raise ValueError(f"geometry should be a shapely geometry, not {geometry}")
     if geometry.is_empty:
         return geometry
@@ -145,7 +147,8 @@ def difference_all(
     # Check input params
     if geometry is None:
         return None
-    elif not isinstance(geometry, BaseGeometry):
+    geometry = _extract_0dim_ndarray(geometry)
+    if not isinstance(geometry, BaseGeometry):
         raise ValueError(f"geometry should be a shapely geometry, not {geometry}")
     if geometry.is_empty:
         return geometry
@@ -205,8 +208,10 @@ def _difference_intersecting(
     """
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
     if geometry_to_subtract is None:
         return geometry
+    geometry_to_subtract = _extract_0dim_ndarray(geometry_to_subtract)
     if not isinstance(geometry_to_subtract, BaseGeometry):
         raise ValueError(
             f"geometry_to_subtract should be geometry, not {geometry_to_subtract}"

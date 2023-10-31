@@ -8,6 +8,8 @@ from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
 
+from pygeoops._general import _extract_0dim_ndarray
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,6 +64,7 @@ def centerline(
     """
     if geometry is None:
         return None
+    geometry = _extract_0dim_ndarray(geometry)
 
     # If input is arraylike, treat every geometry in loop
     if hasattr(geometry, "__len__"):

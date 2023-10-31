@@ -166,6 +166,21 @@ def test_simplify_topo_None():
     assert simplify_topo.simplify_topo([None], tolerance=1, algorithm="lang") == [None]
 
 
+@pytest.mark.parametrize("algorithm", ["lang", "lang+", "rdp", "vw"])
+def test_simplify_topo_0dim_ndarray(algorithm):
+    # Skip test for algorithms that needs simplification lib when it is not available
+    if algorithm in ["rdp", "vw"]:
+        _ = pytest.importorskip("simplification")
+
+    line = shapely.Polygon([(10, 10), (0, 10), (0, 0)])
+    expected = simplify_topo.simplify_topo(line, tolerance=1, algorithm=algorithm)
+
+    assert (
+        simplify_topo.simplify_topo(np.array(line), tolerance=1, algorithm=algorithm)
+        == expected
+    )
+
+
 def test_simplify_topo_result_mixed(tmp_path):
     """
     Test with Polygons as input where some of the polygons collapse to lines because of

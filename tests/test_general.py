@@ -9,6 +9,20 @@ import shapely
 
 import pygeoops
 from pygeoops import PrimitiveType
+import pygeoops._general
+
+MULTIPOLY_INVALID_1_COLLAPSING_LINE = shapely.MultiPolygon(
+    [
+        shapely.Polygon([(0, 0), (0, 10), (10, 0), (10, 10), (0, 0)]),
+        shapely.Polygon([(1, 1), (2, 1), (3, 1)]),
+    ]
+)
+LINESTRING_INVALID_2_COLLAPSING_POINT = shapely.MultiLineString(
+    [
+        shapely.LineString([(0, 0), (5, 0), (10, 0)]),
+        shapely.LineString([(1, 1), (1, 1)]),
+    ]
+)
 
 
 def test_collect():
@@ -59,6 +73,13 @@ def test_collect():
     assert pygeoops.collect(gpd.GeoSeries([point, line, poly])) == geometrycoll
     assert pygeoops.collect(np.array([point, line, poly])) == geometrycoll
 
+    # Test arraylike input, 0 dimension
+    # ---------------------------------
+    # Single geometry in ndarray -> 0 dim array: shapely functions return simple result
+    assert pygeoops.collect(np.array(point)) == point
+    assert pygeoops.collect(np.array(line)) == line
+    assert pygeoops.collect(np.array(multipoly)) == multipoly
+
 
 def test_collection_extract():
     """
@@ -76,6 +97,10 @@ def test_collection_extract():
     assert pygeoops.collection_extract(point, 1) == point
     assert pygeoops.collection_extract(multipoint, 1) == multipoint
     assert pygeoops.collection_extract(multipoint, 2) is None
+
+    # Test dealing with 0 dim array/scalar
+    # ------------------------------------
+    assert pygeoops.collection_extract(np.array(point), 1) == point
 
     # Test dealing with mixed geometries
     # ----------------------------------
@@ -100,6 +125,18 @@ def test_collection_extract():
     assert pygeoops.collection_extract(
         shapely.GeometryCollection(geometrycoll), 0
     ) == shapely.GeometryCollection(geometrycoll)
+
+    # Test dealing with single element ndarray (0 dimension)
+    # ------------------------------------------------------
+    assert pygeoops.collection_extract(np.array(point), 1) == point
+    assert pygeoops.collection_extract(np.array(multipoint), 1) == multipoint
+    assert pygeoops.collection_extract(np.array(multipoint), 2) is None
+
+    assert pygeoops.collection_extract(np.array(geometrycoll), 1) == point
+    assert (
+        pygeoops.collection_extract(np.array(geometrycoll), PrimitiveType.POINT)
+        == point
+    )
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
@@ -242,11 +279,21 @@ def test_explode():
     assert pygeoops.explode(geometrycoll).tolist() == [point, line, poly]
 
 
-def test_get_primitivetype_id():
+@pytest.mark.parametrize(
+    "test_id, input, expected_id",
+    [
+        (1, shapely.Point(), 1),
+        (2, shapely.GeometryCollection(), 0),
+        (3, np.array(shapely.Point()), 1),
+        (4, np.array(shapely.GeometryCollection()), 0),
+    ],
+)
+def test_get_primitivetype_id(test_id, input, expected_id):
     # Test for one geometry
-    assert pygeoops.get_primitivetype_id(shapely.Point()) == 1
-    assert pygeoops.get_primitivetype_id(shapely.GeometryCollection()) == 0
+    assert pygeoops.get_primitivetype_id(input) == expected_id
 
+
+def test_get_primitivetype_ids():
     # Test with list of all different types
     input = [
         shapely.Point(),
@@ -260,34 +307,94 @@ def test_get_primitivetype_id():
     expected = [1, 1, 2, 2, 3, 3, 0]
 
     result = pygeoops.get_primitivetype_id(input)
+    assert isinstance(result, np.ndarray)
     assert result.tolist() == expected
+
+
+@pytest.mark.parametrize(
+    "test_id, input, expected",
+    [
+        (1, 1, False),
+        (2, [1], True),
+        (3, np.array(1), True),
+        (4, np.array([1, 2]), True),
+        (5, "abc", False),
+        (6, ["abc", "def"], True),
+    ],
+)
+def test_is_iterable_arraylike(test_id, input, expected):
+    assert pygeoops._general._is_arraylike(input) is expected
+
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        MULTIPOLY_INVALID_1_COLLAPSING_LINE,
+        np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE),
+    ],
+)
+@pytest.mark.parametrize("only_if_invalid", [True, False])
+@pytest.mark.parametrize(
+    "keep_collapsed, exp_geometrytype",
+    [
+        (True, shapely.GeometryCollection),
+        (False, shapely.MultiPolygon),
+        (True, shapely.GeometryCollection),
+        (False, shapely.MultiPolygon),
+    ],
+)
+def test_makevalid(input, keep_collapsed, only_if_invalid, exp_geometrytype):
+    # Test
+    result = pygeoops.make_valid(
+        input, keep_collapsed=keep_collapsed, only_if_invalid=only_if_invalid
+    )
+
+    # Check result
+    assert result is not None
+    assert isinstance(result, exp_geometrytype)
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
 @pytest.mark.parametrize("only_if_invalid", [True, False])
 @pytest.mark.parametrize(
-    "keep_collapsed, exp_geometrytype",
-    [(True, shapely.GeometryCollection), (False, shapely.MultiPolygon)],
+    "input, keep_collapsed, exp_geometrytype",
+    [
+        (
+            [
+                MULTIPOLY_INVALID_1_COLLAPSING_LINE,
+                LINESTRING_INVALID_2_COLLAPSING_POINT,
+            ],
+            True,
+            [shapely.GeometryCollection, shapely.GeometryCollection],
+        ),
+        (
+            [
+                MULTIPOLY_INVALID_1_COLLAPSING_LINE,
+                LINESTRING_INVALID_2_COLLAPSING_POINT,
+            ],
+            False,
+            [shapely.MultiPolygon, shapely.LineString],
+        ),
+    ],
 )
-def test_makevalid(input_type, keep_collapsed, only_if_invalid, exp_geometrytype):
+def test_makevalid_multi(
+    input, input_type, keep_collapsed, only_if_invalid, exp_geometrytype
+):
     # Prepare test data
-    # Apply to single Polygon, with area tolerance smaller than holes
-    multipoly = shapely.MultiPolygon(
-        [
-            shapely.Polygon([(0, 0), (0, 10), (10, 0), (10, 10), (0, 0)]),
-            shapely.Polygon([(1, 1), (2, 1), (3, 1)]),
-        ]
-    )
-    input = [multipoly, multipoly]
     start_idx = 0
-    if input_type == "geoseries":
+    if input_type == "list":
+        pass
+    elif input_type == "geoseries":
         # For geoseries, also check if the indexers are retained!
         start_idx = 5
         input = gpd.GeoSeries(
-            input, index=[index + start_idx for index in range(len(input))]
+            input,
+            index=[index + start_idx for index in range(len(input))],
         )
     elif input_type == "ndarray":
         input = np.array(input)
+    else:
+        raise ValueError(f"unsupported input_type: {input_type}")
 
     result = pygeoops.make_valid(
         input, keep_collapsed=keep_collapsed, only_if_invalid=only_if_invalid
@@ -295,13 +402,14 @@ def test_makevalid(input_type, keep_collapsed, only_if_invalid, exp_geometrytype
 
     # Check result
     assert result is not None
-    assert len(result) == len(input)
+
     if input_type == "geoseries":
         assert isinstance(result, gpd.GeoSeries)
-    else:
+    elif input_type:
         assert isinstance(result, np.ndarray)
-    assert isinstance(result[start_idx], exp_geometrytype)
-    assert isinstance(result[start_idx + 1], exp_geometrytype)
+    assert len(result) == len(input)
+    for idx in range(len(input)):
+        assert isinstance(result[idx + start_idx], exp_geometrytype[idx])
 
 
 def test_remove_inner_rings():
@@ -318,6 +426,14 @@ def test_remove_inner_rings():
     )
     poly_result = pygeoops.remove_inner_rings(
         polygon_removerings_withholes, min_area_to_keep=1, crs=None
+    )
+    assert isinstance(poly_result, shapely.Polygon)
+    assert len(poly_result.interiors) == 2
+
+    # Apply to single Polygon, with area tolerance smaller than holes and passed as a
+    # 0 dimension ndarray
+    poly_result = pygeoops.remove_inner_rings(
+        np.array(polygon_removerings_withholes), min_area_to_keep=1, crs=None
     )
     assert isinstance(poly_result, shapely.Polygon)
     assert len(poly_result.interiors) == 2
@@ -368,8 +484,6 @@ def test_remove_inner_rings_invalid_input():
 
 
 def test_subdivide():
-    # Test with complex polygon, it should be subdivided!
-    # ---------------------------------------------------
     # Prepare a complex polygon to test with
     poly_size = 1000
     poly_distance = 50
@@ -383,19 +497,23 @@ def test_subdivide():
     num_coordinates = shapely.get_num_coordinates(poly_complex)
     assert num_coordinates == 3258
 
+    # Test with complex polygon, it should be subdivided!
     num_coords_max = 1000
     poly_divided = pygeoops.subdivide(poly_complex, num_coords_max)
     assert isinstance(poly_divided, np.ndarray)
     assert len(poly_divided) == 4
 
+    # Test with complex polygon passed on as 0 dim ndarray, it should be subdivided!
+    poly_divided = pygeoops.subdivide(np.array(poly_complex), num_coords_max)
+    assert isinstance(poly_divided, np.ndarray)
+    assert len(poly_divided) == 4
+
     # Test with complex polygon, but num_coords_max = 0 -> not subdivided!
-    # --------------------------------------------------------------------
     poly_divided = pygeoops.subdivide(poly_complex, 0)
     assert isinstance(poly_divided, np.ndarray)
     assert len(poly_divided) == 1
 
     # Test with standard polygon, should not be subdivided
-    # ----------------------------------------------------
     poly_simple = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
     num_coords_max = 1000
     poly_divided = pygeoops.subdivide(poly_simple, num_coords_max)
