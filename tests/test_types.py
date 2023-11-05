@@ -20,6 +20,19 @@ def test_geometrytype():
     assert GeometryType(GeometryType.POLYGON) is GeometryType.POLYGON
 
 
+def test_has_zm():
+    assert not GeometryType.POLYGON.has_z
+    assert not GeometryType.MULTIPOLYGON.has_m
+    assert not GeometryType.MULTIPOLYGONZ.has_m
+    assert not GeometryType.MULTILINESTRINGM.has_z
+    assert not GeometryType.GEOMETRY.has_m
+
+    assert GeometryType.LINESTRINGZ.has_z
+    assert GeometryType.POINTZM.has_z
+    assert GeometryType.GEOMETRYCOLLECTIONZM.has_m
+    assert GeometryType.TRIANGLEM.has_m
+
+
 def test_geometrytype_is_multitype():
     # Test is_multitype
     assert not GeometryType.POLYGON.is_multitype
@@ -34,6 +47,7 @@ def test_geometrytype_is_multitype():
 
 def test_geometrytype_name_camelcase():
     # Test to_singletype
+    assert GeometryType.MISSING.name_camelcase == "Missing"
     assert GeometryType.POLYGON.name_camelcase == "Polygon"
     assert GeometryType.MULTIPOLYGON.name_camelcase == "MultiPolygon"
     assert GeometryType.LINESTRING.name_camelcase == "LineString"
@@ -41,13 +55,10 @@ def test_geometrytype_name_camelcase():
     assert GeometryType.POINT.name_camelcase == "Point"
     assert GeometryType.MULTIPOINT.name_camelcase == "MultiPoint"
     assert GeometryType.GEOMETRY.name_camelcase == "Geometry"
+    assert GeometryType.POLYHEDRALSURFACE.name_camelcase == "PolyhedralSurface"
     assert GeometryType.GEOMETRYCOLLECTION.name_camelcase == "GeometryCollection"
 
-    # A MISSING geometry type doesn't have a name_camelcase
-    with pytest.raises(
-        ValueError, match="No camelcase name implemented for GeometryType.MISSING"
-    ):
-        GeometryType.MISSING.name_camelcase
+    assert GeometryType.POLYGONZM.name_camelcase == "PolygonZM"
 
 
 def test_geometrytype_to_primitivetype():
@@ -60,6 +71,10 @@ def test_geometrytype_to_primitivetype():
     assert GeometryType.MULTIPOINT.to_primitivetype is PrimitiveType.POINT
     assert GeometryType.GEOMETRY.to_primitivetype is PrimitiveType.GEOMETRY
     assert GeometryType.GEOMETRYCOLLECTION.to_primitivetype is PrimitiveType.GEOMETRY
+
+    assert GeometryType.POINTZ.to_primitivetype is PrimitiveType.POINT
+    assert GeometryType.POLYGONZM.to_primitivetype is PrimitiveType.POLYGON
+    assert GeometryType.LINESTRINGM.to_primitivetype is PrimitiveType.LINESTRING
 
     # A MISSING geometry type doesn't have a primitive type
     with pytest.raises(
@@ -81,6 +96,10 @@ def test_geometrytype_to_multitype():
         GeometryType.GEOMETRYCOLLECTION.to_multitype is GeometryType.GEOMETRYCOLLECTION
     )
 
+    assert GeometryType.POLYGONZ.to_multitype is GeometryType.MULTIPOLYGONZ
+    assert GeometryType.MULTIPOLYGONM.to_multitype is GeometryType.MULTIPOLYGONM
+    assert GeometryType.LINESTRINGZM.to_multitype is GeometryType.MULTILINESTRINGZM
+
     # A MISSING geometry type doesn't have a multitype
     with pytest.raises(
         ValueError, match="No multitype implemented for GeometryType.MISSING"
@@ -98,6 +117,10 @@ def test_geometrytype_to_singletype():
     assert GeometryType.MULTIPOINT.to_singletype is GeometryType.POINT
     assert GeometryType.GEOMETRY.to_singletype is GeometryType.GEOMETRY
     assert GeometryType.GEOMETRYCOLLECTION.to_singletype is GeometryType.GEOMETRY
+
+    assert GeometryType.MULTIPOINTZ.to_singletype is GeometryType.POINTZ
+    assert GeometryType.MULTILINESTRINGM.to_singletype is GeometryType.LINESTRINGM
+    assert GeometryType.MULTIPOLYGONZM.to_singletype is GeometryType.POLYGONZM
 
     # A MISSING geometry type doesn't have a singletype
     with pytest.raises(
