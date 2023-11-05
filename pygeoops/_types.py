@@ -96,6 +96,14 @@ class GeometryType(enum.Enum):
             raise ValueError(f"No empty implemented for {self}")
 
     @property
+    def flatten(self):
+        if math.floor(self.value / 1000) <= 0:
+            # Remark: for MISSING, -1/1000 == -1
+            return self
+        else:
+            return GeometryType(self.value % 1000)
+
+    @property
     def has_m(self) -> bool:
         if math.floor(self.value / 1000) in (2, 3):
             return True

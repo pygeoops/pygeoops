@@ -20,7 +20,17 @@ def test_geometrytype():
     assert GeometryType(GeometryType.POLYGON) is GeometryType.POLYGON
 
 
-def test_has_zm():
+def test_geometrytype_flatten():
+    assert GeometryType.MISSING.flatten == GeometryType.MISSING
+    assert GeometryType.POLYGON.flatten == GeometryType.POLYGON
+    assert GeometryType.POINTZ.flatten == GeometryType.POINT
+    assert GeometryType.MULTILINESTRINGZM.flatten == GeometryType.MULTILINESTRING
+    assert GeometryType.GEOMETRYCOLLECTIONZM.flatten == GeometryType.GEOMETRYCOLLECTION
+    assert GeometryType.GEOMETRY.flatten == GeometryType.GEOMETRY
+    assert GeometryType.POLYHEDRALSURFACEM.flatten == GeometryType.POLYHEDRALSURFACE
+
+
+def test_geometrytype_has_zm():
     assert not GeometryType.POLYGON.has_z
     assert not GeometryType.MULTIPOLYGON.has_m
     assert not GeometryType.MULTIPOLYGONZ.has_m
