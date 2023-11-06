@@ -1,4 +1,5 @@
 import enum
+import math
 
 import shapely
 
@@ -17,6 +18,39 @@ class GeometryType(enum.Enum):
     MULTILINESTRING = 5
     MULTIPOLYGON = 6
     GEOMETRYCOLLECTION = 7
+    POLYHEDRALSURFACE = 15
+    TIN = 16
+    TRIANGLE = 17
+    POINTZ = 1001
+    LINESTRINGZ = 1002
+    POLYGONZ = 1003
+    TRIANGLEZ = 1017
+    MULTIPOINTZ = 1004
+    MULTILINESTRINGZ = 1005
+    MULTIPOLYGONZ = 1006
+    GEOMETRYCOLLECTIONZ = 1007
+    POLYHEDRALSURFACEZ = 1015
+    TINZ = 1016
+    POINTM = 2001
+    LINESTRINGM = 2002
+    POLYGONM = 2003
+    TRIANGLEM = 2017
+    MULTIPOINTM = 2004
+    MULTILINESTRINGM = 2005
+    MULTIPOLYGONM = 2006
+    GEOMETRYCOLLECTIONM = 2007
+    POLYHEDRALSURFACEM = 2015
+    TINM = 2016
+    POINTZM = 3001
+    LINESTRINGZM = 3002
+    POLYGONZM = 3003
+    TRIANGLEZM = 3017
+    MULTIPOINTZM = 3004
+    MULTILINESTRINGZM = 3005
+    MULTIPOLYGONZM = 3006
+    GEOMETRYCOLLECTIONZM = 3007
+    POLYHEDRALSURFACEZM = 3015
+    TINZM = 3016
 
     @classmethod
     def _missing_(cls, value):
@@ -41,95 +75,98 @@ class GeometryType(enum.Enum):
     @property
     def empty(self) -> str:
         """Get an empty geometry instance of this type."""
-        if self is GeometryType.POINT:
+        base_wkb_id = self.value % 1000
+        if base_wkb_id == 1:
             return shapely.Point()
-        elif self is GeometryType.LINESTRING:
+        elif base_wkb_id == 2:
             return shapely.LineString()
-        elif self is GeometryType.POLYGON:
+        elif base_wkb_id == 3:
             return shapely.Polygon()
-        elif self is GeometryType.MULTIPOINT:
+        elif base_wkb_id == 4:
             return shapely.MultiPoint()
-        elif self is GeometryType.MULTILINESTRING:
+        elif base_wkb_id == 5:
             return shapely.MultiLineString()
-        elif self is GeometryType.MULTIPOLYGON:
+        elif base_wkb_id == 6:
             return shapely.MultiPolygon()
-        elif self is GeometryType.GEOMETRYCOLLECTION:
+        elif base_wkb_id == 7:
             return shapely.GeometryCollection()
-        elif self is GeometryType.GEOMETRY:
+        elif base_wkb_id == 0:
             return shapely.GeometryCollection()
         else:
             raise ValueError(f"No empty implemented for {self}")
 
     @property
+    def flatten(self):
+        if math.floor(self.value / 1000) <= 0:
+            # Remark: for MISSING, -1/1000 == -1
+            return self
+        else:
+            return GeometryType(self.value % 1000)
+
+    @property
+    def has_m(self) -> bool:
+        if math.floor(self.value / 1000) in (2, 3):
+            return True
+        else:
+            return False
+
+    @property
+    def has_z(self) -> bool:
+        if math.floor(self.value / 1000) in (1, 3):
+            return True
+        else:
+            return False
+
+    @property
     def name_camelcase(self) -> str:
         """Get the name in camel case."""
-        if self is GeometryType.POINT:
-            return "Point"
-        elif self is GeometryType.LINESTRING:
-            return "LineString"
-        elif self is GeometryType.POLYGON:
-            return "Polygon"
-        elif self is GeometryType.MULTIPOINT:
-            return "MultiPoint"
-        elif self is GeometryType.MULTILINESTRING:
-            return "MultiLineString"
-        elif self is GeometryType.MULTIPOLYGON:
-            return "MultiPolygon"
-        elif self is GeometryType.GEOMETRYCOLLECTION:
-            return "GeometryCollection"
-        elif self is GeometryType.GEOMETRY:
-            return "Geometry"
-        else:
-            raise ValueError(f"No camelcase name implemented for {self}")
+        name_result = self.name
+        name_result = name_result.replace("MISSING", "Missing")
+        name_result = name_result.replace("MULTI", "Multi")
+        name_result = name_result.replace("POINT", "Point")
+        name_result = name_result.replace("POLYGON", "Polygon")
+        name_result = name_result.replace("LINESTRING", "LineString")
+        name_result = name_result.replace("GEOMETRY", "Geometry")
+        name_result = name_result.replace("COLLECTION", "Collection")
+        name_result = name_result.replace("TRIANGLE", "Triangle")
+        name_result = name_result.replace("POLYHEDRALSURFACE", "PolyhedralSurface")
+        # name_result = name_result.replace("TIN", "TIN")
+
+        return name_result
 
     @property
     def is_multitype(self):
         """Returns if the geometry type is a multi type."""
-        return self in (
-            GeometryType.MULTIPOINT,
-            GeometryType.MULTILINESTRING,
-            GeometryType.MULTIPOLYGON,
-            GeometryType.GEOMETRYCOLLECTION,
-        )
+        base_wkb_id = self.value % 1000
+        if base_wkb_id in (4, 5, 6, 7):
+            # It is already single type
+            return True
 
     @property
     def to_multitype(self):
         """Get the corresponding multitype."""
-        if self in [
-            GeometryType.MULTIPOINT,
-            GeometryType.MULTILINESTRING,
-            GeometryType.MULTIPOLYGON,
-            GeometryType.GEOMETRYCOLLECTION,
-        ]:
+        if self.is_multitype:
             return self
-        elif self is GeometryType.POINT:
-            return GeometryType.MULTIPOINT
-        elif self is GeometryType.LINESTRING:
-            return GeometryType.MULTILINESTRING
-        elif self is GeometryType.POLYGON:
-            return GeometryType.MULTIPOLYGON
-        elif self is GeometryType.GEOMETRY:
-            return GeometryType.GEOMETRYCOLLECTION
-        else:
+        elif self.value % 1000 in (1, 2, 3):
+            # For the "standard" types, point, polygon and linestring, return multi
+            return GeometryType(self.value + 3)
+        elif self == GeometryType.MISSING:
             raise ValueError(f"No multitype implemented for {self}")
+        else:
+            # For all other types, return GeometryCollection
+            return GeometryType(self.value - self.value % 1000 + 7)
 
     @property
     def to_singletype(self):
-        """Get the corresponding multitype."""
-        if self in [
-            GeometryType.GEOMETRY,
-            GeometryType.POINT,
-            GeometryType.LINESTRING,
-            GeometryType.POLYGON,
-        ]:
+        """Get the corresponding single type."""
+        base_wkb_id = self.value % 1000
+        if base_wkb_id in (0, 1, 2, 3):
+            # It is already single type
             return self
-        elif self is GeometryType.MULTIPOINT:
-            return GeometryType.POINT
-        elif self is GeometryType.MULTILINESTRING:
-            return GeometryType.LINESTRING
-        elif self is GeometryType.MULTIPOLYGON:
-            return GeometryType.POLYGON
-        elif self is GeometryType.GEOMETRYCOLLECTION:
+        elif base_wkb_id in (4, 5, 6):
+            # For the "standard" types, point, polygon and linestring, return single
+            return GeometryType(self.value - 3)
+        elif base_wkb_id == 7:
             return GeometryType.GEOMETRY
         else:
             raise ValueError(f"No singletype implemented for {self}")
@@ -137,13 +174,14 @@ class GeometryType(enum.Enum):
     @property
     def to_primitivetype(self):
         """Get the corresponding primitive type."""
-        if self in [GeometryType.POINT, GeometryType.MULTIPOINT]:
+        base_wkb_id = self.value % 1000
+        if base_wkb_id in (1, 4):
             return PrimitiveType.POINT
-        elif self in [GeometryType.LINESTRING, GeometryType.MULTILINESTRING]:
+        elif base_wkb_id in (2, 5):
             return PrimitiveType.LINESTRING
-        elif self in [GeometryType.POLYGON, GeometryType.MULTIPOLYGON]:
+        elif base_wkb_id in (3, 6):
             return PrimitiveType.POLYGON
-        elif self in [GeometryType.GEOMETRY, GeometryType.GEOMETRYCOLLECTION]:
+        elif base_wkb_id in (0, 7):
             return PrimitiveType.GEOMETRY
         else:
             raise ValueError(f"No primitivetype implemented for {self}")
