@@ -105,19 +105,21 @@ def test_collection_extract():
     # Test dealing with mixed geometries
     # ----------------------------------
     line = shapely.LineString([(0, 0), (0, 1)])
-    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
-    multipoly = shapely.MultiPolygon([poly, poly])
-    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    poly1 = shapely.box(0, 0, 1, 1)
+    poly2 = shapely.box(2, 0, 3, 1)
+    poly3 = shapely.box(4, 0, 5, 1)
+    multipoly = shapely.MultiPolygon([poly2, poly3])
+    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
     assert pygeoops.collection_extract(geometrycoll, 1) == point
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.POINT) == point
     assert pygeoops.collection_extract(geometrycoll, 2) == line
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.LINESTRING) == line
     assert pygeoops.collection_extract(geometrycoll, 3) == shapely.GeometryCollection(
-        [poly, multipoly]
+        [poly1, multipoly]
     )
     assert pygeoops.collection_extract(
         geometrycoll, PrimitiveType.POLYGON
-    ) == shapely.GeometryCollection([poly, multipoly])
+    ) == shapely.GeometryCollection([poly1, multipoly])
     assert pygeoops.collection_extract(geometrycoll, 0) == geometrycoll
 
     # Test dealing with deeper nested geometries
@@ -139,6 +141,20 @@ def test_collection_extract():
     )
 
 
+def test_collection_extract_adjacent_polygons():
+    # Create geometrycollection with two polygons that are right next to each other
+    box0_5 = shapely.box(0, 0, 5, 5)
+    box5_10 = shapely.box(5, 0, 10, 5)
+    collection_poly = shapely.GeometryCollection([box0_5, box5_10])
+
+    # Extract polygons
+    result = pygeoops.collection_extract(collection_poly, primitivetype=3)
+
+    # Result should stay the same, because a multipolygon where outer rings have common
+    # border are not valid.
+    assert result == collection_poly
+
+
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
 def test_collection_extract_geometries(input_type):
     """
@@ -148,10 +164,12 @@ def test_collection_extract_geometries(input_type):
     point = shapely.Point((0, 0))
     multipoint = shapely.MultiPoint([point, point])
     line = shapely.LineString([(0, 0), (0, 1)])
-    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
-    multipoly = shapely.MultiPolygon([poly, poly])
-    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
-    input = [point, multipoint, line, poly, multipoly, geometrycoll]
+    poly1 = shapely.box(0, 0, 1, 1)
+    poly2 = shapely.box(2, 0, 3, 1)
+    poly3 = shapely.box(4, 0, 5, 1)
+    multipoly = shapely.MultiPolygon([poly2, poly3])
+    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
+    input = [point, multipoint, line, poly1, multipoly, geometrycoll]
     start_idx = 0
     if input_type == "geoseries":
         # For geoseries, also check if the indexers are retained!
@@ -188,9 +206,11 @@ def test_collection_extract_geometries_primitivetypes():
     # Prepare test data
     point = shapely.Point((0, 0))
     line = shapely.LineString([(0, 0), (0, 1)])
-    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
-    multipoly = shapely.MultiPolygon([poly, poly])
-    geometrycoll = shapely.GeometryCollection([point, line, poly, multipoly])
+    poly1 = shapely.box(0, 0, 1, 1)
+    poly2 = shapely.box(2, 0, 3, 1)
+    poly3 = shapely.box(4, 0, 5, 1)
+    multipoly = shapely.MultiPolygon([poly2, poly3])
+    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
     input = [geometrycoll] * 4
     primitivetypes = [0, 1, 2, 3]
 
@@ -204,7 +224,7 @@ def test_collection_extract_geometries_primitivetypes():
     assert result[2] == line
     assert isinstance(result[3], shapely.GeometryCollection)
     assert len(result[3].geoms) == 2
-    assert result[3].geoms[0] == poly
+    assert result[3].geoms[0] == poly1
     assert result[3].geoms[1] == multipoly
 
 
@@ -326,32 +346,36 @@ def test_is_iterable_arraylike(test_id, input, expected):
     assert pygeoops._general._is_arraylike(input) is expected
 
 
-@pytest.mark.parametrize(
-    "input",
-    [
-        MULTIPOLY_INVALID_1_COLLAPSING_LINE,
-        np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE),
-    ],
-)
 @pytest.mark.parametrize("only_if_invalid", [True, False])
 @pytest.mark.parametrize(
-    "keep_collapsed, exp_geometrytype",
+    "geometry, keep_collapsed, exp_geometrytype",
     [
-        (True, shapely.GeometryCollection),
-        (False, shapely.MultiPolygon),
-        (True, shapely.GeometryCollection),
-        (False, shapely.MultiPolygon),
+        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, True, shapely.GeometryCollection),
+        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, False, shapely.MultiPolygon),
+        (
+            np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE),
+            True,
+            shapely.GeometryCollection,
+        ),
+        (np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE), False, shapely.MultiPolygon),
+        (None, False, None),
+        (np.array(None), True, None),
     ],
 )
-def test_makevalid(input, keep_collapsed, only_if_invalid, exp_geometrytype):
+def test_makevalid_keep_collapsed(
+    geometry, keep_collapsed, only_if_invalid, exp_geometrytype
+):
     # Test
     result = pygeoops.make_valid(
-        input, keep_collapsed=keep_collapsed, only_if_invalid=only_if_invalid
+        geometry, keep_collapsed=keep_collapsed, only_if_invalid=only_if_invalid
     )
 
     # Check result
-    assert result is not None
-    assert isinstance(result, exp_geometrytype)
+    if exp_geometrytype is None:
+        assert result is None
+    else:
+        assert result is not None
+        assert isinstance(result, exp_geometrytype)
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
