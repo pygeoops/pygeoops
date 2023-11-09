@@ -9,6 +9,10 @@
 - Add support for Z/M dimensions geometries in `GeometryType` (#63)
 - Add support for 0 dim ndarray input (#60)
 
+### Bugs fixed
+
+ - Fix `collection_extract` and `collect` creating invalid multipolygons in some cases (#65)
+
 ## 0.3.0 (2023-09-07)
 
 ### Improvements
