@@ -49,29 +49,36 @@ def test_collect():
 
     # Test polygons
     # -------------
-    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
-    multipoly = shapely.MultiPolygon([poly, poly])
-    assert pygeoops.collect(poly) == poly
-    assert pygeoops.collect([poly]) == poly
-    assert pygeoops.collect([poly, poly]) == multipoly
+    poly01 = shapely.box(0, 0, 1, 1)
+    poly23 = shapely.box(2, 0, 3, 1)
+    poly34 = shapely.box(3, 0, 4, 1)
+    poly45 = shapely.box(4, 0, 5, 1)
+    multipoly = shapely.MultiPolygon([poly23, poly45])
+    assert pygeoops.collect(poly01) == poly01
+    assert pygeoops.collect([poly01]) == poly01
+    assert pygeoops.collect([poly23, poly45]) == multipoly
+    # Adjacent polygons: would create invalid multipolygon so becomes GeometryCollection
+    assert pygeoops.collect([poly34, poly45]) == shapely.GeometryCollection(
+        [poly34, poly45]
+    )
 
     # Test geometrycollection
     # -----------------------
-    geometrycoll = shapely.GeometryCollection([point, line, poly])
+    geometrycoll = shapely.GeometryCollection([point, line, poly01])
     assert pygeoops.collect(geometrycoll) == geometrycoll
     assert pygeoops.collect([geometrycoll]) == geometrycoll
-    assert pygeoops.collect([point, line, poly]) == geometrycoll
+    assert pygeoops.collect([point, line, poly01]) == geometrycoll
     assert pygeoops.collect([geometrycoll, line]) == shapely.GeometryCollection(
         [geometrycoll, line]
     )
-    assert pygeoops.collect([poly, multipoly]) == shapely.GeometryCollection(
-        [poly, multipoly]
+    assert pygeoops.collect([poly01, multipoly]) == shapely.GeometryCollection(
+        [poly01, multipoly]
     )
 
     # Test arraylike input
     # --------------------
-    assert pygeoops.collect(gpd.GeoSeries([point, line, poly])) == geometrycoll
-    assert pygeoops.collect(np.array([point, line, poly])) == geometrycoll
+    assert pygeoops.collect(gpd.GeoSeries([point, line, poly01])) == geometrycoll
+    assert pygeoops.collect(np.array([point, line, poly01])) == geometrycoll
 
     # Test arraylike input, 0 dimension
     # ---------------------------------
@@ -139,20 +146,6 @@ def test_collection_extract():
         pygeoops.collection_extract(np.array(geometrycoll), PrimitiveType.POINT)
         == point
     )
-
-
-def test_collection_extract_adjacent_polygons():
-    # Create geometrycollection with two polygons that are right next to each other
-    box0_5 = shapely.box(0, 0, 5, 5)
-    box5_10 = shapely.box(5, 0, 10, 5)
-    collection_poly = shapely.GeometryCollection([box0_5, box5_10])
-
-    # Extract polygons
-    result = pygeoops.collection_extract(collection_poly, primitivetype=3)
-
-    # Result should stay the same, because a multipolygon where outer rings have common
-    # border are not valid.
-    assert result == collection_poly
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
@@ -248,6 +241,32 @@ def test_collection_extract_invalid_params():
         ValueError, match="single geometry passed, but primitivetype is arraylike"
     ):
         pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=[1, 2])
+
+
+@pytest.mark.parametrize("test", ["adjacent", "disjoint"])
+def test_collection_extract_polygons(test):
+    # Create geometrycollection with two polygons that are right next to each other
+    box0_4 = shapely.box(0, 0, 4, 5)
+    box0_5 = shapely.box(0, 0, 5, 5)
+    box5_10 = shapely.box(5, 0, 10, 5)
+
+    if test == "adjacent":
+        collection_poly = shapely.GeometryCollection([box0_5, box5_10])
+
+        # Result should stay a GeometryCollection, because a multipolygon where outer
+        # rings have common border is not valid.
+        expected_result = collection_poly
+
+    elif test == "disjoint":
+        collection_poly = shapely.GeometryCollection([box0_4, box5_10])
+
+        # Result should be a multipolygon, because the polygons aren't adjacent
+        expected_result = shapely.MultiPolygon([box0_4, box5_10])
+
+    # Extract polygons
+    result = pygeoops.collection_extract(collection_poly, primitivetype=3)
+
+    assert result == expected_result
 
 
 def test_empty():
