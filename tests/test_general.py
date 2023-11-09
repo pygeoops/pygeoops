@@ -379,6 +379,8 @@ def test_is_iterable_arraylike(test_id, input, expected):
         (np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE), False, shapely.MultiPolygon),
         (None, False, None),
         (np.array(None), True, None),
+        (shapely.box(0, 0, 5, 5), False, shapely.Polygon),
+        (np.array(shapely.box(0, 0, 5, 5)), True, shapely.Polygon),
     ],
 )
 def test_makevalid_keep_collapsed(
@@ -417,6 +419,14 @@ def test_makevalid_keep_collapsed(
             ],
             False,
             [shapely.MultiPolygon, shapely.LineString],
+        ),
+        (
+            [
+                shapely.box(0, 0, 1, 1),
+                shapely.box(5, 0, 6, 1),
+            ],
+            False,
+            [shapely.Polygon, shapely.Polygon],
         ),
     ],
 )

@@ -361,7 +361,10 @@ def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = Fa
             result = _extract_0dim_ndarray(result)
         else:
             # No make_valid needed, but copy because we're supposed to return a copy
-            result = copy.deepcopy(geometry)
+            if not hasattr(geometry, "__len__"):
+                result = copy.deepcopy(geometry)
+            else:
+                result = np.array(geometry)
 
     else:
         result = _make_valid(geometry, keep_collapsed)
