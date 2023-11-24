@@ -54,11 +54,7 @@ def difference_all_tiled(
     geometry = _extract_0dim_ndarray(geometry)
     if not isinstance(geometry, BaseGeometry):
         raise ValueError(f"geometry should be a shapely geometry, not {geometry}")
-    if (
-        geometry.is_empty
-        or geometries_to_subtract is None
-        or geometries_to_subtract.is_empty
-    ):
+    if geometry.is_empty or geometries_to_subtract is None:
         return geometry
 
     # Determine type dimension of input + what the output type should
@@ -87,6 +83,7 @@ def difference_all_tiled(
                     geom_diff[idx],
                     geometries_to_subtract,
                     keep_geom_type=output_primitivetype_id,
+                    check_intersects=True,
                 )
                 futures[future] = idx
 
@@ -99,6 +96,7 @@ def difference_all_tiled(
                 geom_diff[idx],
                 geometries_to_subtract,
                 keep_geom_type=output_primitivetype_id,
+                check_intersects=True,
             )
 
     # Drop empty results
@@ -119,6 +117,7 @@ def difference_all(
     geometry: BaseGeometry,
     geometries_to_subtract,
     keep_geom_type: Union[bool, int] = False,
+    check_intersects: bool = False,
 ) -> BaseGeometry:
     """
     Subtracts all geometries in geometries_to_subtract from the input geometry.
@@ -130,6 +129,9 @@ def difference_all(
             the output of the primitivetype of the input. If int, specify the geometry
             primitive type to retain: 0: all, 1: points, 2: lines, 3: polygons.
             Defaults to False.
+        check_intersects (bool, optional): True to first check if the
+            geometries_to_subtract intersect geometry. This will be faster if some
+            geometries_to_subtract don't intersect. Defaults to False.
 
     Returns:
         geometry: the geometry with the geometries_to_subtract subtracted from it.
@@ -154,33 +156,22 @@ def difference_all(
     )
 
     # Check which geometries_to_subtract intersect the geometry
-    shapely.prepare(geometry)
-    geoms_to_subtract_idx = np.nonzero(
-        shapely.intersects(geometry, geometries_to_subtract)
-    )[0]
+    if check_intersects:
+        shapely.prepare(geometry)
+        geoms_to_subtract_idx = np.nonzero(
+            shapely.intersects(geometry, geometries_to_subtract)
+        )[0]
 
-    # Union the geometries and apply difference
-    geom_to_subtract = shapely.union_all(geometries_to_subtract[geoms_to_subtract_idx])
-    geom_diff = shapely.difference(geometry, geom_to_subtract)
+        if len(geoms_to_subtract_idx) == 0:
+            return geometry
+        geometries_to_subtract = geometries_to_subtract[geoms_to_subtract_idx]
+
+    # Apply difference with unioned geometries_to_subtract.
+    # This is significantly faster than looping through all to difference them.
+    geom_diff = shapely.difference(geometry, shapely.union_all(geometries_to_subtract))
 
     # Only keep geometries of the asked primitivetype.
     geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
-
-    """
-    # Subtract all intersecting ones one by one in a loop
-    # This gives worse performance than unioning first...
-    geom_diff = geometry
-    for idx in geoms_to_subtract_idx:
-        geom_to_subtract = geometries_to_subtract[idx]
-        shapely.prepare(geom_diff)
-        if shapely.intersects(geom_diff, geom_to_subtract):
-            geom_diff = shapely.difference(geom_diff, geom_to_subtract)
-
-            # Only keep geometries of the asked primitivetype.
-            geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
-            if shapely.is_empty(geom_diff):
-                break
-    """
 
     return geom_diff
 
