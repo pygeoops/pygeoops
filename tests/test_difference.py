@@ -35,14 +35,14 @@ def test_difference_all():
     # -------------------------------------------------
     small2 = shapely.Polygon([(45, 0), (50, 0), (50, 5), (45, 5), (45, 0)])
     assert pygeoops.difference_all(large, [small, small2]) == shapely.difference(
-        shapely.difference(large, small), small2
+        large, shapely.union_all([small, small2])
     )
     assert pygeoops.difference_all(line, [small, small2]) == shapely.difference(
-        shapely.difference(line, small), small2
+        line, shapely.union_all([small, small2])
     )
     collection = shapely.GeometryCollection([line, large])
     assert pygeoops.difference_all(collection, [small, small2]) == shapely.difference(
-        shapely.difference(collection, small), small2
+        collection, shapely.union_all([small, small2])
     )
 
     # Tests with keep_geom_type
@@ -107,7 +107,7 @@ def test_difference_all_tiled():
     # Subtract multiple geometries from single geometry
     small2 = shapely.Polygon([(45, 0), (50, 0), (50, 5), (45, 5), (45, 0)])
     assert pygeoops.difference_all_tiled(large, [small, small2]) == shapely.difference(
-        shapely.difference(large, small), small2
+        large, shapely.union_all([small, small2])
     )
 
 
