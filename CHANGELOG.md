@@ -8,6 +8,7 @@
 - Add `make_valid` with `keep_collapsed` parameter (#58)
 - Add support for Z/M dimensions geometries in `GeometryType` (#63)
 - Add support for 0 dim ndarray input (#60)
+- Improve performance of `difference_all` and `difference_all_tiled` (#67)
 
 ### Bugs fixed
 
