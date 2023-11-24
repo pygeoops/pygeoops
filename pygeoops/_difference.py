@@ -25,8 +25,12 @@ def difference_all_tiled(
     This will result in extra collinear points being added to the boundaries of the
     output.
 
-    Note that the geometries_to_subtract won't be subdivided automatically, so if they
-    can contain complex geometries as well you can use `subdivide` on them.
+    Notes:
+      - the geometries_to_subtract won't be subdivided, so if they can contain complex
+        geometries as well you can use `subdivide` on them first.
+      - if geometries_to_subtract is None, the input geometry is returned.
+      - best performance will be obtained if only geometries_to_subtract are passed in
+        that intersect the input geometry.
 
     Args:
         geometry (geometry): single geometry to substract geometries from.
@@ -50,7 +54,11 @@ def difference_all_tiled(
     geometry = _extract_0dim_ndarray(geometry)
     if not isinstance(geometry, BaseGeometry):
         raise ValueError(f"geometry should be a shapely geometry, not {geometry}")
-    if geometry.is_empty:
+    if (
+        geometry.is_empty
+        or geometries_to_subtract is None
+        or geometries_to_subtract.is_empty
+    ):
         return geometry
 
     # Determine type dimension of input + what the output type should
@@ -63,27 +71,9 @@ def difference_all_tiled(
         geometries_to_subtract = [geometries_to_subtract]
     geometries_to_subtract = shapely.get_parts(geometries_to_subtract)
 
-    # Check which geometries_to_subtract intersect the geometry
-    shapely.prepare(geometry)
-    geoms_to_subtract_idx = np.nonzero(
-        shapely.intersects(geometry, geometries_to_subtract)
-    )[0]
-
     # Split the input geometry if it has many points to speedup processing.
     # Max 1000 coordinates seems to work fine based on some testing.
     geom_diff = pygeoops.subdivide(geometry, subdivide_coords)
-
-    """
-    # Subtract all intersecting ones
-    for idx in geoms_to_subtract_idx:
-        geom_to_subtract = geometries_to_subtract[idx]
-        geom_diff = _difference_intersecting(
-            geom_diff, geom_to_subtract, output_primitivetype_id=output_primitivetype_id
-        )
-
-        # Drop empty results
-        geom_diff = geom_diff[~shapely.is_empty(geom_diff)]
-    """
 
     # Subtract all intersecting ones
     if len(geom_diff) > 10:
@@ -95,7 +85,7 @@ def difference_all_tiled(
                 future = pool.submit(
                     difference_all,
                     geom_diff[idx],
-                    geometries_to_subtract[geoms_to_subtract_idx],
+                    geometries_to_subtract,
                     keep_geom_type=output_primitivetype_id,
                 )
                 futures[future] = idx
@@ -107,7 +97,7 @@ def difference_all_tiled(
         for idx in range(len(geom_diff)):
             geom_diff[idx] = difference_all(
                 geom_diff[idx],
-                geometries_to_subtract[geoms_to_subtract_idx],
+                geometries_to_subtract,
                 keep_geom_type=output_primitivetype_id,
             )
 
@@ -169,7 +159,16 @@ def difference_all(
         shapely.intersects(geometry, geometries_to_subtract)
     )[0]
 
-    # Subtract all intersecting ones
+    # Union the geometries and apply difference
+    geom_to_subtract = shapely.union_all(geometries_to_subtract[geoms_to_subtract_idx])
+    geom_diff = shapely.difference(geometry, geom_to_subtract)
+
+    # Only keep geometries of the asked primitivetype.
+    geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
+
+    """
+    # Subtract all intersecting ones one by one in a loop
+    # This gives worse performance than unioning first...
     geom_diff = geometry
     for idx in geoms_to_subtract_idx:
         geom_to_subtract = geometries_to_subtract[idx]
@@ -181,6 +180,7 @@ def difference_all(
             geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
             if shapely.is_empty(geom_diff):
                 break
+    """
 
     return geom_diff
 
