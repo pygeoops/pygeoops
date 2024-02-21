@@ -9,7 +9,7 @@ dependencies:
   - shapely >1
   - topojson
   # benchmark
-  - geofileops
+  #- geofileopsf
   - pandas
   - pandas-stubs
   # testing

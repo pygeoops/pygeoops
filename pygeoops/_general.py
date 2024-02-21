@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
 import pyproj
 import shapely
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
@@ -102,7 +102,7 @@ def _extract_0dim_ndarray(geometry):
 
 def collection_extract(
     geometry,
-    primitivetype: Union[int, PrimitiveType, None] = None,
+    primitivetype: Union[int, PrimitiveType, ArrayLike, None] = None,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
     """
     Extracts the parts from the input geometry/geometries that comply with the
@@ -154,7 +154,7 @@ def collection_extract(
 
     else:
         # Arraylike -> convert to list of primitivetype ids
-        primitivetype = [to_primitivetype_id(type) for type in primitivetype]
+        primitivetype = [to_primitivetype_id(type) for type in primitivetype]  # type: ignore[union-attr]
 
         if _is_arraylike(geometry):
             # Number of primitive types specified should equal the number of geometries
@@ -169,13 +169,13 @@ def collection_extract(
     # Run the collection extraction
     if not _is_arraylike(geometry):
         # Single geometry.
-        result = _collection_extract(geometry=geometry, primitivetype_id=primitivetype)
+        result = _collection_extract(geometry=geometry, primitivetype_id=primitivetype)  # type: ignore[arg-type]
     else:
         # Arraylike geometries -> run on all of them
         result = np.array(
             [
                 _collection_extract(geometry=geom, primitivetype_id=type)
-                for geom, type in zip(geometry, primitivetype)
+                for geom, type in zip(geometry, primitivetype)  # type: ignore[arg-type]
             ]
         )
         # If input is GeoSeries, recover index
