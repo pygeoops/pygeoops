@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.5.0 (???)
+
+### Improvements
+
+- Use ruff instead of black for formatting + use mypy (#)
+
 ## 0.4.0 (???)
 
 ### Improvements
