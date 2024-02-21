@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## 0.4.0 (???)
+## 0.5.0 (???)
+
+### Improvements
+
+- ENH: improve logging of geos warnings (#77)
+
+## 0.4.0 (2023-10-31)
 
 ### Improvements
 
