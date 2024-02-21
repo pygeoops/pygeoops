@@ -523,9 +523,7 @@ def test_remove_inner_rings():
         multipoly_removerings, min_area_to_keep=3, crs=None
     )
     assert isinstance(poly_result, shapely.MultiPolygon)
-    interiors = poly_result.geoms[
-        0
-    ].interiors  # pyright: ignore[reportOptionalMemberAccess]
+    interiors = poly_result.geoms[0].interiors  # pyright: ignore[reportOptionalMemberAccess]
     assert len(interiors) == 1
 
 

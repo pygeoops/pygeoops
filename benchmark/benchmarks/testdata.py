@@ -29,17 +29,17 @@ logger = logging.getLogger(__name__)
 class TestFile(enum.Enum):
     AGRIPRC_2018 = (
         0,
-        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2018/Landbouwgebruikspercelen_LV_2018_GewVLA_Shape.zip",  # noqa: E501
+        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2018/Landbouwgebruikspercelen_LV_2018_GewVLA_Shape.zip",
         "agriprc_2018.gpkg",
     )
     AGRIPRC_2019 = (
         1,
-        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2019/Landbouwgebruikspercelen_LV_2019_GewVLA_Shapefile.zip",  # noqa: E501
+        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2019/Landbouwgebruikspercelen_LV_2019_GewVLA_Shapefile.zip",
         "agriprc_2019.gpkg",
     )
     COMMUNES = (
         2,
-        "https://downloadagiv.blob.core.windows.net/referentiebestand-gemeenten/VoorlopigRefBestandGemeentegrenzen_2019-01-01/VRBG_toestand_16_05_2018_(geldend_vanaf_01_01_2019)_GewVLA_Shape.zip",  # noqa: E501
+        "https://downloadagiv.blob.core.windows.net/referentiebestand-gemeenten/VoorlopigRefBestandGemeentegrenzen_2019-01-01/VRBG_toestand_16_05_2018_(geldend_vanaf_01_01_2019)_GewVLA_Shape.zip",
         "communes.gpkg",
     )
 
