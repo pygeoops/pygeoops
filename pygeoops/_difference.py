@@ -1,5 +1,6 @@
 import concurrent.futures
 from typing import Union
+import warnings
 
 import numpy as np
 from numpy.typing import NDArray
@@ -168,7 +169,19 @@ def difference_all(
 
     # Apply difference with unioned geometries_to_subtract.
     # This is significantly faster than looping through all to difference them.
-    geom_diff = shapely.difference(geometry, shapely.union_all(geometries_to_subtract))
+    geom_to_subtract = shapely.union_all(geometries_to_subtract)
+
+    # Set handler for warnings, so the geometries involved are are logged as well.
+    def err_handler(type, flag):
+        warnings.warn(
+            f"warning in difference of geom at {shapely.get_coordinates(geometry)[0]}"
+            f" with geom at {shapely.get_coordinates(geom_to_subtract)[0]}, "
+            f"type: {type}, flag: {flag}",
+            stacklevel=1,
+        )
+
+    with np.errstate(all="call", call=err_handler):
+        geom_diff = shapely.difference(geometry, geom_to_subtract)
 
     # Only keep geometries of the asked primitivetype.
     geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
