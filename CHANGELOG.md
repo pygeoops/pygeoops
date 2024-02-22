@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- Improve logging of geos warnings (#77)
+- Improve logging of geos warnings in `difference_all` (#77)
 - Use ruff instead of black for formatting + use mypy (#78)
 
 ## 0.4.0 (2023-10-31)
