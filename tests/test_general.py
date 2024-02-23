@@ -2,6 +2,7 @@
 Tests for functionalities in _general.
 """
 
+import locale
 import geopandas as gpd
 import numpy as np
 import pytest
@@ -23,6 +24,10 @@ LINESTRING_INVALID_2_COLLAPSING_POINT = shapely.MultiLineString(
         shapely.LineString([(1, 1), (1, 1)]),
     ]
 )
+
+
+def test_encoding():
+    assert locale.getpreferredencoding() == "utf-8"
 
 
 def test_collect():
