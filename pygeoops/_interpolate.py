@@ -57,6 +57,8 @@ def line_interpolate_to_bbox(
             Point(x0, miny),
             Point(x1, maxy),
         ]
-        bbox = box(minx, miny, maxx, maxy)
-        points_sorted_by_distance = sorted(points_on_boundary_lines, key=bbox.distance)
+        bbox_geom = box(minx, miny, maxx, maxy)
+        points_sorted_by_distance = sorted(
+            points_on_boundary_lines, key=bbox_geom.distance
+        )
         return LineString(points_sorted_by_distance[:2])
