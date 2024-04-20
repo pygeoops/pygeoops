@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- Add functions to extend a line (#83)
 - Improve logging of geos warnings in `difference_all` (#77)
 - Use ruff instead of black for formatting + use mypy (#78)
 
