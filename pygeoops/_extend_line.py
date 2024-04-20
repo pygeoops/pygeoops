@@ -68,4 +68,7 @@ def extend_line_to_bbox(
         points_sorted_by_distance = sorted(
             points_on_boundary_lines, key=bbox_geom.distance
         )
-        return points_sorted_by_distance[:2]
+        return (
+            points_sorted_by_distance[0].coords,
+            points_sorted_by_distance[1].coords,
+        )
