@@ -3,7 +3,7 @@ import pytest
 from shapely import box, LineString, Polygon
 
 import pygeoops
-
+from pygeoops import _extend_line
 
 @pytest.mark.parametrize(
     "desc, line, start_distance, end_distance, exp_line",
@@ -93,7 +93,7 @@ def test_extend_line_to_polygon(desc, line, poly, exp_line):
     ],
 )
 def test_extend_segment_by_distance(desc, p1, p2, distance, exp_p):
-    result = pygeoops._extend_segment_by_distance(p1, p2, distance)
+    result = _extend_line._extend_segment_by_distance(p1, p2, distance)
     assert result == exp_p
 
 
@@ -106,7 +106,7 @@ def test_extend_segment_by_distance(desc, p1, p2, distance, exp_p):
 )
 def test_extend_segment_by_distance_invalid(exp_error, p1, p2, distance):
     with pytest.raises(ValueError, match=exp_error):
-        _ = pygeoops._extend_segment_by_distance(p1, p2, distance)
+        _ = _extend_line._extend_segment_by_distance(p1, p2, distance)
 
 
 @pytest.mark.parametrize(
@@ -129,7 +129,7 @@ def test_extend_segment_by_distance_invalid(exp_error, p1, p2, distance):
     ],
 )
 def test_extend_segment_by_ratio(desc, p1, p2, ratio, exp_p):
-    result = pygeoops._extend_segment_by_ratio(p1, p2, ratio)
+    result = _extend_line._extend_segment_by_ratio(p1, p2, ratio)
     assert result == exp_p
 
 
@@ -141,7 +141,7 @@ def test_extend_segment_by_ratio(desc, p1, p2, ratio, exp_p):
 )
 def test_extend_segment_by_ratio_invalid(exp_error, p1, p2, ratio):
     with pytest.raises(ValueError, match=exp_error):
-        _ = pygeoops._extend_segment_by_ratio(p1, p2, ratio)
+        _ = _extend_line._extend_segment_by_ratio(p1, p2, ratio)
 
 
 @pytest.mark.parametrize(
@@ -160,5 +160,5 @@ def test_extend_segment_by_ratio_invalid(exp_error, p1, p2, ratio):
     ],
 )
 def test_extend_segment_to_bbox(desc, p1, p2, bbox, exp_line):
-    result = pygeoops._extend_segment_to_bbox(p1, p2, bbox)
+    result = _extend_line._extend_segment_to_bbox(p1, p2, bbox)
     assert result == exp_line
