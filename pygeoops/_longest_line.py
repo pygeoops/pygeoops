@@ -1,7 +1,7 @@
 import shapely
 from shapely.geometry import LineString
 
-import pygeoops
+from pygeoops import _extend_line
 
 
 def longest_line(poly: shapely.geometry.base.BaseGeometry):
@@ -20,11 +20,14 @@ def longest_line(poly: shapely.geometry.base.BaseGeometry):
                     continue
 
                 # Extend the line to cover the mbr of the polygon
-                line = pygeoops.line_interpolate_to_bbox(point1, point2, polygon.bounds)
+                line = LineString(
+                    _extend_line._extend_segment_to_bbox(point1, point2, polygon.bounds)
+                )
 
                 # Find intersection points between the line and the polygon
-                intersection = LineString(polygon.boundary).intersection(line)
-                intersection_points.extend(shapely.get_coordinates(intersection))
+                intersection_points.extend(
+                    shapely.get_coordinates(polygon.intersection(line))
+                )
 
         # Iterate over intersection points
         for intersection_pt1 in intersection_points:

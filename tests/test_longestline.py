@@ -1,6 +1,4 @@
-from matplotlib import pyplot as plt
 from shapely import MultiPolygon, Polygon
-import shapely.plotting
 
 import pygeoops
 
@@ -14,8 +12,4 @@ def test_longestline():
     )
 
     longest_line = pygeoops.longest_line(multipolygon)
-
-    shapely.plotting.plot_polygon(multipolygon)
-    shapely.plotting.plot_line(longest_line, color="red")
-    plt.show()
-    assert longest_line.length == 1
+    assert longest_line.length == 2.5
