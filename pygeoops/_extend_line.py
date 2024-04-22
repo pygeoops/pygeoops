@@ -1,7 +1,7 @@
 import math
 from typing import Tuple
 import shapely
-from shapely import box, LineString, MultiPoint, Polygon, Point
+from shapely import box, LineString, Polygon, Point
 
 
 def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
