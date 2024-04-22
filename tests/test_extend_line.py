@@ -30,6 +30,13 @@ from pygeoops import _extend_line
             2,
             LineString([(2, 4), (2, 2), (3, 2), (3, -1)]),
         ),
+        (
+            "0 start_distance and end_distance",
+            LineString([(1, 1), (2, 2)]),
+            0,
+            0,
+            LineString([(1, 1), (2, 2)]),
+        ),
     ],
 )
 def test_extend_line_by_distance(desc, line, start_distance, end_distance, exp_line):
