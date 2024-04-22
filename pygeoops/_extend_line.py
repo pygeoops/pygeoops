@@ -4,6 +4,38 @@ import shapely
 from shapely import box, LineString, Polygon, Point
 
 
+def extend_line_by_distance(
+    line: LineString, start_distance: float, end_distance: float
+) -> LineString:
+    """
+    Extends a line with the specified distances.
+
+    Args:
+        line (LineString): The line to extend.
+        start_distance (float): The distance to extend the start of the line
+            with.
+        end_distance (float): The distance to extend the end of the line with.
+
+    Returns:
+        LineString: The extended line.
+    """
+    if start_distance == 0 and end_distance == 0:
+        return line
+
+    line_coords = shapely.get_coordinates(line)
+    line_result = line_coords.copy()
+
+    # Extend the start and end of the line
+    _, line_result[0] = _extend_segment_by_distance(
+        line_coords[1], line_coords[0], start_distance
+    )
+    _, line_result[-1] = _extend_segment_by_distance(
+        line_coords[-2], line_coords[-1], end_distance
+    )
+
+    return LineString(line_result)
+
+
 def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
     """
     Extends a line to a given Polygon.
@@ -16,17 +48,17 @@ def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
         LineString: The extended line.
     """
     line_coords = shapely.get_coordinates(line)
-    line_result = line_coords
+    line_result = line_coords.copy()
     geometry_line = LineString(shapely.get_coordinates(geometry))
     shapely.prepare(geometry_line)
 
     # Find the closest point on geometry_line that the start of the line can extend to.
-    line_coords[0] = _find_closest_extend_point(
+    line_result[0] = _find_closest_extend_point(
         line_coords[1], line_coords[0], geometry_line
     )
 
     # Find the closest point on geometry_line that the end of the line can extend to.
-    line_coords[-1] = _find_closest_extend_point(
+    line_result[-1] = _find_closest_extend_point(
         line_coords[-2], line_coords[-1], geometry_line
     )
 
@@ -55,7 +87,7 @@ def _find_closest_extend_point(
         return p2
 
     # Extend the segment to the bounding box of the geometry.
-    _, p2_ext = extend_segment_to_bbox(p1, p2, bbox=geometry_line.bounds)
+    _, p2_ext = _extend_segment_to_bbox(p1, p2, bbox=geometry_line.bounds)
 
     # We want to find the intersection point of the extension with the geometry lines
     # that is closest to p2.
@@ -74,7 +106,7 @@ def _find_closest_extend_point(
         return points_sorted_by_distance[0].coords[0]
 
 
-def extend_segment_by_distance(
+def _extend_segment_by_distance(
     p1: Tuple[float, float], p2: Tuple[float, float], distance: float
 ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     """
@@ -93,14 +125,14 @@ def extend_segment_by_distance(
     if distance < 0:
         raise ValueError(f"distance must be >= 0, received: {distance}")
 
-    len = math.sqrt(pow(p1[0] - p2[0], 2.0) + pow(p1[1] - p2[1], 2.0))
-    if len == 0:
+    segment_length = math.sqrt(pow(p1[0] - p2[0], 2.0) + pow(p1[1] - p2[1], 2.0))
+    if segment_length == 0:
         raise ValueError("lenght of input segment cannot be 0")
-    ratio = distance / len
-    return extend_segment_by_ratio(p1, p2, ratio=ratio)
+    ratio = distance / segment_length
+    return _extend_segment_by_ratio(p1, p2, ratio=ratio)
 
 
-def extend_segment_by_ratio(
+def _extend_segment_by_ratio(
     p1: Tuple[float, float], p2: Tuple[float, float], ratio: float
 ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     """
@@ -125,7 +157,7 @@ def extend_segment_by_ratio(
     return (p1, p_ext)
 
 
-def extend_segment_to_bbox(
+def _extend_segment_to_bbox(
     p1: Tuple[float, float],
     p2: Tuple[float, float],
     bbox: Tuple[float, float, float, float],
