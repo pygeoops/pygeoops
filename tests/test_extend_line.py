@@ -9,13 +9,13 @@ import pygeoops
     "desc, line, poly, exp_line",
     [
         (
-            "each line extension intersection is one point",
+            "each line extension intersects with one point",
             LineString([(4, 3), (5, 5), (6, 5)]),
             box(0, 0, 10, 10),
             LineString([(2.5, 0), (5, 5), (10, 5)]),
         ),
         (
-            "one line extension intersection is multiple points",
+            "one line extension intersects with multiple points",
             LineString([(4, 3), (5, 5), (6, 5)]),
             Polygon(
                 [(3, 0), (3, 10), (7, 10), (7, 3), (10, 10), (10, 0), (3, 0)],
@@ -23,12 +23,26 @@ import pygeoops
             LineString([(3, 1), (5, 5), (7, 5)]),
         ),
         (
-            "one line extension intersection is points + lines",
+            "one line extension intersects with a point + a line",
             LineString([(4, 3), (5, 5), (6, 5)]),
             Polygon(
                 [(3, 0), (3, 10), (7, 10), (7, 5), (8, 5), (10, 10), (10, 0), (3, 0)],
             ),
             LineString([(3, 1), (5, 5), (7, 5)]),
+        ),
+        (
+            "input line is already on the polygon",
+            LineString([(3, 1), (5, 5), (7, 5)]),
+            Polygon(
+                [(3, 0), (3, 10), (7, 10), (7, 5), (8, 5), (10, 10), (10, 0), (3, 0)],
+            ),
+            LineString([(3, 1), (5, 5), (7, 5)]),
+        ),
+        (
+            "input line is already on the polygon",
+            LineString([(4, 3), (5, 5), (6, 5)]),
+            box(4, 0, 5, 1),
+            LineString([(4, 3), (5, 5), (6, 5)]),
         ),
     ],
 )

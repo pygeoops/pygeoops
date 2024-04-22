@@ -50,17 +50,24 @@ def _find_closest_extend_point(
         Tuple[float, float]: the closest point on the geometry_line that can be
             extended to.
     """
-    # If p2 is already on the geometry line, return p2
+    # If p2 is already on the geometry line, return p2.
     if geometry_line.intersects(Point(p2)):
         return p2
 
+    # Extend the segment to the bounding box of the geometry.
     _, p2_ext = extend_segment_to_bbox(p1, p2, bbox=geometry_line.bounds)
+
+    # We want to find the intersection point of the extension with the geometry lines
+    # that is closest to p2.
     end_extension = (p2, p2_ext)
     intersections = geometry_line.intersection(LineString(end_extension))
     intersection_points = shapely.get_coordinates(intersections)
+
     if len(intersection_points) == 0:
-        return intersection_points[0]
+        # No intersection found, so return input point p2.
+        return p2
     else:
+        # Find the intersection point closest to input point p2.
         intersection_points = shapely.points(intersection_points)
         p2_point = Point(p2)
         points_sorted_by_distance = sorted(intersection_points, key=p2_point.distance)
