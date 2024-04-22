@@ -5,6 +5,7 @@ from shapely import box, LineString, Polygon
 import pygeoops
 from pygeoops import _extend_line
 
+
 @pytest.mark.parametrize(
     "desc, line, start_distance, end_distance, exp_line",
     [
