@@ -21,6 +21,8 @@ methods implemented in PyGeoOps. All classes and function exposed in
    difference_all_tiled
    empty
    explode
+   extend_line_by_distance
+   extend_line_to_polygon
    make_valid
    remove_inner_rings
    simplify
