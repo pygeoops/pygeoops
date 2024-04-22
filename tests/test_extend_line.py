@@ -116,10 +116,12 @@ def test_extend_segment_by_ratio_invalid(exp_error, p1, p2, ratio):
 @pytest.mark.parametrize(
     "desc, p1, p2, bbox, exp_line",
     [
-        ("diagonal, left-right", (1, 1), (2, 2), (0, 0, 4, 4), ((0, 0), (4, 4))),
-        ("diagonal, left-right, touch", (2, 2), (4, 4), (0, 0, 4, 4), ((0, 0), (4, 4))),
-        ("diagonal, right-left", (2, 2), (1, 1), (0, 0, 4, 4), ((4, 4), (0, 0))),
-        ("diagonal, right-left, touch", (4, 4), (2, 2), (0, 0, 4, 4), ((4, 4), (0, 0))),
+        ("diag, left-right", (1, 1), (2, 2), (0, 0, 4, 4), ((0, 0), (4, 4))),
+        ("diag, left-right, touch", (2, 2), (4, 4), (0, 0, 4, 4), ((0, 0), (4, 4))),
+        ("diag, left-right, touch2", (0, 0), (1, 1), (0, 0, 4, 4), ((0, 0), (4, 4))),
+        ("diag, right-left", (2, 2), (1, 1), (0, 0, 4, 4), ((4, 4), (0, 0))),
+        ("diag, right-left, touch", (4, 4), (2, 2), (0, 0, 4, 4), ((4, 4), (0, 0))),
+        ("diag, right-left, beyond", (5, 5), (2, 2), (0, 0, 4, 4), ((4, 4), (0, 0))),
         ("horizontal, left-right", (1, 1), (2, 1), (0, 0, 4, 4), ((0, 1), (4, 1))),
         ("horizontal, right-left", (2, 1), (1, 1), (0, 0, 4, 4), ((4, 1), (0, 1))),
         ("vertical, bottom-top", (1, 1), (1, 2), (0, 0, 4, 4), ((1, 0), (1, 4))),
