@@ -117,7 +117,9 @@ def test_extend_segment_by_ratio_invalid(exp_error, p1, p2, ratio):
     "desc, p1, p2, bbox, exp_line",
     [
         ("diagonal, left-right", (1, 1), (2, 2), (0, 0, 4, 4), ((0, 0), (4, 4))),
+        ("diagonal, left-right2", (2, 2), (3, 3), (0, 0, 4, 4), ((0, 0), (4, 4))),
         ("diagonal, right-left", (2, 2), (1, 1), (0, 0, 4, 4), ((4, 4), (0, 0))),
+        ("diagonal, right-left2", (3, 3), (2, 2), (0, 0, 4, 4), ((4, 4), (0, 0))),
         ("horizontal, left-right", (1, 1), (2, 1), (0, 0, 4, 4), ((0, 1), (4, 1))),
         ("horizontal, right-left", (2, 1), (1, 1), (0, 0, 4, 4), ((4, 1), (0, 1))),
         ("vertical, bottom-top", (1, 1), (1, 2), (0, 0, 4, 4), ((1, 0), (1, 4))),
