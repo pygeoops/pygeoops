@@ -12,7 +12,7 @@ from pygeoops._view_angles import *  # noqa: F403
 
 def _get_version():
     version_path = Path(__file__).resolve().parent / "version.txt"
-    with open(version_path, mode="r") as file:
+    with open(version_path) as file:
         return file.readline()
 
 

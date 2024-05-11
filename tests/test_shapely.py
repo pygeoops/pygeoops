@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Some tests mainly meant to explore/show behaviour of some shapely functions.
 """

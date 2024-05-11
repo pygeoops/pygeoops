@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Library with some less common or extended spatial functions"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
@@ -84,8 +84,12 @@ select = [
     "PGH",
     # Ruff-specific rules
     "RUF",
+    # pyupgrade
+    "UP",
+    # pydocstyle
+    #"D",
 ]
-target-version = "py38"
+target-version = "py39"
 ignore = [ # space before : (needed for how black formats slicing)
     # "E203",  # not yet implemented
     # do not assign a lambda expression, use a def

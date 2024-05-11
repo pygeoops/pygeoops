@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Module containing utilities to create/manipulate grids.
 """
 
 import logging
 import math
-from typing import Optional, Tuple
+from typing import Optional
 import numpy as np
 
 from numpy.typing import NDArray
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_grid(
-    total_bounds: Tuple[float, float, float, float],
+    total_bounds: tuple[float, float, float, float],
     nb_columns: int,
     nb_rows: int,
 ) -> NDArray[Polygon]:
@@ -43,7 +42,7 @@ def create_grid(
 
 
 def create_grid3(
-    total_bounds: Tuple[float, float, float, float],
+    total_bounds: tuple[float, float, float, float],
     width: float,
     height: float,
 ) -> NDArray[Polygon]:
@@ -97,7 +96,7 @@ def create_grid3(
 
 
 def create_grid2(
-    total_bounds: Tuple[float, float, float, float],
+    total_bounds: tuple[float, float, float, float],
     nb_squarish_tiles: int,
     nb_squarish_tiles_max: Optional[int] = None,
 ) -> NDArray[Polygon]:
