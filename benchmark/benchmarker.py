@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for benchmarking.
 """
@@ -9,7 +8,7 @@ import inspect
 import logging
 from pathlib import Path
 import tempfile
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -63,8 +62,8 @@ class RunResult:
 
 
 def run_benchmarks(
-    modules_to_run: Optional[List[str]] = None,
-    functions_to_run: Optional[List[str]] = None,
+    modules_to_run: Optional[list[str]] = None,
+    functions_to_run: Optional[list[str]] = None,
 ):
     # Init logging
     logging.basicConfig(

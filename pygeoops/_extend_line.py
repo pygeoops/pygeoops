@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 import shapely
 from shapely import box, LineString, Polygon, Point
 
@@ -66,10 +65,10 @@ def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
 
 
 def _find_closest_extend_point(
-    p1: Tuple[float, float],
-    p2: Tuple[float, float],
+    p1: tuple[float, float],
+    p2: tuple[float, float],
     geometry_line: LineString,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     Find the closest point on the geometry line that can be extended to.
 
@@ -107,8 +106,8 @@ def _find_closest_extend_point(
 
 
 def _extend_segment_by_distance(
-    p1: Tuple[float, float], p2: Tuple[float, float], distance: float
-) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    p1: tuple[float, float], p2: tuple[float, float], distance: float
+) -> tuple[tuple[float, float], tuple[float, float]]:
     """
     Extends the segment by the distance specified.
 
@@ -133,8 +132,8 @@ def _extend_segment_by_distance(
 
 
 def _extend_segment_by_ratio(
-    p1: Tuple[float, float], p2: Tuple[float, float], ratio: float
-) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    p1: tuple[float, float], p2: tuple[float, float], ratio: float
+) -> tuple[tuple[float, float], tuple[float, float]]:
     """
     Extends the segment by a ratio.
 
@@ -158,10 +157,10 @@ def _extend_segment_by_ratio(
 
 
 def _extend_segment_to_bbox(
-    p1: Tuple[float, float],
-    p2: Tuple[float, float],
-    bbox: Tuple[float, float, float, float],
-) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    p1: tuple[float, float],
+    p2: tuple[float, float],
+    bbox: tuple[float, float, float, float],
+) -> tuple[tuple[float, float], tuple[float, float]]:
     """
     Extends a segment so both points are onto the boundaries of a given bounding
     box.

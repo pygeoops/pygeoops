@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from geopandas import GeoSeries
 import numpy as np
 import pytest
@@ -11,7 +9,7 @@ import pygeoops
 
 
 def get_testdata() -> (
-    Tuple[shapely.Point, List[shapely.Geometry], List[Tuple[str, str]]]
+    tuple[shapely.Point, list[shapely.Geometry], list[tuple[str, str]]]
 ):
     # Viewpoint
     viewpoint = shapely.Point(10, 20)
