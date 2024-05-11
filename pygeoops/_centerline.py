@@ -175,8 +175,9 @@ def _remove_short_branches_notempty(
     min_branch_length: float,
 ) -> Union[shapely.MultiLineString, shapely.LineString, None]:
     """
-    Remove all branches of the input lines shorter than min_branch_length. If this
-    leads to a None or empty result, return a valid line anyway.
+    Remove all branches of the input lines shorter than min_branch_length.
+
+    If this leads to a None or empty result, return a valid line anyway.
 
     Args:
         line (shapely line): input line

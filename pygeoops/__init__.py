@@ -1,3 +1,7 @@
+"""
+Library with some less common or extended spatial functions.
+"""
+
 from pathlib import Path
 
 from pygeoops._difference import *  # noqa: F403

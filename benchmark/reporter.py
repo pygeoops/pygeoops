@@ -149,7 +149,6 @@ def save_chart(
     Raises:
         Exception: _description_
     """
-
     # Init
     # Check input
     non_numeric_columns = [

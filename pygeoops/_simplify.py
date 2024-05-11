@@ -56,7 +56,7 @@ def simplify(
             in a moving window. Used for LANG algorithm. Defaults to 8.
         preserve_topology (bool, optional): True to (try to) return valid
             geometries as result. Defaults to True.
-        preserve_common_bounderies (bool, optional): True to (try to) maintain common
+        preserve_common_boundaries (bool, optional): True to (try to) maintain common
             boundaries between all geometries in the input geometry list.
             Defaults to False.
         keep_points_on (BaseGeometry], optional): point of the geometry to

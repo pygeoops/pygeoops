@@ -1,3 +1,7 @@
+"""
+Setup file to package pygeoops.
+"""
+
 import setuptools
 
 with open("pygeoops/version.txt") as file:
