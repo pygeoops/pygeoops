@@ -44,7 +44,6 @@ def simplify_coords_lang(
         If input coords is np.ndarray or CoordinateSequence, returns np.ndarray,
         otherwise returns a list.
     """
-
     # Init variables
     if isinstance(coords, np.ndarray):
         coords_arr = coords
@@ -76,8 +75,9 @@ def simplify_coords_lang_idx(
     simplify_lookahead_points: bool = False,
 ) -> Union[np.ndarray, list]:
     """
-    Simplify a line using the lang algorithm and return the coordinate indexes to
-    be kept.
+    Simplify a line using the lang algorithm.
+
+    The result is the coordinate indexes to be kept.
 
     More info about the implemtation + simplify_lookahead_points can be found in the
     description of function simplify_coords_lang.
@@ -96,7 +96,6 @@ def simplify_coords_lang_idx(
         If input coords is an np.ndarray or CoordinateSequence, returns np.ndarray,
         otherwise returns a list.
     """
-
     # Init variables
     if isinstance(coords, np.ndarray):
         line_arr = coords

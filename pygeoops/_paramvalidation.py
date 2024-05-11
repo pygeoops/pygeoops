@@ -9,8 +9,7 @@ def keep_geom_type2primitivetype_id(
     keep_geom_type: Union[bool, int], geometry: BaseGeometry
 ) -> int:
     """
-    Checks and interpretes a keep_geom_type parameter and returns the appropriate
-    geometry primitivetype.
+    Interprete a keep_geom_type parameter and return the appropriate primitivetype.
 
     Args:
         keep_geom_type (Union[bool, int]): value to check and interprete

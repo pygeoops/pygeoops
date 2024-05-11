@@ -162,8 +162,7 @@ def _extend_segment_to_bbox(
     bbox: tuple[float, float, float, float],
 ) -> tuple[tuple[float, float], tuple[float, float]]:
     """
-    Extends a segment so both points are onto the boundaries of a given bounding
-    box.
+    Extends a segment so both points are on the boundaries of a given bounding box.
 
     Args:
         p1 (Tuple[float, float]): The first point of the segment.
