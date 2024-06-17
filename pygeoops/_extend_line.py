@@ -81,9 +81,7 @@ def extend_line_to_geometry(
             )
         result = MultiLineString(result_lines)
     else:
-        raise ValueError(
-            f"line must be LineString or MultiLineString, not {type(line)}"
-        )
+        raise ValueError(f"line must be (Multi)LineString, not {type(line)}")
 
     return result
 
