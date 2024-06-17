@@ -1,9 +1,17 @@
 import math
 import pytest
-from shapely import box, LineString, Polygon
+from shapely import (
+    box,
+    get_coordinates,
+    LineString,
+    MultiLineString,
+    MultiPolygon,
+    Polygon,
+)
 
 import pygeoops
 from pygeoops import _extend_line
+import test_helper
 
 
 @pytest.mark.parametrize(
@@ -48,6 +56,86 @@ def test_extend_line_by_distance(desc, line, start_distance, end_distance, exp_l
     "desc, line, poly, exp_line",
     [
         (
+            "input multiline, Y shape, 2 point linestrings",
+            MultiLineString([[(3, 5), (5, 5)], [(5, 5), (7, 7)], [(5, 5), (7, 3)]]),
+            box(0, 0, 10, 10),
+            MultiLineString([[(0, 5), (5, 5)], [(5, 5), (10, 10)], [(5, 5), (10, 0)]]),
+        ),
+        (
+            "input multiline, Y shape, 3 point linestrings",
+            MultiLineString(
+                [
+                    [(3, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (7, 7)],
+                    [(5, 5), (6, 4), (7, 3)],
+                ]
+            ),
+            box(0, 0, 10, 10),
+            MultiLineString(
+                [
+                    [(0, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (10, 10)],
+                    [(5, 5), (6, 4), (10, 0)],
+                ]
+            ),
+        ),
+        (
+            "input multiline, 3 parallel linestrings",
+            MultiLineString([[(3, 5), (5, 5)], [(3, 3), (5, 3)], [(3, 7), (5, 7)]]),
+            box(0, 0, 10, 10),
+            MultiLineString([[(0, 5), (10, 5)], [(0, 3), (10, 3)], [(0, 7), (10, 7)]]),
+        ),
+    ],
+)
+def test_extend_line_to_polygon_multiline(desc, line, poly, exp_line):
+    result = pygeoops.extend_line_to_geometry(line, poly)
+    assert result == exp_line
+
+
+@pytest.mark.parametrize(
+    "desc, line, poly, exp_line",
+    [
+        (
+            "input multiline, Y shape, 2 point linestrings",
+            MultiLineString([[(3, 5), (5, 5)], [(5, 5), (7, 7)], [(5, 5), (7, 3)]]),
+            box(0, 0, 10, 10),
+            MultiLineString([[(0, 5), (5, 5)], [(5, 5), (10, 10)], [(5, 5), (10, 0)]]),
+        ),
+        (
+            "input multiline, Y shape, 3 point linestrings",
+            MultiLineString(
+                [
+                    [(3, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (7, 7)],
+                    [(5, 5), (6, 4), (7, 3)],
+                ]
+            ),
+            box(0, 0, 10, 10),
+            MultiLineString(
+                [
+                    [(0, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (10, 10)],
+                    [(5, 5), (6, 4), (10, 0)],
+                ]
+            ),
+        ),
+        (
+            "input multiline, 2 linestrings in 2 polygons",
+            MultiLineString([[(3, 5), (5, 5)], [(23, 5), (25, 5)]]),
+            MultiPolygon([box(0, 0, 10, 10), box(20, 0, 30, 10)]),
+            MultiLineString([[(0, 5), (10, 5)], [(20, 5), (30, 5)]]),
+        ),
+    ],
+)
+def test_extend_line_to_polygon_multipolygon(desc, line, poly, exp_line):
+    result = pygeoops.extend_line_to_geometry(line, poly)
+    assert result == exp_line
+
+
+@pytest.mark.parametrize(
+    "desc, line, poly, exp_line",
+    [
+        (
             "each line extension intersects with one point",
             LineString([(4, 3), (5, 5), (6, 5)]),
             box(0, 0, 10, 10),
@@ -85,8 +173,56 @@ def test_extend_line_by_distance(desc, line, start_distance, end_distance, exp_l
         ),
     ],
 )
-def test_extend_line_to_polygon(desc, line, poly, exp_line):
-    result = pygeoops.extend_line_to_polygon(line, poly)
+def test_extend_line_to_polygon_singleline(desc, line, poly, exp_line):
+    result = pygeoops.extend_line_to_geometry(line, poly)
+    assert result == exp_line
+
+
+@pytest.mark.parametrize(
+    "desc, line, poly, exp_line",
+    [
+        (
+            "input multiline, Y shape, 2 point linestrings",
+            MultiLineString([[(3, 5), (5, 5)], [(5, 5), (7, 7)], [(5, 5), (7, 3)]]),
+            Polygon(
+                get_coordinates(box(0, 0, 10, 10)), [get_coordinates(box(5, 4, 6, 6))]
+            ),
+            MultiLineString([[(0, 5), (5, 5)], [(5, 5), (10, 10)], [(5, 5), (10, 0)]]),
+        ),
+        (
+            "input multiline, Y shape, 3 point linestrings",
+            MultiLineString(
+                [
+                    [(3, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (7, 7)],
+                    [(5, 5), (6, 4), (7, 3)],
+                ]
+            ),
+            Polygon(
+                get_coordinates(box(0, 0, 10, 10)), [get_coordinates(box(5, 4, 6, 6))]
+            ),
+            MultiLineString(
+                [
+                    [(0, 5), (4, 5), (5, 5)],
+                    [(5, 5), (6, 6), (10, 10)],
+                    [(5, 5), (6, 4), (10, 0)],
+                ]
+            ),
+        ),
+        (
+            "input multiline, 3 parallel linestrings",
+            MultiLineString([[(3, 5), (5, 5)], [(3, 3), (5, 3)], [(3, 7), (5, 7)]]),
+            Polygon(
+                get_coordinates(box(0, 0, 10, 10)), [get_coordinates(box(6, 4, 7, 6))]
+            ),
+            MultiLineString([[(0, 5), (6, 5)], [(0, 3), (10, 3)], [(0, 7), (10, 7)]]),
+        ),
+    ],
+)
+def test_extend_line_to_polygon_island(tmp_path, desc, line, poly, exp_line):
+    result = pygeoops.extend_line_to_geometry(line, poly)
+    output_path = tmp_path / "test_extend_line_to_polygon_island.png"
+    test_helper.plot([poly, result], output_path)
     assert result == exp_line
 
 
