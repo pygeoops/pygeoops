@@ -1,6 +1,7 @@
 import math
+from typing import Union
 import shapely
-from shapely import box, LineString, Polygon, Point
+from shapely import box, LineString, MultiLineString, MultiPolygon, Polygon, Point
 
 
 def extend_line_by_distance(
@@ -35,31 +36,96 @@ def extend_line_by_distance(
     return LineString(line_result)
 
 
-def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
+def extend_line_to_geometry(
+    line: Union[LineString, MultiLineString],
+    extend_to: Union[LineString, MultiLineString, MultiPolygon, Polygon],
+) -> Union[LineString, MultiLineString]:
     """
-    Extends a line to a given Polygon.
+    Extends a line to (the boundaries of) a given geometry.
 
     Args:
-        line (LineString): The line to extend.
-        geometry (Polygon): The Polygon to extend the line to.
+        line (Union[LineString, MultiLineString]): The line(s) to extend.
+        extend_to (Union[LineString, MultiLineString, MultiPolygon, Polygon]): The
+            geometry to extend the line to.
 
     Returns:
-        LineString: The extended line.
+        Union[LineString, MultiLineString]: The extended line.
     """
-    line_coords = shapely.get_coordinates(line)
+    if isinstance(extend_to, (MultiPolygon, Polygon)):
+        extend_to_line = extend_to.boundary
+    elif isinstance(extend_to, (LineString, MultiLineString)):
+        extend_to_line = extend_to
+    else:
+        raise ValueError("geometry must be a (Multi)Polygon (Multi)LineString")
+
+    # Prepare the extend_to_line as we will be calculating intersects with it a lot.
+    shapely.prepare(extend_to_line)
+
+    if isinstance(line, LineString):
+        result = _extend_linestring_to_line(
+            line, extend_to_blockers=[], extend_to=extend_to_line
+        )
+    elif isinstance(line, MultiLineString):
+        result_lines = []
+        for curr_idx, curr_linestring in enumerate(line.geoms):
+            # Block extending the line in the direction of all other branches
+            other_branches = [
+                ln for ln_idx, ln in enumerate(line.geoms) if ln_idx != curr_idx
+            ]
+            result_lines.append(
+                _extend_linestring_to_line(
+                    curr_linestring,
+                    extend_to=extend_to_line,
+                    extend_to_blockers=other_branches,
+                )
+            )
+        result = MultiLineString(result_lines)
+    else:
+        raise ValueError(f"line must be (Multi)LineString, not {type(line)}")
+
+    return result
+
+
+def _extend_linestring_to_line(
+    linestring: LineString,
+    extend_to: Union[LineString, MultiLineString],
+    extend_to_blockers: list[LineString],
+) -> LineString:
+    """Extend a line towards the boundaries of a polygon.
+
+    The line will normally be extended in both directions. If the start or end point of
+    the linestring intersects with extend_to_blockers though, the line will not be
+    extended in that direction.
+
+    Args:
+        linestring (LineString): the linestring to extend.
+        extend_to (Union[LineString, MultiLineString]): the boundary lines to extend the
+            linestring to.
+        extend_to_blockers (list[LineString]): If the start or end point of the
+            linestring intersects with extend_to_blockers, the linestring will not be
+            extended in that direction.
+
+    Returns:
+        LineString: the extended line.
+    """
+    line_coords = shapely.get_coordinates(linestring)
     line_result = line_coords.copy()
-    geometry_line = LineString(shapely.get_coordinates(geometry))
-    shapely.prepare(geometry_line)
 
-    # Find the closest point on geometry_line that the start of the line can extend to.
-    line_result[0] = _find_closest_extend_point(
-        line_coords[1], line_coords[0], geometry_line
-    )
+    # If the start-segment of the line does not end on any of the extend_blockers,
+    # extend it.
+    if not shapely.intersects(Point(line_coords[0]), extend_to_blockers).any():
+        # Extend to closest point on geometry_line.
+        line_result[0] = _find_closest_extend_point(
+            line_coords[1], line_coords[0], extend_to
+        )
 
-    # Find the closest point on geometry_line that the end of the line can extend to.
-    line_result[-1] = _find_closest_extend_point(
-        line_coords[-2], line_coords[-1], geometry_line
-    )
+    # If the end-segment of line is does not end on any of the extend_blockers, extend
+    # it.
+    if not shapely.intersects(Point(line_coords[-1]), extend_to_blockers).any():
+        # Extend to closest point on geometry_line.
+        line_result[-1] = _find_closest_extend_point(
+            line_coords[-2], line_coords[-1], extend_to
+        )
 
     return LineString(line_result)
 
@@ -67,7 +133,7 @@ def extend_line_to_polygon(line: LineString, geometry: Polygon) -> LineString:
 def _find_closest_extend_point(
     p1: tuple[float, float],
     p2: tuple[float, float],
-    geometry_line: LineString,
+    extend_to: Union[LineString, MultiLineString],
 ) -> tuple[float, float]:
     """
     Find the closest point on the geometry line that can be extended to.
@@ -75,23 +141,23 @@ def _find_closest_extend_point(
     Args:
         p1 (Tuple[float, float]): point 1 of the segment to extend.
         p2 (Tuple[float, float]): point 2 of the segment to extend.
-        geometry_line (LineString): the line to extend to.
+        extend_to (Union[LineString, MultiLineString]): the line to extend to.
 
     Returns:
-        Tuple[float, float]: the closest point on the geometry_line that can be
+        Tuple[float, float]: the closest point on the extend_to line that can be
             extended to.
     """
     # If p2 is already on the geometry line, return p2.
-    if geometry_line.intersects(Point(p2)):
+    if extend_to.intersects(Point(p2)):
         return p2
 
     # Extend the segment to the bounding box of the geometry.
-    _, p2_ext = _extend_segment_to_bbox(p1, p2, bbox=geometry_line.bounds)
+    _, p2_ext = _extend_segment_to_bbox(p1, p2, bbox=extend_to.bounds)
 
     # We want to find the intersection point of the extension with the geometry lines
     # that is closest to p2.
     end_extension = (p2, p2_ext)
-    intersections = geometry_line.intersection(LineString(end_extension))
+    intersections = extend_to.intersection(LineString(end_extension))
     intersection_points = shapely.get_coordinates(intersections)
 
     if len(intersection_points) == 0:
