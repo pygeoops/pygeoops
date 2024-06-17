@@ -9,6 +9,7 @@ import shapely
 from shapely.geometry.base import BaseGeometry
 
 from pygeoops._general import _extract_0dim_ndarray
+from pygeoops import _extend_line
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ def centerline(
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
+    extend: bool = False,
 ) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
     """
     Calculates an approximated centerline for a polygon.
@@ -54,6 +56,7 @@ def centerline(
               - value = 0: no simplify
               - value > 0: simplify with this value as tolerance
               - value < 0: simplifytolerance = average width of geometry * abs(value)
+        extend (bool, optional): extend the centerline to the edge of the geometry.
 
     Returns:
         geometry, GeoSeries or array_like: the centerline for each of the input
@@ -75,6 +78,7 @@ def centerline(
                     densify_distance=densify_distance,
                     min_branch_length=min_branch_length,
                     simplifytolerance=simplifytolerance,
+                    extend=extend,
                 )
                 for geom in geometry
             ]
@@ -88,6 +92,7 @@ def centerline(
             densify_distance=densify_distance,
             min_branch_length=min_branch_length,
             simplifytolerance=simplifytolerance,
+            extend=extend,
         )
 
 
@@ -96,6 +101,7 @@ def _centerline(
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
+    extend: bool = False,
 ) -> Optional[BaseGeometry]:
     if geom is None or geom.is_empty:
         return None
@@ -152,6 +158,9 @@ def _centerline(
             tol = abs(simplifytolerance) * average_width
         lines = shapely.simplify(lines, tol)
 
+    if extend:
+        lines = _extend_line.extend_line_to_geometry(lines, geom)
+
     # Return result
     lines = shapely.normalize(lines)
     return lines
@@ -201,7 +210,7 @@ def _remove_short_branches_notempty(
             line, min_branch_length, remove_one_by_one=True
         )
 
-    # If still an empty result, return original version
+    # If still an empty result, retain original version
     if line_cleaned is None or line_cleaned.is_empty:
         line_cleaned = line
 
