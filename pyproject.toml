@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "geopandas>=0.12.1",
+    "pyproj",
     "shapely>1",
     "topojson",
 ]
