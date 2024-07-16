@@ -162,8 +162,9 @@ def test_difference_all_tiled_invalid_params():
 
 def test_difference_intersecting():
     """
-    difference_intersecting should, for the cases it supports, return the same values as
-    shapely.difference.
+    difference_intersecting should return the same values as shapely.difference.
+
+    Only for the cases it supports.
     """
     # None or empty input
     assert difference._difference_intersecting(None, None) is None

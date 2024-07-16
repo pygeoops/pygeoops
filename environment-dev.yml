@@ -6,10 +6,14 @@ dependencies:
   - pip
   # required
   - geopandas-base >=0.12.1
+  - numpy
+  - pyproj
   - shapely >1
   - topojson
+  # optional
+  - simplification
   # benchmark
-  #- geofileopsf
+  #- geofileops
   - pandas
   - pandas-stubs
   # testing
@@ -17,7 +21,6 @@ dependencies:
   - pytest
   - pytest-cov
   # linting
-  - black
   - mypy
   - pre-commit
   - ruff
@@ -27,4 +30,3 @@ dependencies:
   - pydata-sphinx-theme
   - pip:
     - sphinx-automodapi ==0.13
-    - simplification  # optional dependency

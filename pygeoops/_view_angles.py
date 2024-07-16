@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import numpy as np
 import shapely
@@ -13,8 +12,7 @@ def view_angles(
     visible_geom,
 ):
     """
-    Returns the start and end angle where the visible geometry can be seen from the
-    viewpoint.
+    Returns the start and end angle how the visible_geom can be seen from the viewpoint.
 
     If one of the parameters is an array, the view angles are calculated for each
     of these with the other parameter. If both parameters are arrays, they should each
@@ -74,7 +72,7 @@ def view_angles(
     )
 
     # Function to calculate the view angles for one viewpoint, visible_geom pair
-    def calculate_angles(input) -> Tuple[float, float]:
+    def calculate_angles(input) -> tuple[float, float]:
         viewpoint_geom, visible_geom = input
         return _view_angles(viewpoint_geom, visible_geom)
 
@@ -91,10 +89,9 @@ def view_angles(
 def _view_angles(
     viewpoint: shapely.Point,
     visible_geom: shapely.Geometry,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
-    Returns the start and end angle where the visible geometry can be seen from the
-    viewpoint.
+    Returns the start and end angle how the visible_geom can be seen from the viewpoint.
 
     Remark: the start angle can be larger than the end angle. E.g. if the visible geom
     is located in the south east of the viewpoint till the north east.

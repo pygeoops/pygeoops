@@ -1,10 +1,12 @@
-name: test
+name: pygeoops-latest-no-optional-deps
 channels:
   - conda-forge
 dependencies:
   - python
   # required
   - geopandas-base >=0.12.1
+  - numpy
+  - pyproj
   - shapely >1
   - topojson
   # testing

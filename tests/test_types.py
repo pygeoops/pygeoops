@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests on the types defined in types.py.
 """

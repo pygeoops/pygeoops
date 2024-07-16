@@ -1,4 +1,4 @@
-name: test
+name: pygeoops-latest
 channels:
   - conda-forge
 dependencies:
@@ -6,11 +6,13 @@ dependencies:
   - pip
   # required
   - geopandas-base >=0.12.1
+  - numpy
+  - pyproj
   - shapely >1
   - topojson
+  # optional
+  - simplification
   # testing
   - matplotlib
   - pytest
   - pytest-cov
-  - pip:
-    - simplification  # optional dependency

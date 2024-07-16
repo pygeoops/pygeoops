@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Helper functions for all tests.
 """
@@ -6,7 +5,7 @@ Helper functions for all tests.
 import os
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import Optional
 
 from matplotlib import figure as mpl_figure
 import matplotlib.colors as mcolors
@@ -68,7 +67,7 @@ def get_testfile(testfile: str) -> Path:
 
 
 def plot(
-    geoms: List[BaseGeometry],
+    geoms: list[BaseGeometry],
     output_path: Path,
     title: Optional[str] = None,
     clean_name: bool = True,

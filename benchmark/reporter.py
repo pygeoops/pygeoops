@@ -5,7 +5,7 @@ Module to generate reports for benchmarks.
 import ast
 import math
 from pathlib import Path
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,7 +105,7 @@ def save_chart(
     yscale: Optional[Literal["linear", "log", "symlog", "logit"]] = None,
     y_value_formatter: Optional[str] = None,
     print_labels_on_points: bool = False,
-    size: Tuple[float, float] = (8, 4),
+    size: tuple[float, float] = (8, 4),
     plot_kind: Literal[
         "line",
         "bar",
@@ -149,7 +149,6 @@ def save_chart(
     Raises:
         Exception: _description_
     """
-
     # Init
     # Check input
     non_numeric_columns = [
