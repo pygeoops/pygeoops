@@ -42,7 +42,7 @@ jobs:
         python: ["3.9", "3.10", "3.11", "3.12"]
         env: ["latest"]
         include:
-          - env: minimal-pygeos
+          - env: minimal
             os: ubuntu-latest
             dev: false
             python: "3.9"

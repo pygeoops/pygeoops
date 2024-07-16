@@ -8,7 +8,6 @@ dependencies:
   - geopandas-base =0.12.1
   - numpy
   - pyproj
-  - pygeos
   - shapely =2.0.1
   - topojson
   # optional
