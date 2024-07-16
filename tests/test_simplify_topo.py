@@ -9,15 +9,7 @@ import test_helper
 
 
 @pytest.mark.parametrize(
-    "algorithm, tolerance",
-    [
-        pytest.param(
-            "rdp", 1, marks=pytest.mark.xfail(reason="GEOS 3.12.2 gives wrong result")
-        ),
-        ("lang", 1),
-        ("lang+", 1),
-        ("vw", 5),
-    ],
+    "algorithm, tolerance", [("rdp", 1), ("lang", 1), ("lang+", 1), ("vw", 5)]
 )
 def test_simplify_topo(algorithm, tolerance):
     # Skip test for algorithms that needs simplification lib when it is not available

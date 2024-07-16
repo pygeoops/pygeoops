@@ -89,8 +89,12 @@ def simplify_topo(
 
     # If the algorithm is rdp and no keep_points_on, use shapely
     if algorithm == "rdp" and keep_points_on is None:
-        topolines_simpl = shapely.simplify(
-            geometry=topolines, tolerance=tolerance, preserve_topology=True
+        topolines_simpl = shapely.MultiLineString(
+            shapely.simplify(
+                geometry=shapely.get_parts(topolines),
+                tolerance=tolerance,
+                preserve_topology=True,
+            ).tolist()
         )
     else:
         topolines_simpl = pygeoops.simplify(
