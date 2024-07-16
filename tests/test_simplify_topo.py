@@ -8,8 +8,18 @@ from pygeoops import _simplify_topo as simplify_topo
 import test_helper
 
 
-@pytest.mark.parametrize("algorithm", ["rdp", "lang", "lang+"])
-def test_simplify_topo(algorithm):
+@pytest.mark.parametrize(
+    "algorithm, tolerance",
+    [
+        pytest.param(
+            "rdp", 1, marks=pytest.mark.xfail(reason="GEOS 3.12.2 gives wrong result")
+        ),
+        ("lang", 1),
+        ("lang+", 1),
+        ("vw", 5),
+    ],
+)
+def test_simplify_topo(algorithm, tolerance):
     # Skip test for algorithms that needs simplification lib when it is not available
     if algorithm in ["rdp", "vw"]:
         _ = pytest.importorskip("simplification")
@@ -20,7 +30,9 @@ def test_simplify_topo(algorithm):
     input = [poly1, poly2]
 
     # Test
-    result = simplify_topo.simplify_topo(input, tolerance=1, algorithm=algorithm)
+    result = simplify_topo.simplify_topo(
+        input, tolerance=tolerance, algorithm=algorithm
+    )
 
     # Check result
     assert result is not None
