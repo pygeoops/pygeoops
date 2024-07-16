@@ -1,4 +1,4 @@
-name: test
+name: pygeoops-minimal-pygeos
 channels:
   - conda-forge
 dependencies:
@@ -11,9 +11,9 @@ dependencies:
   - pygeos
   - shapely =2.0.1
   - topojson
+  # optional
+  - simplification
   # testing
   - matplotlib
   - pytest
   - pytest-cov
-  - pip:
-    - simplification  # optional dependency
