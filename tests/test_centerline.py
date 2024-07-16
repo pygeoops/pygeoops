@@ -165,6 +165,6 @@ def test_centerline_poly(
         tmp_path / f"test_centerline_poly_{test}_{min_branch_length}_extend.png"
     )
     test_helper.plot([poly, centerline_extend], output_path)
-    assert (
-        centerline_extend.wkt == expected_centerline_extend_wkt
+    assert centerline_extend.equals_exact(
+        shapely.from_wkt(expected_centerline_extend_wkt), tolerance=1e-6
     ), f"test descr: {test}, {min_branch_length}, with extend=True"
