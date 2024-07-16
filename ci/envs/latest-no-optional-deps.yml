@@ -1,4 +1,4 @@
-name: test
+name: pygeoops-latest-no-optional-deps
 channels:
   - conda-forge
 dependencies:

@@ -1,4 +1,4 @@
-name: pygeoopsdoc
+name: pygeoops-doc
 channels:
   - conda-forge
 dependencies:
@@ -10,10 +10,11 @@ dependencies:
   - pyproj
   - shapely >1
   - topojson
+  # optional
+  - simplification
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
   - sphinx <6
   - pydata-sphinx-theme
   - pip:
     - sphinx-automodapi ==0.13
-    - simplification  # optional dependency
