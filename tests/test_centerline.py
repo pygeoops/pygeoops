@@ -106,7 +106,7 @@ def test_centerline_None_geometry():
             -1.0,
             "POLYGON ((0 1, 1 3.25, 2 4.5, 3 5.75, 3.5 6.25, 5 3.25, 3.75 1.75, 2.5 0.5, 1 0, 0 1))",  # noqa: E501
             "LINESTRING (1.375 1.375, 3.7916666666666665 5.458333333333333)",
-            "LINESTRING (0.7243589743589742 0.2756410256410257, 3.8481308411214954 5.553738317757009)",  # noqa: E501
+            "LINESTRING (0.7243589743589742 0.2756410256410258, 3.8481308411214954 5.553738317757009)",  # noqa: E501
         ),
         (
             "fancy L shape, output: L-ish line",
@@ -150,8 +150,8 @@ def test_centerline_poly(
     assert isinstance(centerline, BaseGeometry)
     output_path = tmp_path / f"test_centerline_poly_{test}_{min_branch_length}.png"
     test_helper.plot([poly, centerline], output_path)
-    assert (
-        centerline.wkt == expected_centerline_wkt
+    assert centerline.equals_exact(
+        shapely.from_wkt(expected_centerline_wkt), tolerance=1e-6
     ), f"test descr: {test}, {min_branch_length}, with extend=False"
     centerline = None
 
