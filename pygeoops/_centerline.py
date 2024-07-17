@@ -11,6 +11,7 @@ from shapely.geometry.base import BaseGeometry
 from pygeoops._general import _extract_0dim_ndarray
 from pygeoops import _extend_line
 
+
 logger = logging.getLogger(__name__)
 
 

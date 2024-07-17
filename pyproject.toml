@@ -33,13 +33,13 @@ full = ["simplification"]
 "Homepage" = "https://github.com/pygeoops/pygeoops"
 "Bug Tracker" = "https://github.com/pygeoops/pygeoops/issues"
 
-[tool.black]
-line-length = 88
-
 [tool.mypy]
 [[tool.mypy.overrides]]
 module = "geofileops.*,geopandas.*,matplotlib.*,setuptools.*,simplification.*,shapely.*,topojson.*"
 ignore_missing_imports = true
+
+[tool.pyright]
+typeCheckingMode = "off"
 
 [tool.pytest.ini_options]
 pythonpath = "."

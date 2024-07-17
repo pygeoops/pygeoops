@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import pandas.api
 
+# mypy: disable-error-code="operator"
+
 A4_LONG_SIDE = 11.69
 A4_SHORT_SIDE = 8.27
 
