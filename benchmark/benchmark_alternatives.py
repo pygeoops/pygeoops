@@ -4,7 +4,7 @@ from benchmark import benchmarker
 def main():
     # Only run specific benchmark function(s)
     benchmarker.run_benchmarks(
-        modules_to_run=["benchmarks_pygeoops"],
+        modules_to_run=["benchmarks_alternatives"],
         functions_to_run=[
             "collection_extract",
             # "simplify_lang",
