@@ -9,3 +9,4 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2023-07-26 16:01:46.749073,pygeoops,0.2.0a2,simplify_rdp_keep_points_on,simplify_rdp_keep_points_on on agri parcel layer BEFL (~50000 polygons),9.23427,
 2024-07-28 21:11:22.125552,pygeoops,0.5.0a1,collection_extract,collection_extract on agri parcel layer BEFL (~500k polygons),1.656197,
 2024-07-28 21:13:00.355684,alternatives,1.0,collection_extract,collection_extract on agri parcel layer BEFL (~500k polygons),0.205727,
+2024-08-06 00:04:39.986235,pygeoops,0.5.0a1,collection_extract,collection_extract on agri parcel layer BEFL (~500k polygons),0.075905,

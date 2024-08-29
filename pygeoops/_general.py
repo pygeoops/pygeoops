@@ -138,48 +138,65 @@ def collection_extract(
 
         return pri_type
 
-    # Valide + prepare primitivetype param
-    if not _is_arraylike(primitivetype):
-        # Single primitive type
-        primitivetype = to_primitivetype_id(primitivetype)
-
-        # If we need to extract everything, we can just return the input
-        if primitivetype == 0:
-            return geometry
-
-        # Arraylike geometries, so convert primitivetype to a list of same length
-        if _is_arraylike(geometry):
-            primitivetype = [primitivetype] * len(geometry)
-
-    else:
-        # Arraylike -> convert to list of primitivetype ids
-        primitivetype = [to_primitivetype_id(type) for type in primitivetype]  # type: ignore[union-attr]
-
-        if _is_arraylike(geometry):
-            # Number of primitive types specified should equal the number of geometries
-            if len(primitivetype) != len(geometry):
-                raise ValueError(
-                    "geometry and primitivetype are arraylike, so len must be equal"
-                )
-        else:
-            # A single geometry: not compatible with the arraylike primitivetype!
+    # Single geometry.
+    if not _is_arraylike(geometry):
+        if _is_arraylike(primitivetype):
             raise ValueError("single geometry passed, but primitivetype is arraylike")
 
-    # Run the collection extraction
-    if not _is_arraylike(geometry):
-        # Single geometry.
-        result = _collection_extract(geometry=geometry, primitivetype_id=primitivetype)  # type: ignore[arg-type]
+        primitivetype_id = to_primitivetype_id(primitivetype)
+        return _collection_extract(geometry=geometry, primitivetype_id=primitivetype_id)  # type: ignore[arg-type]
+
+    # Geometry is arraylike.
+    if not _is_arraylike(primitivetype):
+        primitivetype = PrimitiveType(primitivetype)
+        primitivetype.shapely_type_ids
     else:
-        # Arraylike geometries -> run on all of them
-        result = np.array(
+        # Number of primitive types specified should equal the number of geometries.
+        if len(primitivetype) != len(geometry):
+            raise ValueError(
+                "geometry and primitivetype are arraylike, so len must be equal"
+            )
+
+    result = np.array(geometry.copy())
+
+        # Extract the rows that are GeometryCollections
+        is_collection = shapely.get_type_id(result) == 7
+        primitivetype_id = to_primitivetype_id(primitivetype)
+        result[is_collection] = np.array(
             [
-                _collection_extract(geometry=geom, primitivetype_id=type)
-                for geom, type in zip(geometry, primitivetype)  # type: ignore[arg-type]
+                _collection_extract(geometry=geom, primitivetype_id=primitivetype_id)
+                for geom in result[is_collection]  # type: ignore[arg-type]
             ]
         )
-        # If input is GeoSeries, recover index
-        if isinstance(geometry, GeoSeries):
-            result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
+
+        # Set all rows of a wrong type to None
+        result[
+            ~np.isin(shapely.get_type_id(result), primitivetype.shapely_type_ids)
+        ] = None
+
+    else:
+        # Arraylike primitivetype
+
+        # Extract the rows that are GeometryCollections
+        result = np.array(geometry.copy())
+        is_collection = shapely.get_type_id(result) == 7
+        result[is_collection] = np.array(
+            [
+                _collection_extract(
+                    geometry=geom, primitivetype_id=to_primitivetype_id(type)
+                )
+                for geom, type in zip(result[is_collection], primitivetype)  # type: ignore[arg-type]
+            ]
+        )
+
+        # Set all rows of a wrong type to None
+        result[
+            ~np.isin(shapely.get_type_id(result), primitivetype.shapely_type_ids)
+        ] = None
+
+    # If input is GeoSeries, recover index
+    if isinstance(geometry, GeoSeries):
+        result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
 
     # Apply makevalid, because possibly touching polygons were merged to a multipolygon,
     # which isn't valid.
@@ -198,7 +215,7 @@ def _collection_extract(
         return geometry
     if isinstance(geometry, np.ndarray) and np.ndim(geometry) == 0:
         # geometry is a single-element ndarray: this is not supported
-        ValueError(
+        raise ValueError(
             "input geometry is a 1-element ndarray, extract it using geometry.item()"
         )
 
