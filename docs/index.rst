@@ -35,3 +35,4 @@ Examples are:
    User guide <user_guide>
    API reference <reference>
    Development <development>
+   Ops <operations>
