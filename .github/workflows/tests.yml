@@ -9,25 +9,15 @@ on:
   pull_request:
     branches: [ main, 0.** ]
   schedule:
-    - cron: "0 0 * * *"
+    # Run every Monday at 1:50 UTC
+    - cron: "50 1 * * 1"
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  Linting:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - uses: pre-commit/action@v3.0.1
-
   Test:
-    needs: Linting
     name: ${{ matrix.os }} - ${{ matrix.env }} (python ${{ matrix.python }})
     timeout-minutes: 10
     runs-on: ${{ matrix.os }}
@@ -63,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Conda environment with Micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           micromamba-version: '1.4.9-0'
           environment-file: ci/envs/${{ matrix.env }}.yml
@@ -75,5 +65,5 @@ jobs:
         run: |
           pytest --color=yes --cov=pygeoops --cov-append --cov-report term-missing --cov-report xml tests/
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
       
