@@ -126,7 +126,7 @@ def _centerline(
 
         # Only keep edges that are covered by the original geometry to remove edges
         # going to infinity,...
-        # Remark: contains is optimized for prepared geometries <> within -> a lot faster!
+        # Remark: contains is optimized for prepared geometries <> within -> faster!
         edges = shapely.get_parts(voronoi_edges)
         shapely.prepare(geom)
         edges = edges[shapely.contains(geom, edges)]
