@@ -106,65 +106,72 @@ def _centerline(
 ) -> Optional[BaseGeometry]:
     if geom is None or geom.is_empty:
         return None
-    average_width = None
-    # Densify lines in the input
-    if densify_distance != 0:
-        max_segment_length = densify_distance
-        if densify_distance < 0:
-            # Automatically determine length
+
+    try:
+        average_width = None
+        # Densify lines in the input
+        if densify_distance != 0:
+            max_segment_length = densify_distance
+            if densify_distance < 0:
+                # Automatically determine length
+                if average_width is None:
+                    average_width = _average_width(geom)
+                max_segment_length = abs(densify_distance) * average_width
+            geom_densified = shapely.segmentize(geom, max_segment_length)
+        else:
+            geom_densified = geom
+
+        # Determine envelope of voronoi + calculate voronoi edges
+        voronoi_edges = shapely.voronoi_polygons(geom_densified, only_edges=True)
+
+        # Only keep edges that are covered by the original geometry to remove edges
+        # going to infinity,...
+        # Remark: contains is optimized for prepared geometries <> within -> a lot faster!
+        edges = shapely.get_parts(voronoi_edges)
+        shapely.prepare(geom)
+        edges = edges[shapely.contains(geom, edges)]
+        if len(edges) == 1:
+            lines = edges[0]
+        elif len(edges) > 1:
+            lines = shapely.line_merge(shapely.multilinestrings(edges))
+        else:
+            # No edges within the polygon, so use intersection
+            voronoi_clipped = shapely.intersection(geom, voronoi_edges)
+            lines = shapely.line_merge(voronoi_clipped)
+
+        # If min_branch_length != 0, remove short branches
+        min_branch_length_cur = min_branch_length
+        if min_branch_length_cur < 0:
+            # If < 0, calculate
             if average_width is None:
                 average_width = _average_width(geom)
-            max_segment_length = abs(densify_distance) * average_width
-        geom_densified = shapely.segmentize(geom, max_segment_length)
-    else:
-        geom_densified = geom
+            min_branch_length_cur = abs(min_branch_length_cur) * average_width
+        if min_branch_length_cur > 0:
+            lines = _remove_short_branches_notempty(
+                line=lines, min_branch_length=min_branch_length_cur
+            )
 
-    # Determine envelope of voronoi + calculate voronoi edges
-    voronoi_edges = shapely.voronoi_polygons(geom_densified, only_edges=True)
+        # Simplify if needed
+        if simplifytolerance is not None:
+            tol = simplifytolerance
+            if simplifytolerance < 0:
+                # Automatically determine tol
+                if average_width is None:
+                    average_width = _average_width(geom)
+                tol = abs(simplifytolerance) * average_width
+            lines = shapely.simplify(lines, tol)
 
-    # Only keep edges that are covered by the original geometry to remove edges
-    # going to infinity,...
-    # Remark: contains is optimized for prepared geometries <> within -> a lot faster!
-    edges = shapely.get_parts(voronoi_edges)
-    shapely.prepare(geom)
-    edges = edges[shapely.contains(geom, edges)]
-    if len(edges) == 1:
-        lines = edges[0]
-    elif len(edges) > 1:
-        lines = shapely.line_merge(shapely.multilinestrings(edges))
-    else:
-        # No edges within the polygon, so use intersection
-        voronoi_clipped = shapely.intersection(geom, voronoi_edges)
-        lines = shapely.line_merge(voronoi_clipped)
+        if extend:
+            lines = _extend_line.extend_line_to_geometry(lines, geom)
 
-    # If min_branch_length != 0, remove short branches
-    min_branch_length_cur = min_branch_length
-    if min_branch_length_cur < 0:
-        # If < 0, calculate
-        if average_width is None:
-            average_width = _average_width(geom)
-        min_branch_length_cur = abs(min_branch_length_cur) * average_width
-    if min_branch_length_cur > 0:
-        lines = _remove_short_branches_notempty(
-            line=lines, min_branch_length=min_branch_length_cur
-        )
+        # Return result
+        lines = shapely.normalize(lines)
+        return lines
 
-    # Simplify if needed
-    if simplifytolerance is not None:
-        tol = simplifytolerance
-        if simplifytolerance < 0:
-            # Automatically determine tol
-            if average_width is None:
-                average_width = _average_width(geom)
-            tol = abs(simplifytolerance) * average_width
-        lines = shapely.simplify(lines, tol)
-
-    if extend:
-        lines = _extend_line.extend_line_to_geometry(lines, geom)
-
-    # Return result
-    lines = shapely.normalize(lines)
-    return lines
+    except Exception as ex:
+        raise type(ex)(
+            f"Error for geometry at {shapely.get_point(geom, 0)}: {ex}"
+        ) from ex
 
 
 def _average_width(geom: BaseGeometry) -> float:
