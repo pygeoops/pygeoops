@@ -53,7 +53,7 @@ def test_simplify_topo_ducktype_GeoSeries():
 
     # Check result
     assert result is not None
-    assert type(result) == type(input)
+    assert type(result) is type(input)
     assert len(result) == len(input)
     # poly 1 can't be simplified and stays the same.
     assert result[0] == input[0]
@@ -155,7 +155,7 @@ def test_simplify_topo_mixedtypes():
     assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
     for geom_input, geom_result in zip(input, result):
-        assert type(geom_result) == type(geom_input)
+        assert type(geom_result) is type(geom_input)
         if geom_input.geom_type == "Polygon":
             assert geom_result == geom_input
         else:
