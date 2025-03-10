@@ -39,7 +39,8 @@ module = "geofileops.*,geopandas.*,matplotlib.*,setuptools.*,simplification.*,sh
 ignore_missing_imports = true
 
 [tool.pyright]
-typeCheckingMode = "off"
+exclude = ["local_ignore"]
+ignore = ["*"]
 
 [tool.pytest.ini_options]
 pythonpath = "."
@@ -49,7 +50,6 @@ testpaths = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
 
 [tool.ruff.lint]
 select = [
