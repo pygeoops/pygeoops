@@ -94,7 +94,7 @@ def test_difference_collection():
     assert result.area < geom.area
 
     # Difference of geom: 1 polygon, geom: GeometryCollection of 2 overlapping polygons
-    # Result: TopologyException
+    # Result < GEOS 3.13.1: TopologyException
     geom = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
     geom_collection = shapely.GeometryCollection(
         [
@@ -102,12 +102,17 @@ def test_difference_collection():
             shapely.Polygon([(5, 0), (20, 0), (20, 10), (5, 10), (5, 0)]),
         ]
     )
-    expected_error = (
-        "TopologyException: side location conflict at .*. This can occur if the input "
-        "geometry is invalid."
-    )
-    with pytest.raises(Exception, match=expected_error):
+
+    if shapely.geos_version < (3, 13, 1):
+        expected_error = (
+            "TopologyException: side location conflict at .*. This can occur if the input "
+            "geometry is invalid or self-intersects."
+        )
+        with pytest.raises(Exception, match=expected_error):
+            result = shapely.difference(geom, geom_collection)
+    else:
         result = shapely.difference(geom, geom_collection)
+        assert result.area < geom.area
 
 
 def test_difference_None_empty():
