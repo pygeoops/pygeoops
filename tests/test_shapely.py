@@ -106,7 +106,7 @@ def test_difference_collection():
     if shapely.geos_version < (3, 13, 1):
         expected_error = (
             "TopologyException: side location conflict at .*. This can occur if the "
-            "input geometry is invalid or self-intersects."
+            "input geometry is invalid."
         )
         with pytest.raises(Exception, match=expected_error):
             result = shapely.difference(geom, geom_collection)
