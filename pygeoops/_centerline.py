@@ -1,6 +1,5 @@
 import logging
 import math
-from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
@@ -21,7 +20,7 @@ def centerline(
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
     extend: bool = False,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
+) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
     Calculates an approximated centerline for a polygon.
 
@@ -98,12 +97,12 @@ def centerline(
 
 
 def _centerline(
-    geom: Optional[BaseGeometry],
+    geom: BaseGeometry | None,
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
     extend: bool = False,
-) -> Optional[BaseGeometry]:
+) -> BaseGeometry | None:
     if geom is None or geom.is_empty:
         return None
 
@@ -214,9 +213,9 @@ def _compactness(geom: BaseGeometry) -> float:
 
 
 def _remove_short_branches_notempty(
-    line: Union[shapely.MultiLineString, shapely.LineString, None],
+    line: shapely.MultiLineString | shapely.LineString | None,
     min_branch_length: float,
-) -> Union[shapely.MultiLineString, shapely.LineString, None]:
+) -> shapely.MultiLineString | shapely.LineString | None:
     """
     Remove all branches of the input lines shorter than min_branch_length.
 
@@ -252,10 +251,10 @@ def _remove_short_branches_notempty(
 
 
 def _remove_short_branches(
-    line: Union[shapely.MultiLineString, shapely.LineString, None],
+    line: shapely.MultiLineString | shapely.LineString | None,
     min_branch_length: float,
     remove_one_by_one: bool,
-) -> Union[shapely.MultiLineString, shapely.LineString, None]:
+) -> shapely.MultiLineString | shapely.LineString | None:
     """
     Remove all branches of the input lines shorter than min_branch_length.
 

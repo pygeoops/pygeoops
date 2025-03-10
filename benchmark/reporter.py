@@ -5,7 +5,7 @@ Module to generate reports for benchmarks.
 import ast
 import math
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -104,8 +104,8 @@ def save_chart(
     df: pd.DataFrame,
     title: str,
     output_path: Path,
-    yscale: Optional[Literal["linear", "log", "symlog", "logit"]] = None,
-    y_value_formatter: Optional[str] = None,
+    yscale: Literal["linear", "log", "symlog", "logit"] | None = None,
+    y_value_formatter: str | None = None,
     print_labels_on_points: bool = False,
     size: tuple[float, float] = (8, 4),
     plot_kind: Literal[
@@ -121,8 +121,8 @@ def save_chart(
         "scatter",
         "hexbin",
     ] = "line",
-    gridlines: Optional[Literal["both", "x", "y"]] = None,
-    linestyle: Optional[str] = None,
+    gridlines: Literal["both", "x", "y"] | None = None,
+    linestyle: str | None = None,
 ):
     """
     Render and save a chart.

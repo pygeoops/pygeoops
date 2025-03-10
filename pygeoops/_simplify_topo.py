@@ -3,7 +3,6 @@ Module containing utilities regarding operations on geoseries.
 """
 
 import logging
-from typing import Optional, Union
 import warnings
 
 from geopandas import GeoSeries
@@ -26,8 +25,8 @@ def simplify_topo(
     tolerance: float,
     algorithm: str = "rdp",
     lookahead: int = 8,
-    keep_points_on: Optional[BaseGeometry] = None,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
+    keep_points_on: BaseGeometry | None = None,
+) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
     Applies simplify while retaining common boundaries between all input geometries.
 
@@ -73,7 +72,7 @@ def simplify_topo(
     # If the input is no Geoseries or list, convert it to a list as the topojson library
     # seems to like that best.
     geometries = geometry
-    if not isinstance(geometry, (GeoSeries, list)):
+    if not isinstance(geometry, GeoSeries | list):
         geometries = geometry.tolist()
 
     with warnings.catch_warnings():
