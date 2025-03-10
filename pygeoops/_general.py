@@ -1,6 +1,5 @@
 import copy
 import math
-from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
@@ -13,7 +12,7 @@ import pygeoops
 from pygeoops._types import GeometryType, PrimitiveType
 
 
-def collect(geometries) -> Optional[BaseGeometry]:
+def collect(geometries) -> BaseGeometry | None:
     """
     Collects a list of geometries to one (multi)geometry.
 
@@ -102,8 +101,8 @@ def _extract_0dim_ndarray(geometry):
 
 def collection_extract(
     geometry,
-    primitivetype: Union[int, PrimitiveType, ArrayLike, None] = None,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], None]:
+    primitivetype: int | PrimitiveType | ArrayLike | None = None,
+) -> BaseGeometry | NDArray[BaseGeometry] | None:
     """
     Extracts the parts from the input that comply with the type specified.
 
@@ -128,7 +127,7 @@ def collection_extract(
     def to_primitivetype_id(pri_type) -> int:
         if isinstance(pri_type, PrimitiveType):
             pri_type = pri_type.value
-        elif isinstance(pri_type, (int, np.integer)):
+        elif isinstance(pri_type, int | np.integer):
             if pri_type not in [0, 1, 2, 3]:
                 raise ValueError(f"Invalid value for primitivetype: {pri_type}")
         elif pri_type is None:
@@ -190,8 +189,8 @@ def collection_extract(
 
 
 def _collection_extract(
-    geometry: Optional[BaseGeometry], primitivetype_id: int
-) -> Optional[BaseGeometry]:
+    geometry: BaseGeometry | None, primitivetype_id: int
+) -> BaseGeometry | None:
     if geometry is None:
         return None
     if primitivetype_id == 0:
@@ -202,13 +201,13 @@ def _collection_extract(
             "input geometry is a 1-element ndarray, extract it using geometry.item()"
         )
 
-    if isinstance(geometry, (shapely.MultiPoint, shapely.Point)):
+    if isinstance(geometry, shapely.MultiPoint | shapely.Point):
         if primitivetype_id == 1:
             return geometry
-    elif isinstance(geometry, (shapely.LineString, shapely.MultiLineString)):
+    elif isinstance(geometry, shapely.LineString | shapely.MultiLineString):
         if primitivetype_id == 2:
             return geometry
-    elif isinstance(geometry, (shapely.MultiPolygon, shapely.Polygon)):
+    elif isinstance(geometry, shapely.MultiPolygon | shapely.Polygon):
         if primitivetype_id == 3:
             return geometry
     elif isinstance(geometry, shapely.GeometryCollection):
@@ -224,7 +223,7 @@ def _collection_extract(
     return None
 
 
-def empty(geometrytype: Union[int, GeometryType, None]) -> Optional[BaseGeometry]:
+def empty(geometrytype: int | GeometryType | None) -> BaseGeometry | None:
     """
     Generate an empty geometry of the type specified.
 
@@ -243,7 +242,7 @@ def empty(geometrytype: Union[int, GeometryType, None]) -> Optional[BaseGeometry
     return geometrytype.empty
 
 
-def explode(geometry: Optional[BaseGeometry]) -> Optional[NDArray[BaseGeometry]]:
+def explode(geometry: BaseGeometry | None) -> NDArray[BaseGeometry] | None:
     """
     Dump all (multi)geometries in the input to one list of single geometries.
 
@@ -285,7 +284,7 @@ def force_geometrytype(
 """
 
 
-def get_primitivetype_id(geometry) -> Union[int, NDArray[np.number]]:
+def get_primitivetype_id(geometry) -> int | NDArray[np.number]:
     """
     Determines for each input geometry which is the primitive type of the geometry.
 
@@ -388,10 +387,10 @@ def _make_valid(geometry, keep_collapsed: bool = True):
 
 
 def remove_inner_rings(
-    geometry: Union[shapely.Polygon, shapely.MultiPolygon, None],
+    geometry: shapely.Polygon | shapely.MultiPolygon | None,
     min_area_to_keep: float,
-    crs: Union[str, pyproj.CRS, None],
-) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
+    crs: str | pyproj.CRS | None,
+) -> shapely.Polygon | shapely.MultiPolygon | None:
     """
     Remove (small) inner rings from a (multi)polygon.
 
@@ -419,8 +418,8 @@ def remove_inner_rings(
     # Define function to treat simple polygons
     def remove_inner_rings_polygon(
         geom_poly: shapely.Polygon,
-        min_area_to_keep: Optional[float] = None,
-        crs: Optional[pyproj.CRS] = None,
+        min_area_to_keep: float | None = None,
+        crs: pyproj.CRS | None = None,
     ) -> shapely.Polygon:
         # If all inner rings need to be removed...
         if min_area_to_keep is None or min_area_to_keep == 0.0:
@@ -505,7 +504,7 @@ def subdivide(
         )
         geom_divided = shapely.intersection(geometry, grid)
         input_primitivetype_id = pygeoops.get_primitivetype_id(geometry)
-        assert isinstance(input_primitivetype_id, (int, np.integer))
+        assert isinstance(input_primitivetype_id, int | np.integer)
         geom_divided = pygeoops.collection_extract(geom_divided, input_primitivetype_id)
         geom_divided = geom_divided[~shapely.is_empty(geom_divided)]
         return geom_divided

@@ -1,5 +1,4 @@
 import concurrent.futures
-from typing import Union
 import warnings
 
 import numpy as np
@@ -15,7 +14,7 @@ from pygeoops._general import _extract_0dim_ndarray
 def difference_all_tiled(
     geometry: BaseGeometry,
     geometries_to_subtract,
-    keep_geom_type: Union[bool, int] = False,
+    keep_geom_type: bool | int = False,
     subdivide_coords: int = 1000,
 ) -> BaseGeometry:
     """
@@ -117,7 +116,7 @@ def difference_all_tiled(
 def difference_all(
     geometry: BaseGeometry,
     geometries_to_subtract,
-    keep_geom_type: Union[bool, int] = False,
+    keep_geom_type: bool | int = False,
     check_intersects: bool = False,
 ) -> BaseGeometry:
     """
@@ -193,7 +192,7 @@ def _difference_intersecting(
     geometry,
     geometry_to_subtract: BaseGeometry,
     primitivetype_id: int = 0,
-) -> Union[BaseGeometry, NDArray[BaseGeometry]]:
+) -> BaseGeometry | NDArray[BaseGeometry]:
     """
     Subtracts one geometry from one or more geometies.
 

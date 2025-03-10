@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Library with some less common or extended spatial functions"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",

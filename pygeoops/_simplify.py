@@ -3,7 +3,6 @@ Module containing utilities to simplify geometries.
 """
 
 import logging
-from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
@@ -35,8 +34,8 @@ def simplify(
     lookahead: int = 8,
     preserve_topology: bool = True,
     preserve_common_boundaries=False,
-    keep_points_on: Optional[BaseGeometry] = None,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
+    keep_points_on: BaseGeometry | None = None,
+) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
     Simplify the geometry/geometries.
 
@@ -125,13 +124,13 @@ def simplify(
 
 
 def _simplify(
-    geometry: Optional[BaseGeometry],
+    geometry: BaseGeometry | None,
     tolerance: float,
     algorithm: str = "rdp",
     lookahead: int = 8,
     preserve_topology: bool = True,
-    keep_points_on: Optional[BaseGeometry] = None,
-) -> Optional[BaseGeometry]:
+    keep_points_on: BaseGeometry | None = None,
+) -> BaseGeometry | None:
     # Init:
     if geometry is None:
         return None
@@ -161,7 +160,7 @@ def _simplify(
 
     # Loop over the rings, and simplify them one by one...
     # If the geometry is None, just return...
-    if isinstance(geometry, (shapely.Point, shapely.MultiPoint)):
+    if isinstance(geometry, shapely.Point | shapely.MultiPoint):
         # Point or MultiPoint cannot be simplified
         return geometry
     elif isinstance(geometry, shapely.LineString):
@@ -212,8 +211,8 @@ def simplify_polygon(
     lookahead: int,
     simplify_lookahead_points: bool,
     preserve_topology: bool,
-    keep_points_on: Optional[BaseGeometry],
-) -> Union[shapely.Polygon, shapely.MultiPolygon, None]:
+    keep_points_on: BaseGeometry | None,
+) -> shapely.Polygon | shapely.MultiPolygon | None:
     # First simplify exterior ring
     assert polygon.exterior is not None
     exterior_simpl = simplify_coords(
@@ -276,7 +275,7 @@ def simplify_linestring(
     lookahead: int,
     simplify_lookahead_points: bool,
     preserve_topology: bool,
-    keep_points_on: Optional[BaseGeometry],
+    keep_points_on: BaseGeometry | None,
 ) -> shapely.LineString:
     # If the linestring cannot be simplified, return it
     if linestring is None or len(linestring.coords) <= 2:
@@ -304,12 +303,12 @@ def simplify_linestring(
 
 
 def simplify_coords(
-    coords: Union[np.ndarray, shapely.coords.CoordinateSequence],
+    coords: np.ndarray | shapely.coords.CoordinateSequence,
     tolerance: float,
     algorithm: str,
     lookahead: int,
     simplify_lookahead_points: bool,
-    keep_points_on: Optional[BaseGeometry],
+    keep_points_on: BaseGeometry | None,
 ) -> np.ndarray:
     if isinstance(coords, shapely.coords.CoordinateSequence):
         coords = np.asarray(coords)

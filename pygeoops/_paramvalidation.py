@@ -1,4 +1,3 @@
-from typing import Union
 import numpy as np
 
 import pygeoops
@@ -6,7 +5,7 @@ from shapely.geometry.base import BaseGeometry
 
 
 def keep_geom_type2primitivetype_id(
-    keep_geom_type: Union[bool, int], geometry: BaseGeometry
+    keep_geom_type: bool | int, geometry: BaseGeometry
 ) -> int:
     """
     Interprete a keep_geom_type parameter and return the appropriate primitivetype.
@@ -28,9 +27,9 @@ def keep_geom_type2primitivetype_id(
             return 0
 
         primitivetype_id = pygeoops.get_primitivetype_id(geometry)
-        assert isinstance(primitivetype_id, (int, np.integer))
+        assert isinstance(primitivetype_id, int | np.integer)
         return int(primitivetype_id)
-    elif isinstance(keep_geom_type, (int, np.integer)):
+    elif isinstance(keep_geom_type, int | np.integer):
         # If it is already an int, just validate the value is valid
         if keep_geom_type not in (0, 1, 2, 3):
             raise ValueError(f"Invalid value for keep_geom_type: {keep_geom_type}")

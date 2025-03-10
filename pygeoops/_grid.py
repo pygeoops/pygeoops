@@ -4,7 +4,6 @@ Module containing utilities to create/manipulate grids.
 
 import logging
 import math
-from typing import Optional
 import numpy as np
 
 from numpy.typing import NDArray
@@ -97,7 +96,7 @@ def create_grid3(
 def create_grid2(
     total_bounds: tuple[float, float, float, float],
     nb_squarish_tiles: int,
-    nb_squarish_tiles_max: Optional[int] = None,
+    nb_squarish_tiles_max: int | None = None,
 ) -> NDArray[Polygon]:
     """
     Creates a grid with about the indicated number of ~square tiles.
