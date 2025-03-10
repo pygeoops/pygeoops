@@ -2,13 +2,13 @@ name: pygeoops-dev
 channels:
   - conda-forge
 dependencies:
-  - python =3.10
+  - python=3.10
   - pip
   # required
-  - geopandas-base >=0.12.1
+  - geopandas-base>=0.12.1
   - numpy
   - pyproj
-  - shapely >1
+  - shapely>1
   - topojson
   # optional
   - simplification
@@ -21,12 +21,12 @@ dependencies:
   - pytest
   - pytest-cov
   # linting
-  - mypy
+  - mypy==1.15.0
   - pre-commit
-  - ruff
+  - ruff==0.9.10
   # docs
   # Restrict sphinx version to < 6 to avoid logo error
-  - sphinx <6
+  - sphinx<6
   - pydata-sphinx-theme
   - pip:
-    - sphinx-automodapi ==0.13
+    - sphinx-automodapi==0.13
