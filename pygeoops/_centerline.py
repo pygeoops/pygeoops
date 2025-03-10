@@ -108,21 +108,32 @@ def _centerline(
         return None
 
     try:
-        average_width = None
         # Densify lines in the input
+        average_width = None
+        geom_for_voronoi = geom
         if densify_distance != 0:
-            max_segment_length = densify_distance
-            if densify_distance < 0:
+            if densify_distance > 0:
+                max_segment_length = densify_distance
+            elif _compactness(geom) < 0.001:
+                # Very compact/narrow geometry, so densify_distance is not useful
+                max_segment_length = 0
+            else:
                 # Automatically determine length
-                if average_width is None:
-                    average_width = _average_width(geom)
+                average_width = _average_width(geom)
                 max_segment_length = abs(densify_distance) * average_width
-            geom_densified = shapely.segmentize(geom, max_segment_length)
-        else:
-            geom_densified = geom
+                factor_increase = (
+                    geom.length / max_segment_length
+                ) / shapely.get_num_coordinates(geom)
+                max_factor_increase = 10
+                if factor_increase > max_factor_increase:
+                    # Too large increase in number of points, cap to max_factor_increase
+                    max_segment_length *= factor_increase / max_factor_increase
+
+            if max_segment_length > 0:
+                geom_for_voronoi = shapely.segmentize(geom, max_segment_length)
 
         # Determine envelope of voronoi + calculate voronoi edges
-        voronoi_edges = shapely.voronoi_polygons(geom_densified, only_edges=True)
+        voronoi_edges = shapely.voronoi_polygons(geom_for_voronoi, only_edges=True)
 
         # Only keep edges that are covered by the original geometry to remove edges
         # going to infinity,...
@@ -185,6 +196,21 @@ def _average_width(geom: BaseGeometry) -> float:
         float: the average width
     """
     return geom.length / 4 - math.sqrt(max((geom.length / 4) ** 2 - geom.area, 0))
+
+
+def _compactness(geom: BaseGeometry) -> float:
+    """
+    Calculate the compactness of a polygon.
+
+    Is also called the Polsby-Popper index.
+
+    Args:
+        geom (BaseGeometry): the input polygon
+
+    Returns:
+        float: the compactness
+    """
+    return (4 * math.pi * geom.area) / (geom.boundary.length**2)
 
 
 def _remove_short_branches_notempty(
