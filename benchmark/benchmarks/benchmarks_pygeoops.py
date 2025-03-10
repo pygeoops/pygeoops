@@ -10,12 +10,12 @@ from pathlib import Path
 import os
 
 os.environ["USE_PYGEOS"] = "0"
-import geopandas as gpd  # noqa: E402
-import shapely  # noqa: E402
+import geopandas as gpd
+import shapely
 
-from benchmark.benchmarker import RunResult  # noqa: E402
-from benchmark.benchmarks import testdata  # noqa: E402
-import pygeoops  # noqa: E402
+from benchmark.benchmarker import RunResult
+from benchmark.benchmarks import testdata
+import pygeoops
 
 logger = logging.getLogger(__name__)
 nb_rows_simplify = 50000
