@@ -129,8 +129,7 @@ def create_grid2(
     nb_rows = max(round(math.sqrt(nb_squarish_tiles / columns_vs_rows)), 1)
 
     # Evade having too many cells (if few cells are asked)
-    if nb_rows > nb_squarish_tiles:
-        nb_rows = nb_squarish_tiles
+    nb_rows = min(nb_rows, nb_squarish_tiles)
     nb_columns = max(round(nb_squarish_tiles / nb_rows), 1)
     # If a maximum number of tiles is specified, check it
     if nb_squarish_tiles_max is not None:

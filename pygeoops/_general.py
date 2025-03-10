@@ -198,7 +198,7 @@ def _collection_extract(
         return geometry
     if isinstance(geometry, np.ndarray) and np.ndim(geometry) == 0:
         # geometry is a single-element ndarray: this is not supported
-        ValueError(
+        raise ValueError(
             "input geometry is a 1-element ndarray, extract it using geometry.item()"
         )
 
