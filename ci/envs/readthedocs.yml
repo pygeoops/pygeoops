@@ -2,13 +2,13 @@ name: pygeoops-doc
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python =3.12
   - pip
   # required
-  - geopandas-base>=0.12.1
+  - geopandas-base >=0.12.1
   - numpy
   - pyproj
-  - shapely>1
+  - shapely >1
   - topojson
   # optional
   - simplification
