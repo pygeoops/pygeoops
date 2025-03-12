@@ -2,7 +2,7 @@ name: pygeoops-doc
 channels:
   - conda-forge
 dependencies:
-  - python =3.10
+  - python =3.12
   - pip
   # required
   - geopandas-base >=0.12.1
@@ -13,8 +13,7 @@ dependencies:
   # optional
   - simplification
   # docs
-  # Restrict sphinx version to < 6 to avoid logo error
-  - sphinx <6
+  - sphinx
   - pydata-sphinx-theme
   - pip:
-    - sphinx-automodapi ==0.13
+    - sphinx-automodapi

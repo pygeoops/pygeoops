@@ -76,6 +76,8 @@ exclude_patterns = [
 #
 html_theme = "pydata_sphinx_theme"
 
+html_title = f"{project} {release}"
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -87,6 +89,14 @@ html_theme_options = {
             "icon": "fab fa-github-square fa-xl",
         }
     ]
+}
+
+html_sidebars: dict[str, list[str]] = {
+    "development": [],
+    "faq": [],
+    "installation": [],
+    "reference": [],
+    "user_guide": [],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
