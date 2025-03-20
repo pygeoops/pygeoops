@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "pygeoops"
 dynamic = ["version"]
@@ -11,12 +7,13 @@ authors = [
 ]
 description = "Library with some less common or extended spatial functions"
 readme = "README.md"
+license = "BSD-3-Clause"
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
 ]
+# Any dependencies added here should also be added to build-system.requires
 dependencies = [
     "geopandas>=0.12.1",
     "numpy",
@@ -34,8 +31,23 @@ full = ["simplification"]
 "Homepage" = "https://github.com/pygeoops/pygeoops"
 "Bug Tracker" = "https://github.com/pygeoops/pygeoops/issues"
 
+[build-system]
+# All required runtime dependencies necessary as well to be able to get the __version__
+requires = [
+    "setuptools>=68.0",
+    "geopandas>=0.12.1",
+    "numpy",
+    "pyproj",
+    "shapely>1",
+    "topojson",
+]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools.dynamic]
 version = {attr = "pygeoops.__version__"}
+
+[tool.setuptools]
+packages = ["pygeoops"]
 
 [tool.mypy]
 [[tool.mypy.overrides]]
