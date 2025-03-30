@@ -13,6 +13,11 @@
 - Use ruff instead of black for formatting + use mypy (#78)
 - Enable extra linter checks like pydocstyle and pyupgrade (#85)
 
+### Bugs fixed
+
+- Fix `centerline` error for very narrow polygons (#117)
+- Fix `centerline` error for polygons that have points very close together (#127)
+
 ## 0.4.0 (2023-10-31)
 
 ### Improvements
