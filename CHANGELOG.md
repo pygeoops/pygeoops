@@ -7,7 +7,6 @@
 - Add functions `extend_line_by_distance` and `extend_line_to_geometry`
   (#83, #89)
 - Add option to function `centerline` to extend it to the polygon boundary (#87)
-- Make `centerline` more tolerant for extremely narrow polygons (#118)
 - Improve logging of geos warnings in `difference_all` (#77)
 - Add more context to errors raised by `centerline` (#116)
 - Change minimal python version to 3.9 (#84)
