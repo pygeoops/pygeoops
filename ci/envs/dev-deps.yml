@@ -1,6 +1,6 @@
 name: pygeoops-dev-deps
 channels:
-  - shapely-dev
+  - shapely_dev
   - conda-forge
 dependencies:
   - python
