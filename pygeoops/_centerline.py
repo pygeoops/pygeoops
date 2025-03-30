@@ -132,6 +132,7 @@ def _centerline(
                 geom_for_voronoi = shapely.segmentize(geom, max_segment_length)
 
         # Determine envelope of voronoi + calculate voronoi edges
+        geom_for_voronoi = shapely.remove_repeated_points(geom_for_voronoi, 1e-8)
         voronoi_edges = shapely.voronoi_polygons(geom_for_voronoi, only_edges=True)
 
         # Only keep edges that are covered by the original geometry to remove edges
