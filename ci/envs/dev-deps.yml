@@ -1,0 +1,19 @@
+name: pygeoops-dev-deps
+channels:
+  - conda-forge/label/shapely_dev
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  # required
+  - geopandas-base >=0.12.1
+  - numpy
+  - pyproj
+  - shapely >1
+  - topojson
+  # optional
+  - simplification
+  # testing
+  - matplotlib
+  - pytest
+  - pytest-cov
