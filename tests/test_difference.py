@@ -153,7 +153,6 @@ def test_difference_all_tiled_complex_poly():
 
 
 def test_difference_all_tiled_invalid_params():
-    #
     with pytest.raises(ValueError, match="geometry should be a shapely geometry"):
         pygeoops.difference_all_tiled(
             np.array([shapely.Polygon()]), np.array([shapely.Polygon()])

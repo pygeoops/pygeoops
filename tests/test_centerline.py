@@ -129,6 +129,13 @@ def test_centerline_None_geometry():
             "LINESTRING (1 9, 1 1, 9 1)",
             "LINESTRING (1 10, 1 1, 10 1)",
         ),
+        (
+            "Very narrow polygon",
+            -1.0,
+            "POLYGON ((64440.00000007346534403 218000.00000000279396772, 64438.00000007345079212 218000.00000000279396772, 64438.00000007345079212 218000.00000000311410986, 64440.00000007346534403 218000.00000000311410986, 64440.00000007346534403 218000.00000000279396772))",  # noqa: E501
+            "LINESTRING (64438.00000007345 218000.00000000297, 64440.000000073465 218000.00000000297)",  # noqa: E501
+            "LINESTRING (64438.00000007345 218000.00000000297, 64440.000000073465 218000.00000000297)",  # noqa: E501
+        ),
     ],
 )
 def test_centerline_poly(
@@ -145,6 +152,7 @@ def test_centerline_poly(
     output plots.
     """
     poly = shapely.from_wkt(poly_wkt)
+    assert poly.is_valid
     centerline = pygeoops.centerline(poly, min_branch_length=min_branch_length)
     assert centerline is not None
     assert isinstance(centerline, BaseGeometry)

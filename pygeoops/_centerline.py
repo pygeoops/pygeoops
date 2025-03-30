@@ -1,6 +1,5 @@
 import logging
 import math
-from typing import Optional, Union
 
 from geopandas import GeoSeries
 import numpy as np
@@ -21,7 +20,7 @@ def centerline(
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
     extend: bool = False,
-) -> Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]:
+) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
     Calculates an approximated centerline for a polygon.
 
@@ -98,31 +97,42 @@ def centerline(
 
 
 def _centerline(
-    geom: Optional[BaseGeometry],
+    geom: BaseGeometry | None,
     densify_distance: float = -1,
     min_branch_length: float = -1,
     simplifytolerance: float = -0.25,
     extend: bool = False,
-) -> Optional[BaseGeometry]:
+) -> BaseGeometry | None:
     if geom is None or geom.is_empty:
         return None
 
     try:
-        average_width = None
         # Densify lines in the input
+        average_width = None
+        geom_for_voronoi = geom
         if densify_distance != 0:
-            max_segment_length = densify_distance
-            if densify_distance < 0:
+            if densify_distance > 0:
+                max_segment_length = densify_distance
+            elif _compactness(geom) < 0.001:
+                # Very compact/narrow geometry, so densify_distance is not useful
+                max_segment_length = 0
+            else:
                 # Automatically determine length
-                if average_width is None:
-                    average_width = _average_width(geom)
+                average_width = _average_width(geom)
                 max_segment_length = abs(densify_distance) * average_width
-            geom_densified = shapely.segmentize(geom, max_segment_length)
-        else:
-            geom_densified = geom
+                factor_increase = (
+                    geom.length / max_segment_length
+                ) / shapely.get_num_coordinates(geom)
+                max_factor_increase = 10
+                if factor_increase > max_factor_increase:
+                    # Too large increase in number of points, cap to max_factor_increase
+                    max_segment_length *= factor_increase / max_factor_increase
+
+            if max_segment_length > 0:
+                geom_for_voronoi = shapely.segmentize(geom, max_segment_length)
 
         # Determine envelope of voronoi + calculate voronoi edges
-        voronoi_edges = shapely.voronoi_polygons(geom_densified, only_edges=True)
+        voronoi_edges = shapely.voronoi_polygons(geom_for_voronoi, only_edges=True)
 
         # Only keep edges that are covered by the original geometry to remove edges
         # going to infinity,...
@@ -187,10 +197,25 @@ def _average_width(geom: BaseGeometry) -> float:
     return geom.length / 4 - math.sqrt(max((geom.length / 4) ** 2 - geom.area, 0))
 
 
+def _compactness(geom: BaseGeometry) -> float:
+    """
+    Calculate the compactness of a polygon.
+
+    Is also called the Polsby-Popper index.
+
+    Args:
+        geom (BaseGeometry): the input polygon
+
+    Returns:
+        float: the compactness
+    """
+    return (4 * math.pi * geom.area) / (geom.boundary.length**2)
+
+
 def _remove_short_branches_notempty(
-    line: Union[shapely.MultiLineString, shapely.LineString, None],
+    line: shapely.MultiLineString | shapely.LineString | None,
     min_branch_length: float,
-) -> Union[shapely.MultiLineString, shapely.LineString, None]:
+) -> shapely.MultiLineString | shapely.LineString | None:
     """
     Remove all branches of the input lines shorter than min_branch_length.
 
@@ -226,10 +251,10 @@ def _remove_short_branches_notempty(
 
 
 def _remove_short_branches(
-    line: Union[shapely.MultiLineString, shapely.LineString, None],
+    line: shapely.MultiLineString | shapely.LineString | None,
     min_branch_length: float,
     remove_one_by_one: bool,
-) -> Union[shapely.MultiLineString, shapely.LineString, None]:
+) -> shapely.MultiLineString | shapely.LineString | None:
     """
     Remove all branches of the input lines shorter than min_branch_length.
 

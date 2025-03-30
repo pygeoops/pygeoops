@@ -5,7 +5,6 @@ Helper functions for all tests.
 import os
 from pathlib import Path
 import re
-from typing import Optional
 
 from matplotlib import figure as mpl_figure
 import matplotlib.colors as mcolors
@@ -69,7 +68,7 @@ def get_testfile(testfile: str) -> Path:
 def plot(
     geoms: list[BaseGeometry],
     output_path: Path,
-    title: Optional[str] = None,
+    title: str | None = None,
     clean_name: bool = True,
 ):
     # If we are running on CI server, don't plot
@@ -87,11 +86,11 @@ def plot(
             continue
 
         color = colors[list(colors.keys())[geom_idx % len(colors)]]
-        if isinstance(geom, (shapely.MultiPolygon, shapely.Polygon)):
+        if isinstance(geom, shapely.MultiPolygon | shapely.Polygon):
             shapely.plotting.plot_polygon(geom, ax=figure.axes[0], color=color)
-        elif isinstance(geom, (shapely.LineString, shapely.MultiLineString)):
+        elif isinstance(geom, shapely.LineString | shapely.MultiLineString):
             shapely.plotting.plot_line(geom, ax=figure.axes[0], color=color)
-        elif isinstance(geom, (shapely.MultiPoint, shapely.Point)):
+        elif isinstance(geom, shapely.MultiPoint | shapely.Point):
             shapely.plotting.plot_points(geom, ax=figure.axes[0], color=color)
         else:
             raise ValueError(f"invalid geom to plot: {geom}")

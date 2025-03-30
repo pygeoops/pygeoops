@@ -1,6 +1,5 @@
 import logging
 import math
-from typing import Union
 
 import numpy as np
 import shapely
@@ -10,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def simplify_coords_lang(
-    coords: Union[np.ndarray, list, shapely.coords.CoordinateSequence],
+    coords: np.ndarray | list | shapely.coords.CoordinateSequence,
     tolerance: float,
     lookahead: int = 8,
     simplify_lookahead_points: bool = False,
-) -> Union[np.ndarray, list]:
+) -> np.ndarray | list:
     """
     Simplify a line using the lang algorithm.
 
@@ -62,18 +61,18 @@ def simplify_coords_lang(
     coords_simplified_arr = coords_arr[coords_to_keep_idx]
 
     # If input was np.ndarray, return np.ndarray, otherwise list
-    if isinstance(coords, (np.ndarray, shapely.coords.CoordinateSequence)):
+    if isinstance(coords, np.ndarray | shapely.coords.CoordinateSequence):
         return coords_simplified_arr
     else:
         return coords_simplified_arr.tolist()
 
 
 def simplify_coords_lang_idx(
-    coords: Union[np.ndarray, list, shapely.coords.CoordinateSequence],
+    coords: np.ndarray | list | shapely.coords.CoordinateSequence,
     tolerance: float,
     lookahead: int = 8,
     simplify_lookahead_points: bool = False,
-) -> Union[np.ndarray, list]:
+) -> np.ndarray | list:
     """
     Simplify a line using the lang algorithm.
 
@@ -183,7 +182,7 @@ def simplify_coords_lang_idx(
     idx_to_keep_arr = mask_idx_to_keep.nonzero()[0]
 
     # If input was np.ndarray, return np.ndarray, otherwise list
-    if isinstance(coords, (np.ndarray, shapely.coords.CoordinateSequence)):
+    if isinstance(coords, np.ndarray | shapely.coords.CoordinateSequence):
         return idx_to_keep_arr
     else:
         return idx_to_keep_arr.tolist()

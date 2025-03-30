@@ -1,21 +1,19 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "pygeoops"
-version = "0.5.0a1"
+dynamic = ["version"]
+
 authors = [
   { name="Pieter Roggemans", email="pieter.roggemans@gmail.com" },
 ]
 description = "Library with some less common or extended spatial functions"
 readme = "README.md"
-requires-python = ">=3.9"
+license = "BSD-3-Clause"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
 ]
+# Any dependencies added here should also be added to build-system.requires
 dependencies = [
     "geopandas>=0.12.1",
     "numpy",
@@ -33,13 +31,32 @@ full = ["simplification"]
 "Homepage" = "https://github.com/pygeoops/pygeoops"
 "Bug Tracker" = "https://github.com/pygeoops/pygeoops/issues"
 
+[build-system]
+# All required runtime dependencies necessary as well to be able to get the __version__
+requires = [
+    "setuptools>=68.0",
+    "geopandas>=0.12.1",
+    "numpy",
+    "pyproj",
+    "shapely>1",
+    "topojson",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "pygeoops.__version__"}
+
+[tool.setuptools]
+packages = ["pygeoops"]
+
 [tool.mypy]
 [[tool.mypy.overrides]]
 module = "geofileops.*,geopandas.*,matplotlib.*,setuptools.*,simplification.*,shapely.*,topojson.*"
 ignore_missing_imports = true
 
 [tool.pyright]
-typeCheckingMode = "off"
+exclude = ["local_ignore"]
+ignore = ["*"]
 
 [tool.pytest.ini_options]
 pythonpath = "."
@@ -49,6 +66,8 @@ testpaths = [
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = [
     # pyflakes
     "F",
@@ -91,7 +110,7 @@ select = [
     # pydocstyle
     "D",
 ]
-target-version = "py39"
+
 ignore = [ # space before : (needed for how black formats slicing)
     # "E203",  # not yet implemented
     # do not assign a lambda expression, use a def
@@ -177,9 +196,9 @@ ignore = [ # space before : (needed for how black formats slicing)
 ]
 exclude = ["docs/*"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]
 "benchmark/*" = ["D"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -134,7 +134,7 @@ def test_simplify_topo_GeometryCollection():
     assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
     for geom_input, geom_result in zip(input, result):
-        assert type(geom_input) == type(geom_result)
+        assert type(geom_input) is type(geom_result)
 
 
 def test_simplify_topo_mixedtypes():

@@ -8,9 +8,9 @@ from shapely import from_wkt
 import pygeoops
 
 
-def get_testdata() -> (
-    tuple[shapely.Point, list[shapely.Geometry], list[tuple[str, str]]]
-):
+def get_testdata() -> tuple[
+    shapely.Point, list[shapely.Geometry], list[tuple[str, str]]
+]:
     # Viewpoint
     viewpoint = shapely.Point(10, 20)
 

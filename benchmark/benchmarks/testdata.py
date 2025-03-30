@@ -8,7 +8,6 @@ from pathlib import Path
 import pprint
 import shutil
 import tempfile
-from typing import Optional
 import urllib.request
 import zipfile
 
@@ -59,9 +58,7 @@ class TestFile(enum.Enum):
         return testfile_path
 
 
-def download_samplefile(
-    url: str, dst_name: str, dst_dir: Optional[Path] = None
-) -> Path:
+def download_samplefile(url: str, dst_name: str, dst_dir: Path | None = None) -> Path:
     """
     Download a sample file to dest_path.
 
@@ -138,7 +135,7 @@ def download_samplefile(
     return dst_path
 
 
-def prepare_dst_path(dst_name: str, dst_dir: Optional[Path] = None):
+def prepare_dst_path(dst_name: str, dst_dir: Path | None = None):
     if dst_dir is None:
         return Path(tempfile.gettempdir()) / "geofileops_sampledata" / dst_name
     else:

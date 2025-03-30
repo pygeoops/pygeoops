@@ -31,7 +31,7 @@ Examples are:
    :maxdepth: 1
 
    Home <self>
-   Getting started <getting_started>
+   Installation <installation>
    User guide <user_guide>
    API reference <reference>
    Development <development>

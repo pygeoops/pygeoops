@@ -1,5 +1,4 @@
 import math
-from typing import Union
 import shapely
 from shapely import box, LineString, MultiLineString, MultiPolygon, Polygon, Point
 
@@ -37,9 +36,9 @@ def extend_line_by_distance(
 
 
 def extend_line_to_geometry(
-    line: Union[LineString, MultiLineString],
-    extend_to: Union[LineString, MultiLineString, MultiPolygon, Polygon],
-) -> Union[LineString, MultiLineString]:
+    line: LineString | MultiLineString,
+    extend_to: LineString | MultiLineString | MultiPolygon | Polygon,
+) -> LineString | MultiLineString:
     """
     Extends a line to (the boundaries of) a given geometry.
 
@@ -51,9 +50,9 @@ def extend_line_to_geometry(
     Returns:
         Union[LineString, MultiLineString]: The extended line.
     """
-    if isinstance(extend_to, (MultiPolygon, Polygon)):
+    if isinstance(extend_to, MultiPolygon | Polygon):
         extend_to_line = extend_to.boundary
-    elif isinstance(extend_to, (LineString, MultiLineString)):
+    elif isinstance(extend_to, LineString | MultiLineString):
         extend_to_line = extend_to
     else:
         raise ValueError("geometry must be a (Multi)Polygon (Multi)LineString")
@@ -88,7 +87,7 @@ def extend_line_to_geometry(
 
 def _extend_linestring_to_line(
     linestring: LineString,
-    extend_to: Union[LineString, MultiLineString],
+    extend_to: LineString | MultiLineString,
     extend_to_blockers: list[LineString],
 ) -> LineString:
     """Extend a line towards the boundaries of a polygon.
@@ -133,7 +132,7 @@ def _extend_linestring_to_line(
 def _find_closest_extend_point(
     p1: tuple[float, float],
     p2: tuple[float, float],
-    extend_to: Union[LineString, MultiLineString],
+    extend_to: LineString | MultiLineString,
 ) -> tuple[float, float]:
     """
     Find the closest point on the geometry line that can be extended to.
