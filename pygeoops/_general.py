@@ -100,6 +100,147 @@ def _extract_0dim_ndarray(geometry):
 
 
 def collection_extract(
+    geometry, primitivetype: int | PrimitiveType | None = None
+) -> BaseGeometry | NDArray[BaseGeometry] | None:
+    """
+    Extracts the parts from the input that comply with the type specified.
+
+    Args:
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+        primitivetype (Union[int, PrimitiveType]): the type of geometries to keep in the
+            output. Can be either be a PrimitiveType, or it can be a string or an int
+            with one of the following values:
+                - 1 or "Point": keep only Point geometries
+                - 2 or "LineString": keep only Linestring geometries
+                - 3 or "Polygon": keep only Polygon geometries
+
+
+    Raises:
+        ValueError: if geometry is an unsupported geometry type or (a) primitivetype is
+            invalid.
+
+    Returns:
+        Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
+            geometries containing only parts of the primitive type specified.
+    """
+    if isinstance(primitivetype, PrimitiveType):
+        primitivetype = primitivetype.value
+
+    return collection_extract2(geometry, primitivetype)
+
+
+def collection_extract2(
+    geometry,
+    type: int | str,
+) -> BaseGeometry | NDArray[BaseGeometry] | None:
+    """
+    Extracts the parts from the input that comply with the type specified.
+
+    Notes:
+        - MultiPolygon results are not checked for validity. If the polygon components
+          are adjacent or overlapping the result will be invalid. This situation can be
+          checked with `is_valid` and repaired with `make_valid`.
+
+    Args:
+        geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
+        type (Union[int, str] or arraylike): the type of geometries to keep in the
+            output. One of the following values:
+                - 1 or "Point": keep only Point geometries
+                - 2 or "LineString": keep only Linestring geometries
+                - 3 or "Polygon": keep only Polygon geometries
+
+    Raises:
+        ValueError: if geometry is an unsupported geometry type or if the type specified
+            is invalid.
+
+    Returns:
+        Union[BaseGeometry, NDArray[BaseGeometry], None]: geometry or array of
+            geometries containing only parts of the primitive type specified.
+    """
+    if type is None:
+        raise ValueError("Invalid value for type: None")
+    elif isinstance(type, str):
+        type = type.lower()
+        if type == "point":
+            type_ids = np.array([0, 4])
+        elif type == "linestring":
+            type_ids = np.array([1, 2, 5])
+        elif type == "polygon":
+            type_ids = np.array([3, 6])
+        else:
+            raise ValueError(f"Invalid value for type: {type}")
+    elif isinstance(type, int | np.integer):
+        if type == 1:
+            type_ids = np.array([0, 4])
+        elif type == 2:
+            type_ids = np.array([1, 2, 5])
+        elif type == 3:
+            type_ids = np.array([3, 6])
+        else:
+            raise ValueError(f"Invalid value for type: {type}")
+    else:
+        raise ValueError(f"Invalid type for parameter type: {type(type)}")
+
+    if geometry is None:
+        return None
+    geometry = _extract_0dim_ndarray(geometry)
+
+    # Single geometry.
+    if not _is_arraylike(geometry):
+        return _collection_extract(geometry, type_ids)
+
+    # Extract the rows that are GeometryCollections
+    geometry = np.array(geometry)
+    is_collection = shapely.get_type_id(geometry) == 7
+    geometry[is_collection] = np.array(
+        [
+            _collection_extract(geometry=geom, type_ids=type_ids)
+            for geom in geometry[is_collection]
+        ]
+    )
+
+    # Set all rows of a wrong type to None
+    geometry[~np.isin(shapely.get_type_id(geometry), type_ids)] = None
+
+    return geometry
+
+
+def _collection_extract(
+    geometry: shapely.GeometryCollection, type_ids: NDArray[np.number]
+) -> BaseGeometry | None:
+    parts = shapely.get_parts(geometry)
+
+    # Recursively extract parts to keep from GeometryCollections
+    types = shapely.get_type_id(parts)
+    extracted = np.array(
+        [_collection_extract(geom, type_ids=type_ids) for geom in parts[types == 7]]
+    )
+
+    # Filter the parts of the types to keep from the original parts
+    parts_to_keep = parts[np.isin(types, type_ids)]
+
+    # Concatenate the extracted parts with the parts to keep
+    if len(extracted) > 0:
+        parts_to_keep = np.concatenate(parts_to_keep, extracted)
+
+    # If there are few resulting parts, we are ready
+    if len(parts_to_keep) == 0:
+        return None
+    elif len(parts_to_keep) == 1:
+        return parts_to_keep[0]
+
+    # Flatten all geometries to be able to return a single multigeometry
+    parts_to_keep = shapely.get_parts(parts_to_keep)
+
+    if type_ids[0] == 0:
+        return shapely.multipoints(parts_to_keep)
+    elif type_ids[0] == 1:
+        return shapely.multilinestrings(parts_to_keep)
+    elif type_ids[0] == 3:
+        return shapely.multipolygons(parts_to_keep)
+
+
+def _collection_extract_old(
     geometry,
     primitivetype: int | PrimitiveType | ArrayLike | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | None:
@@ -143,27 +284,35 @@ def collection_extract(
             raise ValueError("single geometry passed, but primitivetype is arraylike")
 
         primitivetype_id = to_primitivetype_id(primitivetype)
-        return _collection_extract(geometry=geometry, primitivetype_id=primitivetype_id)  # type: ignore[arg-type]
+        return _collection_extract_old(
+            geometry=geometry, primitivetype_id=primitivetype_id
+        )  # type: ignore[arg-type]
 
     # Geometry is arraylike.
     if not _is_arraylike(primitivetype):
         primitivetype = PrimitiveType(primitivetype)
-        primitivetype.shapely_type_ids
+        shapely_type_id = primitivetype.shapely_type_ids
     else:
         # Number of primitive types specified should equal the number of geometries.
         if len(primitivetype) != len(geometry):
             raise ValueError(
                 "geometry and primitivetype are arraylike, so len must be equal"
             )
+        shapely_type_id = [
+            PrimitiveType(pritype).shapely_type_ids for pritype in primitivetype
+        ]
 
     result = np.array(geometry.copy())
 
+    if not _is_arraylike(primitivetype):
         # Extract the rows that are GeometryCollections
         is_collection = shapely.get_type_id(result) == 7
         primitivetype_id = to_primitivetype_id(primitivetype)
         result[is_collection] = np.array(
             [
-                _collection_extract(geometry=geom, primitivetype_id=primitivetype_id)
+                _collection_extract_old(
+                    geometry=geom, primitivetype_id=primitivetype_id
+                )
                 for geom in result[is_collection]  # type: ignore[arg-type]
             ]
         )
@@ -174,14 +323,14 @@ def collection_extract(
         ] = None
 
     else:
-        # Arraylike primitivetype
+        # Arraylike primitivetype, convert to ids
 
         # Extract the rows that are GeometryCollections
         result = np.array(geometry.copy())
         is_collection = shapely.get_type_id(result) == 7
         result[is_collection] = np.array(
             [
-                _collection_extract(
+                _collection_extract_old(
                     geometry=geom, primitivetype_id=to_primitivetype_id(type)
                 )
                 for geom, type in zip(result[is_collection], primitivetype)  # type: ignore[arg-type]
@@ -189,9 +338,7 @@ def collection_extract(
         )
 
         # Set all rows of a wrong type to None
-        result[
-            ~np.isin(shapely.get_type_id(result), primitivetype.shapely_type_ids)
-        ] = None
+        result[~np.isin(shapely.get_type_id(result), shapely_type_id)] = None
 
     # If input is GeoSeries, recover index
     if isinstance(geometry, GeoSeries):
@@ -229,7 +376,7 @@ def _collection_extract(
             return geometry
     elif isinstance(geometry, shapely.GeometryCollection):
         returngeoms = [
-            _collection_extract(geom, primitivetype_id=primitivetype_id)
+            _collection_extract_old(geom, primitivetype_id=primitivetype_id)
             for geom in geometry.geoms
         ]
         if len(returngeoms) > 0:

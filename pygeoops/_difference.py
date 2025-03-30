@@ -183,7 +183,8 @@ def difference_all(
         geom_diff = shapely.difference(geometry, geom_to_subtract)
 
     # Only keep geometries of the asked primitivetype.
-    geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
+    if output_primitivetype_id != 0:
+        geom_diff = pygeoops.collection_extract(geom_diff, output_primitivetype_id)
 
     return geom_diff
 

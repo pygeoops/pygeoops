@@ -23,7 +23,7 @@ def _get_version() -> str:
     return 1.0
 
 
-def collection_extract(tmp_dir: Path) -> RunResult:
+def collection_extract2(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -32,7 +32,7 @@ def collection_extract(tmp_dir: Path) -> RunResult:
     # Go!
     start_time = datetime.now()
     # This is a (private) implementation in geopandas
-    geoms_gdf = _collection_extract(geoms_gdf, geom_type="Polygon")
+    geoms_gdf = _collection_extract2(geoms_gdf, geom_type="Polygon")
     operation_descr = f"{function_name} on agri parcel layer BEFL (~500k polygons)"
     result = RunResult(
         package=_get_package(),
@@ -49,7 +49,7 @@ def collection_extract(tmp_dir: Path) -> RunResult:
     return result
 
 
-def _collection_extract(df, geom_type):
+def _collection_extract2(df, geom_type):
     # Check input
     if geom_type in ["Polygon", "MultiPolygon"]:
         geom_types = ["Polygon", "MultiPolygon"]
@@ -91,3 +91,47 @@ def _collection_extract(df, geom_type):
     result = result.loc[result.geom_type.isin(geom_types)]
 
     return result
+
+
+def collection_extract3(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    geoms_gdf = gpd.read_file(input_path, engine="pyogrio")
+
+    # Go!
+    start_time = datetime.now()
+    # This is a (private) implementation in geopandas
+    geoms_gdf = _collection_extract3(geoms_gdf, geom_type="Polygon")
+    operation_descr = f"{function_name} on agri parcel layer BEFL (~500k polygons)"
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=operation_descr,
+        run_details=None,
+    )
+
+    # geoms_gdf.to_file(tmp_dir / f"{function_name}_output.gpkg", engine="pyogrio")
+
+    # Cleanup and return
+    return result
+
+
+def _collection_extract3(df, geom_type):
+    import numpy as np
+    import shapely
+    from shapely.tests.common import all_types
+
+    # Make a GeometryCollection, then convert that to an array
+    geom_collection = shapely.geometrycollections(all_types)
+    geoms = np.array(geom_collection.geoms)
+
+    # Get a specific geometry type type
+    geoms[shapely.get_type_id(geoms) == shapely.GeometryType.LINESTRING]
+    # array([<LINESTRING (0 0, 1 0, 1 1)>], dtype=object)
+
+    # Get geometries with an inherent dimensionality
+    geoms[shapely.get_dimensions(geoms) == 0]
+    # array([<POINT (2 3)>, <MULTIPOINT (0 0, 1 2)>], dtype=object)
