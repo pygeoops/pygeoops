@@ -7,7 +7,7 @@ authors = [
 ]
 description = "Library with some less common or extended spatial functions"
 readme = "README.md"
-license = "BSD-3-Clause"
+license = { text = "BSD-3-Clause" }
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
