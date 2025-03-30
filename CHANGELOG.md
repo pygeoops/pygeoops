@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.5.0 (???)
+## 0.5.0 (2025-03-30)
 
 ### Improvements
 
@@ -9,7 +9,7 @@
 - Add option to function `centerline` to extend it to the polygon boundary (#87)
 - Improve logging of geos warnings in `difference_all` (#77)
 - Add more context to errors raised by `centerline` (#116)
-- Change minimal python version to 3.9 (#84)
+- Change minimal python version to 3.10 (#121)
 - Use ruff instead of black for formatting + use mypy (#78)
 - Enable extra linter checks like pydocstyle and pyupgrade (#85)
 
