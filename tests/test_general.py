@@ -94,8 +94,8 @@ def test_collection_extract():
     """
     # Test None input
     # ---------------
-    assert pygeoops.collection_extract(None, 0) is None
-    assert pygeoops.collection_extract([None], 0) == [None]
+    assert pygeoops.collection_extract(None, 1) is None
+    assert pygeoops.collection_extract([None], 1) == [None]
 
     # Test dealing with points
     # ------------------------
@@ -121,19 +121,18 @@ def test_collection_extract():
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.POINT) == point
     assert pygeoops.collection_extract(geometrycoll, 2) == line
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.LINESTRING) == line
-    assert pygeoops.collection_extract(geometrycoll, 3) == shapely.GeometryCollection(
-        [poly1, multipoly]
+    assert pygeoops.collection_extract(geometrycoll, 3) == shapely.MultiPolygon(
+        [poly1, poly2, poly3]
     )
     assert pygeoops.collection_extract(
         geometrycoll, PrimitiveType.POLYGON
-    ) == shapely.GeometryCollection([poly1, multipoly])
-    assert pygeoops.collection_extract(geometrycoll, 0) == geometrycoll
+    ) == shapely.MultiPolygon([poly1, poly2, poly3])
 
     # Test dealing with deeper nested geometries
     # ------------------------------------------
     assert pygeoops.collection_extract(
-        shapely.GeometryCollection(geometrycoll), 0
-    ) == shapely.GeometryCollection(geometrycoll)
+        shapely.GeometryCollection(geometrycoll), 3
+    ) == shapely.MultiPolygon([poly1, poly2, poly3])
 
     # Test dealing with single element ndarray (0 dimension)
     # ------------------------------------------------------

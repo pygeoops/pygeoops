@@ -29,6 +29,33 @@ def _get_version() -> str:
     return pygeoops.__version__
 
 
+def collection_extract(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    geoms_gdf = gpd.read_file(input_path, engine="pyogrio")
+
+    # Go!
+    start_time = datetime.now()
+    geoms_gdf.geometry = pygeoops.collection_extract(
+        geoms_gdf.geometry, primitivetype=pygeoops.PrimitiveType.POLYGON
+    )
+    operation_descr = f"{function_name} on agri parcel layer BEFL (~500k polygons)"
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=operation_descr,
+        run_details=None,
+    )
+
+    # geoms_gdf.to_file(tmp_dir / f"{function_name}_output.gpkg", engine="pyogrio")
+
+    # Cleanup and return
+    return result
+
+
 def simplify_lang(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]

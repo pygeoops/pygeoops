@@ -242,3 +242,16 @@ class PrimitiveType(enum.Enum):
             return GeometryType.GEOMETRY
         else:
             raise ValueError(f"No singletype implemented for {self}")
+
+    @property
+    def shapely_type_ids(self) -> list[int]:
+        if self is PrimitiveType.POINT:
+            return [0, 4]
+        elif self is PrimitiveType.LINESTRING:
+            return [1, 5]
+        elif self is PrimitiveType.POLYGON:
+            return [3, 6]
+        elif self is PrimitiveType.GEOMETRY:
+            return [7]
+        else:
+            raise ValueError(f"No type_ids implemented for {self}")
