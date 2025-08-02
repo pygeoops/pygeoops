@@ -4,7 +4,8 @@
 
 ### Bugs fixed
 
-- Fix errors in `centerline` for some specific polygons (#132)
+- Avoid errors in `centerline` for some specific polygons (#132)
+- Avoid errors in `centerline` with `extend` for some specific polygons (#133)
 
 ## 0.5.0 (2025-03-30)
 
