@@ -130,6 +130,15 @@ def _centerline(
 
             if max_segment_length > 0:
                 geom_for_voronoi = shapely.segmentize(geom, max_segment_length)
+                if geom_for_voronoi is None or geom_for_voronoi.is_empty:
+                    # If segmentize returned an empty geometry, keep the original
+                    geom_for_voronoi = geom
+
+                # If the area changed > 10%, keep the original geometry
+                min_area = min(geom.area, geom_for_voronoi.area)
+                max_area = max(geom.area, geom_for_voronoi.area)
+                if (max_area - min_area) / max_area > 0.1:
+                    geom_for_voronoi = geom
 
         # Remove repeated points, as Voronoi does not like them
         try:
@@ -139,10 +148,6 @@ def _centerline(
         except shapely.errors.GEOSException as ex:
             if "invalid number of points in linearring" in str(ex).lower():
                 # If this error occurs, try set_precision
-                logger.warning(
-                    f"Error in remove_repeated_points on "
-                    f"{format_short(geom_for_voronoi)}: {ex}. Trying set_precision."
-                )
                 geom_for_voronoi_dedup = shapely.set_precision(geom_for_voronoi, 1e-8)
             else:
                 raise
@@ -156,10 +161,6 @@ def _centerline(
         except shapely.errors.GEOSException as ex:
             if "point array must contain" in str(ex).lower():
                 # If this error occurs, try set_precision
-                logger.warning(
-                    f"Error in voronoi_polygons on {format_short(geom_for_voronoi)}: "
-                    f"{ex}. Trying set_precision first."
-                )
                 geom_for_voronoi = shapely.set_precision(geom_for_voronoi, 1e-8)
                 voronoi_edges = shapely.voronoi_polygons(
                     geom_for_voronoi, only_edges=True
