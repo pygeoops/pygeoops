@@ -335,7 +335,7 @@ def test_explode():
         (MultiLineString([[(0, 0), (0, 1)]]), "MULTILINESTRING((0.0 0.0, ...)"),
         (Polygon([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]), "POLYGON(0.0 0.0, ...)"),
         (
-            MultiPolygon([[[(0.01, 0.0), (0.02, 0.0), (0.02, 0.01)]]]),
+            MultiPolygon([Polygon([(0.01, 0.0), (0.02, 0.0), (0.02, 0.01)])]),
             "MULTIPOLYGON((0.01 0.0, ...)",
         ),
         (
