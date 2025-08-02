@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.5.1 (????-??-??)
+
+### Bugs fixed
+
+- Fix errors in `centerline` for some specific polygons (#132)
+
 ## 0.5.0 (2025-03-30)
 
 ### Improvements
