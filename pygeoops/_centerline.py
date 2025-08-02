@@ -157,8 +157,8 @@ def _centerline(
             if "point array must contain" in str(ex).lower():
                 # If this error occurs, try set_precision
                 logger.warning(
-                    "Error in voronoi_polygons on "
-                    f"{format_short(geom_for_voronoi)}: {ex}. Trying set_precision first."
+                    f"Error in voronoi_polygons on {format_short(geom_for_voronoi)}: "
+                    f"{ex}. Trying set_precision first."
                 )
                 geom_for_voronoi = shapely.set_precision(geom_for_voronoi, 1e-8)
                 voronoi_edges = shapely.voronoi_polygons(
