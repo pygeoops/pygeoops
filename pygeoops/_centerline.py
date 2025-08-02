@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
 
-from pygeoops._general import _extract_0dim_ndarray
+from pygeoops._general import _extract_0dim_ndarray, format_short
 from pygeoops import _extend_line
 
 
@@ -132,12 +132,40 @@ def _centerline(
                 geom_for_voronoi = shapely.segmentize(geom, max_segment_length)
 
         # Remove repeated points, as Voronoi does not like them
-        geom_for_voronoi_dedup = shapely.remove_repeated_points(geom_for_voronoi, 1e-8)
+        try:
+            geom_for_voronoi_dedup = shapely.remove_repeated_points(
+                geom_for_voronoi, 1e-8
+            )
+        except shapely.errors.GEOSException as ex:
+            if "invalid number of points in linearring" in str(ex).lower():
+                # If this error occurs, try set_precision
+                logger.warning(
+                    f"Error in remove_repeated_points on "
+                    f"{format_short(geom_for_voronoi)}: {ex}. Trying set_precision."
+                )
+                geom_for_voronoi_dedup = shapely.set_precision(geom_for_voronoi, 1e-8)
+            else:
+                raise
+
         if geom_for_voronoi_dedup.is_valid:
             geom_for_voronoi = geom_for_voronoi_dedup
 
         # Calculate voronoi edges
-        voronoi_edges = shapely.voronoi_polygons(geom_for_voronoi, only_edges=True)
+        try:
+            voronoi_edges = shapely.voronoi_polygons(geom_for_voronoi, only_edges=True)
+        except shapely.errors.GEOSException as ex:
+            if "point array must contain" in str(ex).lower():
+                # If this error occurs, try set_precision
+                logger.warning(
+                    f"Error in voronoi_polygons on {format_short(geom_for_voronoi)}: "
+                    f"{ex}. Trying set_precision first."
+                )
+                geom_for_voronoi = shapely.set_precision(geom_for_voronoi, 1e-8)
+                voronoi_edges = shapely.voronoi_polygons(
+                    geom_for_voronoi, only_edges=True
+                )
+            else:
+                raise
 
         # Only keep edges that are covered by the original geometry to remove edges
         # going to infinity,...
@@ -184,9 +212,7 @@ def _centerline(
         return lines
 
     except Exception as ex:
-        raise type(ex)(
-            f"Error for geometry at {shapely.get_point(geom, 0)}: {ex}"
-        ) from ex
+        raise type(ex)(f"Error for geometry {format_short(geom)}: {ex}") from ex
 
 
 def _average_width(geom: BaseGeometry) -> float:

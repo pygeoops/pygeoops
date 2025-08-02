@@ -284,6 +284,59 @@ def force_geometrytype(
 """
 
 
+def format_short(geometry: BaseGeometry | None) -> str:
+    """Formats a geometry with only the first point included for display.
+
+    Args:
+        geometry (BaseGeometry, optional): The geometry to format.
+
+    Returns:
+        str: A string representation of the geometry including only the first point.
+    """
+    if geometry is None:
+        return "None"
+
+    if isinstance(geometry, shapely.Point):
+        return f"POINT({geometry.x} {geometry.y})"
+    elif isinstance(geometry, (shapely.LinearRing | shapely.LineString)):
+        first_point = shapely.get_point(geometry, 0)
+        return (
+            f"{type(geometry).__name__.upper()}({first_point.x} {first_point.y}, ...)"
+        )
+    elif isinstance(geometry, shapely.Polygon):
+        first_point = shapely.get_point(geometry.exterior, 0)
+        return f"POLYGON({first_point.x} {first_point.y}, ...)"
+    elif isinstance(geometry, shapely.MultiPolygon):
+        first_point = shapely.get_point(shapely.get_geometry(geometry, 0).exterior, 0)
+        return f"MULTIPOLYGON(({first_point.x} {first_point.y}, ...)"
+    elif isinstance(geometry, shapely.MultiPoint):
+        if shapely.get_num_geometries(geometry) > 1:
+            first_point = shapely.get_geometry(geometry, 0)
+            return f"MULTIPOINT({first_point.x} {first_point.y}, ...)"
+        else:
+            first_point = shapely.get_geometry(geometry, 0)
+            return f"MULTIPOINT({first_point.x} {first_point.y})"
+    elif isinstance(geometry, shapely.MultiLineString):
+        first_point = shapely.get_point(shapely.get_geometry(geometry, 0), 0)
+        return f"MULTILINESTRING(({first_point.x} {first_point.y}, ...)"
+
+    # Loop till it isn't a multipart geometry anymore
+    result = ""
+    multi = False
+    while isinstance(geometry, shapely.GeometryCollection):
+        if shapely.get_num_geometries(geometry) > 1:
+            multi = True
+        result += f"{type(geometry).__name__.upper()}("
+        geometry = shapely.get_geometry(geometry, 0)
+
+    suffix = ", ...)" if multi else ")"
+    result += format_short(geometry)
+    if not result.endswith(", ...)"):
+        result += suffix
+
+    return result
+
+
 def get_primitivetype_id(geometry) -> int | NDArray[np.number]:
     """
     Determines for each input geometry which is the primitive type of the geometry.

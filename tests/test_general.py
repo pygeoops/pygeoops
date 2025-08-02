@@ -6,21 +6,30 @@ import geopandas as gpd
 import numpy as np
 import pytest
 import shapely
+from shapely import (
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+    GeometryCollection,
+)
 
 import pygeoops
-from pygeoops import PrimitiveType
 import pygeoops._general
+from pygeoops import PrimitiveType
 
-MULTIPOLY_INVALID_1_COLLAPSING_LINE = shapely.MultiPolygon(
+MULTIPOLY_INVALID_1_COLLAPSING_LINE = MultiPolygon(
     [
-        shapely.Polygon([(0, 0), (0, 10), (10, 0), (10, 10), (0, 0)]),
-        shapely.Polygon([(1, 1), (2, 1), (3, 1)]),
+        Polygon([(0, 0), (0, 10), (10, 0), (10, 10), (0, 0)]),
+        Polygon([(1, 1), (2, 1), (3, 1)]),
     ]
 )
-LINESTRING_INVALID_2_COLLAPSING_POINT = shapely.MultiLineString(
+LINESTRING_INVALID_2_COLLAPSING_POINT = MultiLineString(
     [
-        shapely.LineString([(0, 0), (5, 0), (10, 0)]),
-        shapely.LineString([(1, 1), (1, 1)]),
+        LineString([(0, 0), (5, 0), (10, 0)]),
+        LineString([(1, 1), (1, 1)]),
     ]
 )
 
@@ -31,21 +40,21 @@ def test_collect():
     assert pygeoops.collect(None) is None
     assert pygeoops.collect([None]) is None
     # Empty geometries are treated as None as well
-    assert pygeoops.collect([None, shapely.Polygon(), None, shapely.Polygon()]) is None
+    assert pygeoops.collect([None, Polygon(), None, Polygon()]) is None
 
     # Test points
     # -----------
-    point = shapely.Point((0, 0))
+    point = Point((0, 0))
     assert pygeoops.collect(point) == point
     assert pygeoops.collect([point]) == point
-    assert pygeoops.collect([point, point]) == shapely.MultiPoint([(0, 0), (0, 0)])
+    assert pygeoops.collect([point, point]) == MultiPoint([(0, 0), (0, 0)])
 
     # Test linestrings
     # ----------------
-    line = shapely.LineString([(0, 0), (0, 1)])
+    line = LineString([(0, 0), (0, 1)])
     assert pygeoops.collect(line) == line
     assert pygeoops.collect([line]) == line
-    assert pygeoops.collect([line, line]) == shapely.MultiLineString([line, line])
+    assert pygeoops.collect([line, line]) == MultiLineString([line, line])
 
     # Test polygons
     # -------------
@@ -53,25 +62,23 @@ def test_collect():
     poly23 = shapely.box(2, 0, 3, 1)
     poly34 = shapely.box(3, 0, 4, 1)
     poly45 = shapely.box(4, 0, 5, 1)
-    multipoly = shapely.MultiPolygon([poly23, poly45])
+    multipoly = MultiPolygon([poly23, poly45])
     assert pygeoops.collect(poly01) == poly01
     assert pygeoops.collect([poly01]) == poly01
     assert pygeoops.collect([poly23, poly45]) == multipoly
     # Adjacent polygons: would create invalid multipolygon so becomes GeometryCollection
-    assert pygeoops.collect([poly34, poly45]) == shapely.GeometryCollection(
-        [poly34, poly45]
-    )
+    assert pygeoops.collect([poly34, poly45]) == GeometryCollection([poly34, poly45])
 
     # Test geometrycollection
     # -----------------------
-    geometrycoll = shapely.GeometryCollection([point, line, poly01])
+    geometrycoll = GeometryCollection([point, line, poly01])
     assert pygeoops.collect(geometrycoll) == geometrycoll
     assert pygeoops.collect([geometrycoll]) == geometrycoll
     assert pygeoops.collect([point, line, poly01]) == geometrycoll
-    assert pygeoops.collect([geometrycoll, line]) == shapely.GeometryCollection(
+    assert pygeoops.collect([geometrycoll, line]) == GeometryCollection(
         [geometrycoll, line]
     )
-    assert pygeoops.collect([poly01, multipoly]) == shapely.GeometryCollection(
+    assert pygeoops.collect([poly01, multipoly]) == GeometryCollection(
         [poly01, multipoly]
     )
 
@@ -99,8 +106,8 @@ def test_collection_extract():
 
     # Test dealing with points
     # ------------------------
-    point = shapely.Point((0, 0))
-    multipoint = shapely.MultiPoint([point, point])
+    point = Point((0, 0))
+    multipoint = MultiPoint([point, point])
     assert pygeoops.collection_extract(point, 1) == point
     assert pygeoops.collection_extract(multipoint, 1) == multipoint
     assert pygeoops.collection_extract(multipoint, 2) is None
@@ -111,29 +118,29 @@ def test_collection_extract():
 
     # Test dealing with mixed geometries
     # ----------------------------------
-    line = shapely.LineString([(0, 0), (0, 1)])
+    line = LineString([(0, 0), (0, 1)])
     poly1 = shapely.box(0, 0, 1, 1)
     poly2 = shapely.box(2, 0, 3, 1)
     poly3 = shapely.box(4, 0, 5, 1)
-    multipoly = shapely.MultiPolygon([poly2, poly3])
-    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
+    multipoly = MultiPolygon([poly2, poly3])
+    geometrycoll = GeometryCollection([point, line, poly1, multipoly])
     assert pygeoops.collection_extract(geometrycoll, 1) == point
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.POINT) == point
     assert pygeoops.collection_extract(geometrycoll, 2) == line
     assert pygeoops.collection_extract(geometrycoll, PrimitiveType.LINESTRING) == line
-    assert pygeoops.collection_extract(geometrycoll, 3) == shapely.GeometryCollection(
+    assert pygeoops.collection_extract(geometrycoll, 3) == GeometryCollection(
         [poly1, multipoly]
     )
     assert pygeoops.collection_extract(
         geometrycoll, PrimitiveType.POLYGON
-    ) == shapely.GeometryCollection([poly1, multipoly])
+    ) == GeometryCollection([poly1, multipoly])
     assert pygeoops.collection_extract(geometrycoll, 0) == geometrycoll
 
     # Test dealing with deeper nested geometries
     # ------------------------------------------
     assert pygeoops.collection_extract(
-        shapely.GeometryCollection(geometrycoll), 0
-    ) == shapely.GeometryCollection(geometrycoll)
+        GeometryCollection(geometrycoll), 0
+    ) == GeometryCollection(geometrycoll)
 
     # Test dealing with single element ndarray (0 dimension)
     # ------------------------------------------------------
@@ -154,14 +161,14 @@ def test_collection_extract_geometries(input_type):
     Test collection_extract with several geometries as input and extracting only points.
     """
     # Prepare test data
-    point = shapely.Point((0, 0))
-    multipoint = shapely.MultiPoint([point, point])
-    line = shapely.LineString([(0, 0), (0, 1)])
+    point = Point((0, 0))
+    multipoint = MultiPoint([point, point])
+    line = LineString([(0, 0), (0, 1)])
     poly1 = shapely.box(0, 0, 1, 1)
     poly2 = shapely.box(2, 0, 3, 1)
     poly3 = shapely.box(4, 0, 5, 1)
-    multipoly = shapely.MultiPolygon([poly2, poly3])
-    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
+    multipoly = MultiPolygon([poly2, poly3])
+    geometrycoll = GeometryCollection([point, line, poly1, multipoly])
     input = [point, multipoint, line, poly1, multipoly, geometrycoll]
     start_idx = 0
     if input_type == "geoseries":
@@ -197,13 +204,13 @@ def test_collection_extract_geometries_primitivetypes():
     primitive types.
     """
     # Prepare test data
-    point = shapely.Point((0, 0))
-    line = shapely.LineString([(0, 0), (0, 1)])
+    point = Point((0, 0))
+    line = LineString([(0, 0), (0, 1)])
     poly1 = shapely.box(0, 0, 1, 1)
     poly2 = shapely.box(2, 0, 3, 1)
     poly3 = shapely.box(4, 0, 5, 1)
-    multipoly = shapely.MultiPolygon([poly2, poly3])
-    geometrycoll = shapely.GeometryCollection([point, line, poly1, multipoly])
+    multipoly = MultiPolygon([poly2, poly3])
+    geometrycoll = GeometryCollection([point, line, poly1, multipoly])
     input = [geometrycoll] * 4
     primitivetypes = [0, 1, 2, 3]
 
@@ -215,7 +222,7 @@ def test_collection_extract_geometries_primitivetypes():
     assert result[0] == geometrycoll
     assert result[1] == point
     assert result[2] == line
-    assert isinstance(result[3], shapely.GeometryCollection)
+    assert isinstance(result[3], GeometryCollection)
     assert len(result[3].geoms) == 2
     assert result[3].geoms[0] == poly1
     assert result[3].geoms[1] == multipoly
@@ -223,24 +230,24 @@ def test_collection_extract_geometries_primitivetypes():
 
 def test_collection_extract_invalid_params():
     with pytest.raises(ValueError, match="Invalid value for primitivetype: 5"):
-        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=5)
+        pygeoops.collection_extract(Point((0, 0)), primitivetype=5)
     with pytest.raises(ValueError, match="Invalid value for primitivetype: -5"):
-        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=-5)
+        pygeoops.collection_extract(Point((0, 0)), primitivetype=-5)
     with pytest.raises(ValueError, match="Invalid value for primitivetype: None"):
-        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=None)
+        pygeoops.collection_extract(Point((0, 0)), primitivetype=None)
     with pytest.raises(ValueError, match="Invalid type for primitivetype"):
-        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype="invalid")
+        pygeoops.collection_extract(Point((0, 0)), primitivetype="invalid")
 
     # Test lists of different length for geometries vs. primitivetypes
     with pytest.raises(
         ValueError,
         match="geometry and primitivetype are arraylike, so len must be equal",
     ):
-        pygeoops.collection_extract([shapely.Point((0, 0))], primitivetype=[1, 2])
+        pygeoops.collection_extract([Point((0, 0))], primitivetype=[1, 2])
     with pytest.raises(
         ValueError, match="single geometry passed, but primitivetype is arraylike"
     ):
-        pygeoops.collection_extract(shapely.Point((0, 0)), primitivetype=[1, 2])
+        pygeoops.collection_extract(Point((0, 0)), primitivetype=[1, 2])
 
 
 @pytest.mark.parametrize("test", ["adjacent", "disjoint"])
@@ -251,17 +258,17 @@ def test_collection_extract_polygons(test):
     box5_10 = shapely.box(5, 0, 10, 5)
 
     if test == "adjacent":
-        collection_poly = shapely.GeometryCollection([box0_5, box5_10])
+        collection_poly = GeometryCollection([box0_5, box5_10])
 
-        # Result should stay a GeometryCollection, because a multipolygon where outer
+        # Result should stay a GeometryCollection(, because a multipolygon where outer
         # rings have common border is not valid.
         expected_result = collection_poly
 
     elif test == "disjoint":
-        collection_poly = shapely.GeometryCollection([box0_4, box5_10])
+        collection_poly = GeometryCollection([box0_4, box5_10])
 
         # Result should be a multipolygon, because the polygons aren't adjacent
-        expected_result = shapely.MultiPolygon([box0_4, box5_10])
+        expected_result = MultiPolygon([box0_4, box5_10])
 
     # Extract polygons
     result = pygeoops.collection_extract(collection_poly, primitivetype=3)
@@ -271,16 +278,16 @@ def test_collection_extract_polygons(test):
 
 def test_empty():
     assert pygeoops.empty(None) is None
-    assert pygeoops.empty(1) == shapely.Point()
-    assert pygeoops.empty(2) == shapely.LineString()
-    assert pygeoops.empty(3) == shapely.Polygon()
-    assert pygeoops.empty(4) == shapely.MultiPoint()
-    assert pygeoops.empty(5) == shapely.MultiLineString()
-    assert pygeoops.empty(6) == shapely.MultiPolygon()
-    assert pygeoops.empty(7) == shapely.GeometryCollection()
+    assert pygeoops.empty(1) == Point()
+    assert pygeoops.empty(2) == LineString()
+    assert pygeoops.empty(3) == Polygon()
+    assert pygeoops.empty(4) == MultiPoint()
+    assert pygeoops.empty(5) == MultiLineString()
+    assert pygeoops.empty(6) == MultiPolygon()
+    assert pygeoops.empty(7) == GeometryCollection()
 
     # Special case: shapely.Geometry() does not exist, so also collection
-    assert pygeoops.empty(0) == shapely.GeometryCollection()
+    assert pygeoops.empty(0) == GeometryCollection()
 
     with pytest.raises(ValueError, match="-2 is not a valid GeometryType"):
         pygeoops.empty(-2)
@@ -293,38 +300,77 @@ def test_explode():
 
     # Test dealing with points
     # ------------------------
-    point = shapely.Point((0, 0))
-    multipoint = shapely.MultiPoint([point, point])
+    point = Point((0, 0))
+    multipoint = MultiPoint([point, point])
     assert pygeoops.explode(point).tolist() == [point]
     assert pygeoops.explode(multipoint).tolist() == [point, point]
 
     # Test dealing with linestrings
     # -----------------------------
-    line = shapely.LineString([(0, 0), (0, 1)])
-    multiline = shapely.MultiLineString([line, line])
+    line = LineString([(0, 0), (0, 1)])
+    multiline = MultiLineString([line, line])
     assert pygeoops.explode(line).tolist() == [line]
     assert pygeoops.explode(multiline).tolist() == [line, line]
 
     # Test dealing with Polygons
     # --------------------------
-    poly = shapely.Polygon([(0, 0), (0, 1), (0, 0)])
-    multipoly = shapely.MultiPolygon([poly, poly])
+    poly = Polygon([(0, 0), (0, 1), (0, 0)])
+    multipoly = MultiPolygon([poly, poly])
     assert pygeoops.explode(poly).tolist() == [poly]
     assert pygeoops.explode(multipoly).tolist() == [poly, poly]
 
     # Test geometrycollection
     # -----------------------
-    geometrycoll = shapely.GeometryCollection([point, line, poly])
+    geometrycoll = GeometryCollection([point, line, poly])
     assert pygeoops.explode(geometrycoll).tolist() == [point, line, poly]
+
+
+@pytest.mark.parametrize(
+    "geometry, expected",
+    [
+        (None, "None"),
+        (Point((0, 0)), "POINT(0.0 0.0)"),
+        (MultiPoint([(0, 0), (1, 1)]), "MULTIPOINT(0.0 0.0, ...)"),
+        (LineString([(0, 0), (0, 1)]), "LINESTRING(0.0 0.0, ...)"),
+        (MultiLineString([[(0, 0), (0, 1)]]), "MULTILINESTRING((0.0 0.0, ...)"),
+        (Polygon([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]), "POLYGON(0.0 0.0, ...)"),
+        (
+            MultiPolygon([Polygon([(0.01, 0.0), (0.02, 0.0), (0.02, 0.01)])]),
+            "MULTIPOLYGON((0.01 0.0, ...)",
+        ),
+        (
+            GeometryCollection([Point((0, 0))]),
+            "GEOMETRYCOLLECTION(POINT(0.0 0.0))",
+        ),
+        (
+            GeometryCollection([Point((0, 0)), Point((1, 1))]),
+            "GEOMETRYCOLLECTION(POINT(0.0 0.0), ...)",
+        ),
+        (
+            GeometryCollection([Polygon([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)])]),
+            "GEOMETRYCOLLECTION(POLYGON(0.0 0.0, ...)",
+        ),
+        (
+            GeometryCollection(
+                [GeometryCollection([MultiLineString([[(0, 0), (0, 1)]])])]
+            ),
+            "GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(MULTILINESTRING((0.0 0.0, ...)",
+        ),
+    ],
+)
+def test_format_short(geometry, expected):
+    """Test the format_short function."""
+    # Test with None input
+    assert pygeoops.format_short(geometry) == expected
 
 
 @pytest.mark.parametrize(
     "test_id, input, expected_id",
     [
-        (1, shapely.Point(), 1),
-        (2, shapely.GeometryCollection(), 0),
-        (3, np.array(shapely.Point()), 1),
-        (4, np.array(shapely.GeometryCollection()), 0),
+        (1, Point(), 1),
+        (2, GeometryCollection(), 0),
+        (3, np.array(Point()), 1),
+        (4, np.array(GeometryCollection()), 0),
     ],
 )
 def test_get_primitivetype_id(test_id, input, expected_id):
@@ -335,13 +381,13 @@ def test_get_primitivetype_id(test_id, input, expected_id):
 def test_get_primitivetype_ids():
     # Test with list of all different types
     input = [
-        shapely.Point(),
-        shapely.MultiPoint(),
-        shapely.LineString(),
-        shapely.MultiLineString(),
-        shapely.Polygon(),
-        shapely.MultiPolygon(),
-        shapely.GeometryCollection(),
+        Point(),
+        MultiPoint(),
+        LineString(),
+        MultiLineString(),
+        Polygon(),
+        MultiPolygon(),
+        GeometryCollection(),
     ]
     expected = [1, 1, 2, 2, 3, 3, 0]
 
@@ -369,18 +415,18 @@ def test_is_iterable_arraylike(test_id, input, expected):
 @pytest.mark.parametrize(
     "geometry, keep_collapsed, exp_geometrytype",
     [
-        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, True, shapely.GeometryCollection),
-        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, False, shapely.MultiPolygon),
+        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, True, GeometryCollection),
+        (MULTIPOLY_INVALID_1_COLLAPSING_LINE, False, MultiPolygon),
         (
             np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE),
             True,
-            shapely.GeometryCollection,
+            GeometryCollection,
         ),
-        (np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE), False, shapely.MultiPolygon),
+        (np.array(MULTIPOLY_INVALID_1_COLLAPSING_LINE), False, MultiPolygon),
         (None, False, None),
         (np.array(None), True, None),
-        (shapely.box(0, 0, 5, 5), False, shapely.Polygon),
-        (np.array(shapely.box(0, 0, 5, 5)), True, shapely.Polygon),
+        (shapely.box(0, 0, 5, 5), False, Polygon),
+        (np.array(shapely.box(0, 0, 5, 5)), True, Polygon),
     ],
 )
 def test_makevalid_keep_collapsed(
@@ -410,7 +456,7 @@ def test_makevalid_keep_collapsed(
                 LINESTRING_INVALID_2_COLLAPSING_POINT,
             ],
             True,
-            [shapely.GeometryCollection, shapely.GeometryCollection],
+            [GeometryCollection, GeometryCollection],
         ),
         (
             [
@@ -418,7 +464,7 @@ def test_makevalid_keep_collapsed(
                 LINESTRING_INVALID_2_COLLAPSING_POINT,
             ],
             False,
-            [shapely.MultiPolygon, shapely.LineString],
+            [MultiPolygon, LineString],
         ),
         (
             [
@@ -426,7 +472,7 @@ def test_makevalid_keep_collapsed(
                 shapely.box(5, 0, 6, 1),
             ],
             False,
-            [shapely.Polygon, shapely.Polygon],
+            [Polygon, Polygon],
         ),
     ],
 )
@@ -470,7 +516,7 @@ def test_remove_inner_rings():
     assert pygeoops.remove_inner_rings(None, min_area_to_keep=1, crs=None) is None
 
     # Apply to single Polygon, with area tolerance smaller than holes
-    polygon_removerings_withholes = shapely.Polygon(
+    polygon_removerings_withholes = Polygon(
         shell=[(0, 0), (0, 10), (1, 10), (10, 10), (10, 0), (0, 0)],
         holes=[
             [(2, 2), (2, 4), (4, 4), (4, 2), (2, 2)],
@@ -480,7 +526,7 @@ def test_remove_inner_rings():
     poly_result = pygeoops.remove_inner_rings(
         polygon_removerings_withholes, min_area_to_keep=1, crs=None
     )
-    assert isinstance(poly_result, shapely.Polygon)
+    assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 2
 
     # Apply to single Polygon, with area tolerance smaller than holes and passed as a
@@ -488,7 +534,7 @@ def test_remove_inner_rings():
     poly_result = pygeoops.remove_inner_rings(
         np.array(polygon_removerings_withholes), min_area_to_keep=1, crs=None
     )
-    assert isinstance(poly_result, shapely.Polygon)
+    assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 2
 
     # Apply to single Polygon, with area tolerance between
@@ -496,33 +542,33 @@ def test_remove_inner_rings():
     poly_result = pygeoops.remove_inner_rings(
         polygon_removerings_withholes, min_area_to_keep=3, crs="epsg:31370"
     )
-    assert isinstance(poly_result, shapely.Polygon)
+    assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 1
 
     # Apply to single polygon and remove all holes
     poly_result = pygeoops.remove_inner_rings(
         polygon_removerings_withholes, min_area_to_keep=0, crs=None
     )
-    assert isinstance(poly_result, shapely.Polygon)
+    assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 0
-    polygon_removerings_noholes = shapely.Polygon(
+    polygon_removerings_noholes = Polygon(
         shell=[(100, 100), (100, 110), (110, 110), (110, 100), (100, 100)]
     )
     poly_result = pygeoops.remove_inner_rings(
         polygon_removerings_noholes, min_area_to_keep=0, crs=None
     )
-    assert isinstance(poly_result, shapely.Polygon)
+    assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 0
 
     # Apply to MultiPolygon, with area tolerance between
     # smallest hole (= 2m²) and largest (= 4m²)
-    multipoly_removerings = shapely.MultiPolygon(
+    multipoly_removerings = MultiPolygon(
         [polygon_removerings_withholes, polygon_removerings_noholes]
     )
     poly_result = pygeoops.remove_inner_rings(
         multipoly_removerings, min_area_to_keep=3, crs=None
     )
-    assert isinstance(poly_result, shapely.MultiPolygon)
+    assert isinstance(poly_result, MultiPolygon)
     interiors = poly_result.geoms[0].interiors  # pyright: ignore[reportOptionalMemberAccess]
     assert len(interiors) == 1
 
@@ -530,7 +576,7 @@ def test_remove_inner_rings():
 def test_remove_inner_rings_invalid_input():
     with pytest.raises(ValueError, match="remove_inner_rings impossible on LineString"):
         pygeoops.remove_inner_rings(
-            shapely.LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
+            LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
         )
 
 
@@ -540,10 +586,10 @@ def test_subdivide():
     poly_distance = 50
     lines = []
     for off in range(0, poly_size, poly_distance):
-        lines.append(shapely.LineString([(off, 0), (off, poly_size)]))
-        lines.append(shapely.LineString([(0, off), (poly_size, off)]))
+        lines.append(LineString([(off, 0), (off, poly_size)]))
+        lines.append(LineString([(0, off), (poly_size, off)]))
 
-    poly_complex = shapely.unary_union(shapely.MultiLineString(lines).buffer(2))
+    poly_complex = shapely.unary_union(MultiLineString(lines).buffer(2))
     assert len(shapely.get_parts(poly_complex)) == 1
     num_coordinates = shapely.get_num_coordinates(poly_complex)
     assert num_coordinates == 3258
@@ -565,7 +611,7 @@ def test_subdivide():
     assert len(poly_divided) == 1
 
     # Test with standard polygon, should not be subdivided
-    poly_simple = shapely.Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
+    poly_simple = Polygon([(0, 0), (50, 0), (50, 50), (0, 50), (0, 0)])
     num_coords_max = 1000
     poly_divided = pygeoops.subdivide(poly_simple, num_coords_max)
     assert isinstance(poly_divided, np.ndarray)
