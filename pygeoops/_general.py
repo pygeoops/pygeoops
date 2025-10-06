@@ -495,7 +495,7 @@ def remove_inner_rings(
             else:
                 geod = crs.get_geod()
                 assert geod is not None
-                ring_area, ring_perimeter = geod.geometry_area_perimeter(ring)
+                ring_area, _ = geod.geometry_area_perimeter(ring)
 
             # If ring area small, skip it, otherwise keep it
             if abs(ring_area) <= min_area_to_keep:
@@ -559,5 +559,6 @@ def subdivide(
         input_primitivetype_id = pygeoops.get_primitivetype_id(geometry)
         assert isinstance(input_primitivetype_id, int | np.integer)
         geom_divided = pygeoops.collection_extract(geom_divided, input_primitivetype_id)
-        geom_divided = geom_divided[~shapely.is_empty(geom_divided)]
-        return geom_divided
+        assert geom_divided is not None
+
+        return geom_divided[~shapely.is_empty(geom_divided)]

@@ -2,6 +2,8 @@
 Tests on the types defined in types.py.
 """
 
+import re
+
 import pytest
 
 from pygeoops import GeometryType, PrimitiveType
@@ -87,7 +89,8 @@ def test_geometrytype_to_primitivetype():
 
     # A MISSING geometry type doesn't have a primitive type
     with pytest.raises(
-        ValueError, match="No primitivetype implemented for GeometryType.MISSING"
+        ValueError,
+        match=re.escape("No primitivetype implemented for GeometryType.MISSING"),
     ):
         GeometryType.MISSING.to_primitivetype
 
@@ -111,7 +114,7 @@ def test_geometrytype_to_multitype():
 
     # A MISSING geometry type doesn't have a multitype
     with pytest.raises(
-        ValueError, match="No multitype implemented for GeometryType.MISSING"
+        ValueError, match=re.escape("No multitype implemented for GeometryType.MISSING")
     ):
         GeometryType.MISSING.to_multitype
 
@@ -133,7 +136,8 @@ def test_geometrytype_to_singletype():
 
     # A MISSING geometry type doesn't have a singletype
     with pytest.raises(
-        ValueError, match="No singletype implemented for GeometryType.MISSING"
+        ValueError,
+        match=re.escape("No singletype implemented for GeometryType.MISSING"),
     ):
         GeometryType.MISSING.to_singletype
 
