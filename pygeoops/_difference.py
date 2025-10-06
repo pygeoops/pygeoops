@@ -240,6 +240,7 @@ def _difference_intersecting(
 
         # Only keep geometries of the specified primitivetype.
         subtracted = pygeoops.collection_extract(subtracted, primitivetype_id)
+        assert subtracted is not None
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()
