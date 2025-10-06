@@ -60,8 +60,8 @@ def create_grid3(
         NDArray[Polygon]: ndarray with tiles.
     """
     xmin, ymin, xmax, ymax = total_bounds
-    rows = int(math.ceil((ymax - ymin) / height))
-    cols = int(math.ceil((xmax - xmin) / width))
+    rows = math.ceil((ymax - ymin) / height)
+    cols = math.ceil((xmax - xmin) / width)
 
     polygons = []
     cell_left = xmin
