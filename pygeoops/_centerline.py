@@ -31,7 +31,7 @@ def centerline(
 
     Example output:
 
-    |centerline_L_shape|
+    .. plot:: code/centerline_l_shape.py
 
     Args:
         geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
