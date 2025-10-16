@@ -5,35 +5,40 @@ from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
 
-from figures import SIZE, BLACK, BLUE, GRAY, YELLOW, set_limits
+from figures import SIZE, BLACK, BLUE, GRAY, YELLOW
 
-fig = plt.figure(1, figsize=SIZE, dpi=90)
+# fig = plt.figure(1, figsize=SIZE, dpi=90)
+fig = plt.figure()
 
 fancy_l_poly_wkt = "POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))"
 
 # 1: fancy L shape, extend=False
-ax = fig.add_subplot(121)
+# ------------------------------
+ax1 = fig.add_subplot(121)
 poly = shapely.from_wkt(fancy_l_poly_wkt)
 centerline = pygeoops.centerline(poly, extend=False)
 
-plot_line(centerline, ax=ax, add_points=False, color=BLUE, alpha=0.7)
-plot_polygon(poly, ax=ax, color=GRAY, alpha=0.3)
+plot_line(centerline, ax=ax1, add_points=False, color=BLUE, alpha=0.7)
+plot_polygon(poly, ax=ax1, color=GRAY, alpha=0.3)
 
-ax.set_title("a) extend=False")
-
-# set_limits(ax, -1, 4, -1, 3)
+ax1.set_title("a) extend=False")
+# Set x and y scale to be equal
+ax1.set_aspect("equal", adjustable="box")
 
 # 2: fancy L shape, extend=True
-ax = fig.add_subplot(122)
+# -----------------------------
+ax2 = fig.add_subplot(122)
 
 poly = shapely.from_wkt(fancy_l_poly_wkt)
 centerline = pygeoops.centerline(poly, extend=True)
 
-plot_line(centerline, ax=ax, add_points=False, color=BLUE, alpha=0.7)
-plot_polygon(poly, ax=ax, color=GRAY, alpha=0.3)
+plot_line(centerline, ax=ax2, add_points=False, color=BLUE, alpha=0.7)
+plot_polygon(poly, ax=ax2, color=GRAY, alpha=0.3)
 
-ax.set_title("b) extend=True")
+ax2.set_title("b) extend=True")
 
-# set_limits(ax, -2, 3, -1, 3)
+# Set x and y scale to be equal
+ax2.set_aspect("equal", adjustable="box")
 
+# plt.tight_layout()
 plt.show()
