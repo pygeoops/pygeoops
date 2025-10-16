@@ -5,10 +5,9 @@ from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
 
-from figures import SIZE, BLACK, BLUE, GRAY, YELLOW
+from figures import W, BLACK, BLUE, GRAY, YELLOW
 
-# fig = plt.figure(1, figsize=SIZE, dpi=90)
-fig, (ax1, ax2) = plt.subplots(1, 2, layout="constrained")
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W, W / 2), dpi=90, layout="constrained")
 
 fancy_l_poly_wkt = "POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))"
 
@@ -37,6 +36,4 @@ ax2.set_title("b) extend=True")
 # Set x and y scale to be equal
 ax2.set_aspect("equal")
 
-# fig.set_layout_engine("compressed")
-# fig.tight_layout()
 plt.show()
