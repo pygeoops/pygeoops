@@ -40,5 +40,5 @@ ax2.set_title("b) extend=True")
 # Set x and y scale to be equal
 ax2.set_aspect("equal", adjustable="box")
 
-# plt.tight_layout()
+plt.tight_layout()
 plt.show()
