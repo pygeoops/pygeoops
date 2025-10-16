@@ -21,7 +21,7 @@ plot_polygon(poly, ax=ax, color=GRAY, alpha=0.3)
 
 ax.set_title("a) extend=False")
 
-set_limits(ax, -1, 4, -1, 3)
+# set_limits(ax, -1, 4, -1, 3)
 
 # 2: fancy L shape, extend=True
 ax = fig.add_subplot(122)
