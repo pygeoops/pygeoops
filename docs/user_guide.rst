@@ -23,8 +23,6 @@ Determine the :meth:`~centerline` for polygons
 
 .. plot:: code/centerline_l_shape.py
 
-|centerline_L_shape|
-
 
 Determine :meth:`~view_angles` from a viewpoint towards polygons
 ----------------------------------------------------------------

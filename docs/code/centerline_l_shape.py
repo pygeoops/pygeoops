@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-from shapely.geometry import LineString
-from shapely.plotting import plot_line, plot_points
+import shapely
+from shapely import LineString
+from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
 
