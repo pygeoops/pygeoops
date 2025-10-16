@@ -21,6 +21,7 @@ Determine the :meth:`~centerline` for polygons
     ]
     centerlines = pygeoops.centerline(polygons)
 
+.. plot:: code/centerline_l_shape.py
 
 |centerline_L_shape|
 
