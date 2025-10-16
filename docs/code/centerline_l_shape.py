@@ -34,6 +34,6 @@ plot_polygon(poly, ax=ax, color=GRAY, alpha=0.3)
 
 ax.set_title("b) extend=True")
 
-set_limits(ax, -2, 3, -1, 3)
+# set_limits(ax, -2, 3, -1, 3)
 
 plt.show()
