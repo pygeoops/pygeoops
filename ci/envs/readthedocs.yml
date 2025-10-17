@@ -13,7 +13,8 @@ dependencies:
   # optional
   - simplification
   # docs
-  - sphinx
+  - matplotlib
   - pydata-sphinx-theme
+  - sphinx
   - pip:
     - sphinx-automodapi
