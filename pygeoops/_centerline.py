@@ -62,15 +62,13 @@ def centerline(
         geometry, GeoSeries or array_like: the centerline for each of the input
             geometries.
 
-    Notes:
-    These are some more visualisation of centerlines calculated with some different
-    options specified.
+    Example:
+        These are some more visualisation of centerlines calculated with some different
+        options specified.
 
-    .. plot:: code/centerline_options.py
+        .. plot:: code/centerline_options.py
 
 
-    .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
-        :alt: Centerline of a fancy L shaped polygon
     """
     if geometry is None:
         return None
