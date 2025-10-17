@@ -37,7 +37,11 @@ def simplify(
     keep_points_on: BaseGeometry | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
-    Simplify the geometry/geometries.
+    Simplify geometry/geometries.
+
+    Example of simplify on a polygon (grey: original, blue: simplified):
+
+    .. plot:: code/simplify_basic.py
 
     Args:
         geometry (geometry or array_like): a geometry or ndarray of geometries.
@@ -67,6 +71,17 @@ def simplify(
     Returns:
         Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]: the
             simplified version of the input geometry/geometries.
+
+    Examples:
+        The simplify function has some advanced options to control the simplification
+        behavior.
+
+        Using the `keep_points_on` parameter, you can specify geometries/locations
+        where points should be preserved during simplification. In the following plot
+        you see the result if you exclude the points on the minimum bounding box of the
+        polygon being removed.
+
+        .. plot:: code/simplify_keep_points_on.py
     """
     if geometry is None:
         return None
