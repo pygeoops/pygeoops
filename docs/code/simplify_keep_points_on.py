@@ -8,7 +8,7 @@ import pygeoops
 from figures import W, BLACK, BLUE, GRAY, YELLOW
 
 fig, (ax1, ax2) = plt.subplots(
-    nrows=1, ncols=2, figsize=(W, W / 2), dpi=90, layout="constrained"
+    nrows=1, ncols=2, figsize=(W, W / 3), dpi=90, layout="constrained"
 )
 
 poly_wkt = (

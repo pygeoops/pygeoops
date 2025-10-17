@@ -74,7 +74,7 @@ def simplify(
 
     Examples:
         The simplify function has some advanced options to control the simplification
-        behavior.
+        behaviour.
 
         Using the `keep_points_on` parameter, you can specify geometries/locations
         where points should be preserved during simplification. In the following plot

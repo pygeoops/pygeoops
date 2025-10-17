@@ -7,7 +7,7 @@ import pygeoops
 
 from figures import W, BLACK, BLUE, GRAY, YELLOW
 
-fig, ax = plt.subplots(figsize=(W / 2, W / 2), dpi=90)
+fig, ax = plt.subplots(figsize=(W / 2, W / 3), dpi=90)
 
 poly_wkt = (
     "POLYGON ((0 5, 0 6, 1 6, 1 7, 2 7, 2 8, 3 8, 3 9, 4 9, 4 10, 5 10, 5 9, "
