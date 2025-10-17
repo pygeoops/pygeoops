@@ -29,7 +29,7 @@ def centerline(
 
     Alternative name: medial axis.
 
-    Example output with default parameters:
+    Example output with default parameters (grey: original polygon, blue: centerline):
 
     .. plot:: code/centerline_basic.py
 
