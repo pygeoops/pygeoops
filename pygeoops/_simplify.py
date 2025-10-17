@@ -45,19 +45,19 @@ def simplify(
 
     Args:
         geometry (geometry or array_like): a geometry or ndarray of geometries.
-        tolerance (float): mandatory for the following algorithms:
+        tolerance (float): mandatory tolerance. The type of tolerance depends on the
+            ``algorithm`` specified:
 
-            - "rdp": distance to use as tolerance
-            - "lang": distance to use as tolerance
-            - "vw": area to use as tolerance
-        algorithm (str, optional): algorithm to use. Defaults to "rdp".
+                - "rdp", "lang", "lang+": distance to use as tolerance
+                - "vw": area to use as tolerance
+        algorithm (str, optional): algorithm to use. Defaults to "rdp". Possible
+            values:
 
-            - "rdp": Ramer Douglas Peuker algorithm
-            - "lang": Lang algorithm
-            - "lang+": Lang-based algorithm, but without limit of having at least
-              nb_input_coordinates/lookahead points in the simplified output.
-            - "vw": Visvalingal Whyatt algorithm
-
+                - "rdp": Ramer Douglas Peuker algorithm
+                - "lang": Lang algorithm
+                - "lang+": Lang-based algorithm, but without limit of having at least
+                  nb_input_coordinates/lookahead points in the simplified output.
+                - "vw": Visvalingal Whyatt algorithm
         lookahead (int, optional): the number of points to consider for removing
             in a moving window. Used for LANG algorithm. Defaults to 8.
         preserve_topology (bool, optional): True to (try to) return valid
