@@ -29,9 +29,9 @@ def centerline(
 
     Alternative name: medial axis.
 
-    Example output:
+    Example output with default parameters:
 
-    .. plot:: code/centerline_l_shape.py
+    .. plot:: code/centerline_basic.py
 
     Args:
         geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
@@ -61,6 +61,13 @@ def centerline(
     Returns:
         geometry, GeoSeries or array_like: the centerline for each of the input
             geometries.
+
+    Notes:
+    These are some more visualisation of centerlines calculated with some different
+    options specified.
+
+    .. plot:: code/centerline_options.py
+
 
     .. |centerline_L_shape| image:: ../_static/images/centerline_fancy_Lshape.png
         :alt: Centerline of a fancy L shaped polygon
