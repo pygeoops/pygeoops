@@ -16,5 +16,5 @@ dependencies:
   - matplotlib
   - pydata-sphinx-theme
   - sphinx
-  - pip:
-    - sphinx-automodapi
+  - sphinx-automodapi
+  - sphinx-copybutton
