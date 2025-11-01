@@ -7,7 +7,11 @@ import numpy as np
 from shapely.geometry import LineString, Polygon, MultiPolygon
 
 from pygeoops._buffer_by_m import buffer_by_m
+from pygeoops._compat import SHAPELY_GTE_21
 import test_helper
+
+if not SHAPELY_GTE_21:
+    pytest.skip("buffer_by_m tests require Shapely >= 2.1.0", allow_module_level=True)
 
 
 @pytest.mark.parametrize(
