@@ -37,20 +37,27 @@ def simplify(
     keep_points_on: BaseGeometry | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
-    Simplify the geometry/geometries.
+    Simplify geometry/geometries.
+
+    Example of simplify on a polygon (grey: original, blue: simplified):
+
+    .. plot:: code/simplify_basic.py
 
     Args:
         geometry (geometry or array_like): a geometry or ndarray of geometries.
-        tolerance (float): mandatory for the following algorithms:
-            * "rdp": distance to use as tolerance
-            * "lang": distance to use as tolerance
-            * "vw": area to use as tolerance
-        algorithm (str, optional): algorithm to use. Defaults to "rdp".
-            * "rdp": Ramer Douglas Peuker algorithm
-            * "lang": Lang algorithm
-            * "lang+": Lang-based algorithm, but without limit of having at least
-              nb_input_coordinates/lookahead points in the simplified output.
-            * "vw": Visvalingal Whyatt algorithm
+        tolerance (float): mandatory tolerance. The type of tolerance depends on the
+            ``algorithm`` specified:
+
+                - "rdp", "lang", "lang+": distance to use as tolerance
+                - "vw": area to use as tolerance
+        algorithm (str, optional): algorithm to use. Defaults to "rdp". Possible
+            values:
+
+                - "rdp": Ramer Douglas Peuker algorithm
+                - "lang": Lang algorithm
+                - "lang+": Lang-based algorithm, but without limit of having at least
+                  nb_input_coordinates/lookahead points in the simplified output.
+                - "vw": Visvalingal Whyatt algorithm
         lookahead (int, optional): the number of points to consider for removing
             in a moving window. Used for LANG algorithm. Defaults to 8.
         preserve_topology (bool, optional): True to (try to) return valid
@@ -67,6 +74,17 @@ def simplify(
     Returns:
         Union[BaseGeometry, NDArray[BaseGeometry], GeoSeries, None]: the
             simplified version of the input geometry/geometries.
+
+    Examples:
+        The simplify function has some advanced options to control the simplification
+        behaviour.
+
+        Using the `keep_points_on` parameter, you can specify geometries/locations
+        where points should be preserved during simplification. In the following plot
+        you see the result if you exclude the points on the minimum bounding box of the
+        polygon being removed.
+
+        .. plot:: code/simplify_keep_points_on.py
     """
     if geometry is None:
         return None
