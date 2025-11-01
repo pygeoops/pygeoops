@@ -57,11 +57,48 @@ def buffer_by_m(
             geometries.
 
     Examples:
+        An example of buffering a single LineString with M values:
 
         .. code-block:: python
 
-            line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
-            buffer_geom = buffer_by_m(line)
+            import pygeoops
+            import shapely
+
+            line = shapely.LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
+            buffer_geom = pygeoops.buffer_by_m(line)
+
+
+        An example where the M values still need to be added to the LineString:
+
+        .. code-block:: python
+
+            import pygeoops
+            import shapely
+
+            line = shapely.LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
+            distances = [1, 2, 2, 4]
+            line_with_m = shapely.LineString(
+                [[x, y, m] for (x, y), m in zip(line.coords, distances)]
+            )
+            buffer_geom = pygeoops.buffer_by_m(line_with_m)
+
+
+        An example of buffering a GeoDataFrame with LineStrings with M values:
+
+        .. code-block:: python
+
+            import geopandas as gpd
+            import pygeoops
+            import shapely
+
+            lines_gdf = gpd.GeoDataFrame(
+                geometry=[
+                    shapely.LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]]),
+                    shapely.LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]]),
+                ],
+            )
+            buffer_geoms = lines_gdf.copy()
+            buffer_geoms.geometry = pygeoops.buffer_by_m(lines_gdf.geometry)
 
     """
     if line is None:

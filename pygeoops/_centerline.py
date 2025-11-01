@@ -62,7 +62,7 @@ def centerline(
         geometry, GeoSeries or array_like: the centerline for each of the input
             geometries.
 
-    Example:
+    Examples:
         These are some more visualisation of centerlines calculated with some different
         options specified.
 
