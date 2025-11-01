@@ -15,14 +15,17 @@ Determine the :meth:`~centerline` for polygons
 
 .. code-block:: python
 
-    polygons = [
-        shapely.from_wkt("POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))"),
-        shapely.from_wkt("POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))"),
-    ]
-    centerlines = pygeoops.centerline(polygons)
+    # For a single polygon
+    wkt = "POLYGON ((0 0, 0 8, -2 10, 4 10, 2 8, 2 2, 10 2, 10 0, 0 0))"
+    polygon = shapely.from_wkt(wkt)
+    centerline = pygeoops.centerline(polygon)
 
+    # For a Geopandas dataframe with polygons
+    gdf = gpd.GeoDataFrame(geometry=[polygon])
+    centerlines_gdf = gdf.copy()
+    centerlines_gdf.geometry = pygeoops.centerline(gdf.geometry)
 
-|centerline_L_shape|
+.. plot:: code/centerline_basic.py
 
 
 Determine :meth:`~view_angles` from a viewpoint towards polygons
@@ -42,7 +45,3 @@ Determine :meth:`~view_angles` from a viewpoint towards polygons
         columns=["angle_start", "angle_end"],
         index=visible_geoms_gdf.index,
     )
-
-
-.. |centerline_L_shape| image:: ./_static/images/centerline_fancy_Lshape.png
-        :alt: Centerline of a fancy L shaped polygon

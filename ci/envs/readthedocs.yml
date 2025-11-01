@@ -13,7 +13,9 @@ dependencies:
   # optional
   - simplification
   # docs
-  - sphinx
+  - matplotlib
   - pydata-sphinx-theme
+  - sphinx
+  - sphinx-copybutton
   - pip:
     - sphinx-automodapi
