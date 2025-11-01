@@ -54,7 +54,7 @@ def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation)
     - input as WKT LineString ZM
     """
     if distance_dim == "M" and (not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0):
-        pytest.skip("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
+        pytest.xfail("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
 
     buffer_geom = pygeoops.buffer_by_m(line)
 
