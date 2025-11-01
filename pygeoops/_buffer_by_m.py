@@ -57,6 +57,7 @@ def buffer_by_m(
             geometries.
 
     Example:
+
     .. code-block:: python
 
         line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
