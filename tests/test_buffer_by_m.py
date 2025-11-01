@@ -18,7 +18,7 @@ import test_helper
 
 
 @pytest.mark.parametrize(
-    "line, distance_dim, exp_type, exp_parts_relation",
+    "geometry, distance_dim, exp_type, exp_parts_relation",
     [
         (LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]), "Z", Polygon, None),
         (LineString([[0, 6, 1], [0, 0, 0], [9, 0, 2]]), "Z", MultiPolygon, "touches"),
@@ -39,27 +39,34 @@ import test_helper
             "touches",
         ),
         (np.array(LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]])), "Z", Polygon, None),
+        (
+            from_wkt("POLYGON Z ((0 0 0, 0 5 1, 5 5 2, 5 0 3, 0 0 0))"),
+            "Z",
+            Polygon,
+            None,
+        ),
     ],
 )
-def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation):
+def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relation):
     """Test buffer_by_m function with various input geometries.
 
     Specific cases tested:
-    - a normal case with M values all > 0 will produce a single Polygon
-    - a case with one M value = 0 will produce a MultiPolygon with touching parts, as
+    - line with M values all > 0 will produce a single Polygon
+    - line with one M value = 0 will produce a MultiPolygon with touching parts, as
       this point will be represented as the original (unbuffered) point
-    - a case with one M value < 0 will produce a MultiPolygon with disjoint
+    - line with one M value < 0 will produce a MultiPolygon with disjoint
       parts, as this point will be omitted from the buffer
-    - a case with one M value = NaN: same as previous case
-    - input as WKT LineString M
-    - input as WKT LineString M with all negative M values: should produce empty Polygon
-    - input as WKT LineString ZM
-    - input as 0dim ndarray
+    - line with one M value = NaN: same as previous case
+    - line as WKT LINESTRING M
+    - line as WKT LINESTRING M with all negative M values: should produce empty Polygon
+    - line as WKT LINESTRING ZM with all negative Z values, which should be ignored
+    - line as 0dim ndarray
+    - polygon as WKT POLYGON Z
     """
     if distance_dim == "M" and (not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0):
         pytest.xfail("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
 
-    buffer_geom = pygeoops.buffer_by_m(line)
+    buffer_geom = pygeoops.buffer_by_m(geometry)
 
     # Check result
     if exp_type == Polygon():
@@ -83,7 +90,7 @@ def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation)
 
     # Plot for visual inspection
     output_path = tmp_path / "test_buffer_by_m.png"
-    test_helper.plot([buffer_geom, _extract_0dim_ndarray(line)], output_path)
+    test_helper.plot([buffer_geom, _extract_0dim_ndarray(geometry)], output_path)
 
 
 @pytest.mark.skipif(

@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
-from shapely.geometry import MultiPoint, Polygon
+from shapely.geometry import MultiPoint, Polygon, MultiPolygon
 
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 from pygeoops._general import _extract_0dim_ndarray
@@ -36,6 +36,8 @@ def buffer_by_m(
         point and the result will be a multipolygon where the parts touch at that point.
       - If a distance is negative or NaN, the resulting buffer will omit that point from
         treatment entirely and the result will be a multipolygon with disjoint parts.
+
+    Support for polygons is experimental, feedback welcome.
 
     Example output (grey: original line, blue: buffer):
 
@@ -187,7 +189,10 @@ def _buffer_by_m(
     ]
     hulls = shapely.convex_hull(hull_inputs)
 
-    # Union all hulls to get the final buffer
+    # Union all hulls to get the final buffer. If input was a polygon, union it in as
+    # well to make sure original areas are preserved.
+    if isinstance(geometry, Polygon) or isinstance(geometry, MultiPolygon):
+        hulls = np.append(hulls, geometry)
     buffer_geom = shapely.union_all(hulls)
 
     if buffer_geom.is_empty:
