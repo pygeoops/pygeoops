@@ -13,6 +13,7 @@ from shapely.geometry import LineString, Polygon, MultiPolygon
 
 import pygeoops
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
+from pygeoops._general import _extract_0dim_ndarray
 import test_helper
 
 
@@ -37,6 +38,7 @@ import test_helper
             MultiPolygon,
             "touches",
         ),
+        (np.array(LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]])), "Z", Polygon, None),
     ],
 )
 def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation):
@@ -52,6 +54,7 @@ def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation)
     - input as WKT LineString M
     - input as WKT LineString M with all negative M values: should produce empty Polygon
     - input as WKT LineString ZM
+    - input as 0dim ndarray
     """
     if distance_dim == "M" and (not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0):
         pytest.xfail("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
@@ -80,7 +83,7 @@ def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation)
 
     # Plot for visual inspection
     output_path = tmp_path / "test_buffer_by_m.png"
-    test_helper.plot([buffer_geom, line], output_path)
+    test_helper.plot([buffer_geom, _extract_0dim_ndarray(line)], output_path)
 
 
 @pytest.mark.skipif(
