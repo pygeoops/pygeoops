@@ -91,7 +91,7 @@ def test_buffer_by_m_dependencies():
     """Test if buffer_by_m gives a proper error when dependencies are not met."""
     line = shapely.from_wkt("LINESTRING M (0 6 1, 0 0 2, 10 0 2, 13 5 4)")
     with pytest.raises(
-        RuntimeError,
+        ValueError,
         match=re.escape("For M, Shapely >= 2.1.0 and GEOS >= 3.12.0 are needed"),
     ):
         _ = pygeoops.buffer_by_m(line)
