@@ -56,12 +56,12 @@ def buffer_by_m(
         geometry, GeoSeries or array_like: the buffer for each of the input
             geometries.
 
-    Example:
+    Examples:
 
-    .. code-block:: python
+        .. code-block:: python
 
-        line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
-        buffer_geom = buffer_by_m(line)
+            line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
+            buffer_geom = buffer_by_m(line)
 
     """
     if line is None:
