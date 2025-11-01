@@ -21,11 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def buffer_by_m(
-    geometry,
-    quad_segs: int = 8,
-    cap_style: str = "round",
-    join_style: str = "round",
-    mitre_limit: float = 5.0,
+    geometry, quad_segs: int = 8
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """
     Calculates a variable width buffer for a geometry.
@@ -51,12 +47,6 @@ def buffer_by_m(
         geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
         quad_segs (int, optional): The number of segments used to approximate a
             quarter circle. Defaults to 8.
-        cap_style (str, optional): The style of the buffer's end caps. One of
-            'round', 'flat' or 'square'. Defaults to 'round'.
-        join_style (str, optional): The style of the buffer's joins. One of
-            'round', 'mitre' or 'bevel'. Defaults to 'round'.
-        mitre_limit (float, optional): The mitre limit for 'mitre' join styles.
-            Defaults to 5.0.
 
     Returns:
         geometry, GeoSeries or array_like: the buffer for each of the input
@@ -113,26 +103,11 @@ def buffer_by_m(
 
     # If input is not arraylike, treat the single geometry
     if not hasattr(geometry, "__len__"):
-        return _buffer_by_m(
-            geometry=geometry,
-            quad_segs=quad_segs,
-            cap_style=cap_style,
-            join_style=join_style,
-            mitre_limit=mitre_limit,
-        )
+        return _buffer_by_m(geometry=geometry, quad_segs=quad_segs)
     else:
         # Arraylike, so treat every geometry in loop
         result = np.array(
-            [
-                _buffer_by_m(
-                    geometry=geom,
-                    quad_segs=quad_segs,
-                    cap_style=cap_style,
-                    join_style=join_style,
-                    mitre_limit=mitre_limit,
-                )
-                for geom in geometry
-            ]
+            [_buffer_by_m(geometry=geom, quad_segs=quad_segs) for geom in geometry]
         )
         if isinstance(geometry, GeoSeries):
             result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
@@ -140,13 +115,7 @@ def buffer_by_m(
         return result
 
 
-def _buffer_by_m(
-    geometry,
-    quad_segs: int,
-    cap_style: str,
-    join_style: str,
-    mitre_limit: float,
-) -> BaseGeometry:
+def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
     # Determine which include kwargs to use. Using kwargs as include_m is not available
     # in all Shapely versions.
     include_kwargs = {}
@@ -167,14 +136,7 @@ def _buffer_by_m(
     distances = coords[:, 2]
 
     # Buffer each point by its M/Z value
-    buffers = shapely.buffer(
-        pts,
-        distances,
-        quad_segs=quad_segs,
-        cap_style=cap_style,
-        join_style=join_style,
-        mitre_limit=mitre_limit,
-    )
+    buffers = shapely.buffer(pts, distances, quad_segs=quad_segs)
 
     # Zero-distance points get empty geometries, so replace those with the original
     # points. Negative distances also result in empty geometries, but we don't want to
