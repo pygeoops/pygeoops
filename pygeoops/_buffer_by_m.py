@@ -145,13 +145,14 @@ def _buffer_by_m(
     join_style,
     mitre_limit,
 ) -> BaseGeometry:
+    # Determine which include kwargs to use. Using kwargs as include_m is not available
+    # in all Shapely versions.
+    include_kwargs = {}
     if SHAPELY_GTE_2_1_0 and GEOS_GTE_3_12_0 and line.has_m:
         # has_m is available in Shapely >= 2.1.0 and GEOS >= 3.12.0
-        include_m = True
-        include_z = False
+        include_kwargs["include_m"] = True
     elif line.has_z:
-        include_m = False
-        include_z = True
+        include_kwargs["include_z"] = True
     else:
         message = "input geometry must have M or Z values for buffer distances."
         if not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0:
@@ -159,7 +160,7 @@ def _buffer_by_m(
         raise ValueError(f"{message}: got {line}")
 
     # Extract points and distances
-    coords = shapely.get_coordinates(line, include_m=include_m, include_z=include_z)
+    coords = shapely.get_coordinates(line, **include_kwargs)
     pts = shapely.points(coords[:, :2])
     distances = coords[:, 2]
 
