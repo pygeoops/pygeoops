@@ -105,8 +105,6 @@ def buffer_by_m(
             buffer_geoms.geometry = pygeoops.buffer_by_m(lines_gdf.geometry)
 
     """
-    if not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0:
-        raise RuntimeError("buffer_by_m requires Shapely >= 2.1.0 and GEOS >= 3.12.0")
     if line is None:
         return None
     line = _extract_0dim_ndarray(line)
@@ -147,16 +145,18 @@ def _buffer_by_m(
     join_style,
     mitre_limit,
 ) -> BaseGeometry:
-    if line.has_m:
+    if SHAPELY_GTE_2_1_0 and GEOS_GTE_3_12_0 and line.has_m:
+        # has_m is available in Shapely >= 2.1.0 and GEOS >= 3.12.0
         include_m = True
         include_z = False
     elif line.has_z:
         include_m = False
         include_z = True
     else:
-        raise ValueError(
-            f"input geometry must have M or Z values for buffer distances: {line}"
-        )
+        message = "input geometry must have M or Z values for buffer distances."
+        if not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0:
+            message += " For M, Shapely >= 2.1.0 and GEOS >= 3.12.0 are needed."
+        raise ValueError(f"{message}: got {line}")
 
     # Extract points and distances
     coords = shapely.get_coordinates(line, include_m=include_m, include_z=include_z)

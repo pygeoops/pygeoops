@@ -1,44 +1,69 @@
+"""Tests for buffer_by_m function."""
+
+import re
 from concurrent.futures import ProcessPoolExecutor
 
 import pytest
 
 import geopandas as gpd
+import shapely
 import numpy as np
+from shapely import from_wkt
 from shapely.geometry import LineString, Polygon, MultiPolygon
 
-from pygeoops._buffer_by_m import buffer_by_m
+import pygeoops
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 import test_helper
 
 
 @pytest.mark.parametrize(
-    "line_coords, exp_type, exp_parts_relation",
+    "line, distance_dim, exp_type, exp_parts_relation",
     [
-        ([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]], Polygon, None),
-        ([[0, 6, 1], [0, 0, 0], [10, 0, 2], [13, 5, 4]], MultiPolygon, "touches"),
-        ([[0, 6, 1], [0, 0, -1], [10, 0, 2], [13, 5, 4]], MultiPolygon, "disjoint"),
-        ([[0, 6, 1], [0, 0, np.nan], [10, 0, 2], [13, 5, 4]], MultiPolygon, "disjoint"),
+        (LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]), "Z", Polygon, None),
+        (LineString([[0, 6, 1], [0, 0, 0], [9, 0, 2]]), "Z", MultiPolygon, "touches"),
+        (LineString([[0, 6, 1], [0, 0, -1], [9, 0, 2]]), "Z", MultiPolygon, "disjoint"),
+        (
+            LineString([[0, 6, 1], [0, 0, np.nan], [9, 0, 2]]),
+            "Z",
+            MultiPolygon,
+            "disjoint",
+        ),
+        (LineString([[0, 6, -1], [0, 0, -1], [9, 0, -2]]), "Z", Polygon(), None),
+        (from_wkt("LINESTRING M (0 6 1, 0 0 2, 9 0 2)"), "M", Polygon, None),
+        (from_wkt("LINESTRING M (0 6 -1, 0 0 -1, 9 0 -1)"), "M", Polygon(), None),
+        (
+            from_wkt("LINESTRING ZM (0 6 -1 1, 0 0 -1 0, 9 0 -1 2)"),
+            "M",
+            MultiPolygon,
+            "touches",
+        ),
     ],
 )
-@pytest.mark.skipif(
-    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
-    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
-)
-def test_buffer_by_m(tmp_path, line_coords, exp_type, exp_parts_relation):
-    """Test buffer_by_m function.
+def test_buffer_by_m(tmp_path, line, distance_dim, exp_type, exp_parts_relation):
+    """Test buffer_by_m function with various input geometries.
 
     Specific cases tested:
     - a normal case with M values all > 0 will produce a single Polygon
     - a case with one M value = 0 will produce a MultiPolygon with touching parts, as
       this point will be represented as the original (unbuffered) point
-    - a case with one M value < 0 or NaN will produce a MultiPolygon with disjoint
+    - a case with one M value < 0 will produce a MultiPolygon with disjoint
       parts, as this point will be omitted from the buffer
+    - a case with one M value = NaN: same as previous case
+    - input as WKT LineString M
+    - input as WKT LineString M with all negative M values: should produce empty Polygon
+    - input as WKT LineString ZM
     """
-    line = LineString(line_coords)
+    if distance_dim == "M" and (not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0):
+        pytest.skip("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
 
-    buffer_geom = buffer_by_m(line)
+    buffer_geom = pygeoops.buffer_by_m(line)
 
     # Check result
+    if exp_type == Polygon():
+        # Special case: an empty Polygon is expected as result
+        assert buffer_geom.is_empty
+        return
+
     assert isinstance(buffer_geom, exp_type)
     assert not buffer_geom.is_empty
 
@@ -64,19 +89,15 @@ def test_buffer_by_m(tmp_path, line_coords, exp_type, exp_parts_relation):
 )
 def test_buffer_by_m_dependencies():
     """Test if buffer_by_m gives a proper error when dependencies are not met."""
-    line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
+    line = shapely.from_wkt("LINESTRING M (0 6 1, 0 0 2, 10 0 2, 13 5 4)")
     with pytest.raises(
         RuntimeError,
-        match="buffer_by_m requires Shapely >= 2.1.0 and GEOS >= 3.12.0",
+        match=re.escape("For M, Shapely >= 2.1.0 and GEOS >= 3.12.0 are needed"),
     ):
-        _ = buffer_by_m(line)
+        _ = pygeoops.buffer_by_m(line)
 
 
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
-@pytest.mark.skipif(
-    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
-    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
-)
 def test_buffer_by_m_geometries(tmp_path, input_type):
     """Test processing an array of polygons."""
     # Prepare test data
@@ -96,7 +117,7 @@ def test_buffer_by_m_geometries(tmp_path, input_type):
         input = np.array(input)  # type: ignore[assignment]
 
     # Run test
-    result = buffer_by_m(input)
+    result = pygeoops.buffer_by_m(input)
 
     # Check result
     assert result is not None
@@ -111,10 +132,6 @@ def test_buffer_by_m_geometries(tmp_path, input_type):
         )
 
 
-@pytest.mark.skipif(
-    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
-    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
-)
 def test_buffer_by_m_parallel():
     """Test processing an array of polygons."""
     # Prepare test data
@@ -129,7 +146,7 @@ def test_buffer_by_m_parallel():
     # Run test
     quad_segs = [4] * len(input)
     with ProcessPoolExecutor(max_workers=2) as pool:
-        results = pool.map(buffer_by_m, input, quad_segs)
+        results = pool.map(pygeoops.buffer_by_m, input, quad_segs)
 
     # Check result
     for line, buffer_geom, exp_type, exp_parts_relation in zip(
@@ -148,30 +165,22 @@ def test_buffer_by_m_parallel():
                 raise ValueError(f"Unknown {exp_parts_relation=}")
 
 
-@pytest.mark.skipif(
-    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
-    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
-)
 def test_buffer_by_m_separate_distances():
     """Test buffer_by_m with LineString without M or Z values."""
     line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
     distances = [1, 2, 2, 4]
     line_with_m = LineString([[x, y, m] for (x, y), m in zip(line.coords, distances)])
 
-    buffer_geom = buffer_by_m(line_with_m)
+    buffer_geom = pygeoops.buffer_by_m(line_with_m)
 
     # Check result
     assert isinstance(buffer_geom, Polygon)
     assert not buffer_geom.is_empty
 
 
-@pytest.mark.skipif(
-    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
-    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
-)
 def test_buffer_by_m_without_zm():
     """Test buffer_by_m with LineString without M or Z values."""
     line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
 
     with pytest.raises(ValueError, match="input geometry must have M or Z values"):
-        _ = buffer_by_m(line)
+        _ = pygeoops.buffer_by_m(line)
