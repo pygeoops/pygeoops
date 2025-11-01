@@ -30,16 +30,19 @@ def buffer_by_m(
     Calculates a variable width buffer for a geometry.
 
     The buffer distance at each vertex is determined by the M value of that vertex, or
-    the Z value if M is not available. If a distance is zero, the resulting buffer will
-    taper towards the original point and the result will be a multipolygon where the
-    parts touch at that point. If a distance is negative, the resulting buffer will
-    omit that point and the result will be a multipolygon with disjoint parts.
+    the Z value if M is not available.
+      - If a distance is zero, the resulting buffer will taper towards the original
+        point and the result will be a multipolygon where the parts touch at that point.
+      - If a distance is negative or NaN, the resulting buffer will omit that point from
+        treatment entirely and the result will be a multipolygon with disjoint parts.
 
     Example output (grey: original polygon, blue: buffer):
 
     .. plot:: code/buffer_by_m_different_cases.py
 
     Alternative name: variable width buffer.
+
+    .. versionadded:: 0.6.0
 
     Args:
         line (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
@@ -148,7 +151,9 @@ def _buffer_by_m(
         include_m = False
         include_z = True
     else:
-        raise ValueError("Input geometry must have M or Z values for buffer distances.")
+        raise ValueError(
+            f"input geometry must have M or Z values for buffer distances: {line}"
+        )
 
     # Extract points and distances
     coords = shapely.get_coordinates(line, include_m=include_m, include_z=include_z)
