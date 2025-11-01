@@ -1,3 +1,9 @@
+"""Function to create variable width buffers based on M or Z values.
+
+Inspired by the following stackoverflow post:
+https://stackoverflow.com/questions/79804624/buffer-a-polyline-by-variable-distance
+"""
+
 import logging
 from itertools import pairwise
 
