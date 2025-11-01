@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
-from shapely.geometry import LineString, MultiPoint, Polygon
+from shapely.geometry import MultiPoint, Polygon
 
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 from pygeoops._general import _extract_0dim_ndarray
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def buffer_by_m(
-    line,
+    geometry,
     quad_segs: int = 8,
     cap_style: str = "round",
     join_style: str = "round",
@@ -37,7 +37,7 @@ def buffer_by_m(
       - If a distance is negative or NaN, the resulting buffer will omit that point from
         treatment entirely and the result will be a multipolygon with disjoint parts.
 
-    Example output (grey: original polygon, blue: buffer):
+    Example output (grey: original line, blue: buffer):
 
     .. plot:: code/buffer_by_m_different_cases.py
 
@@ -46,7 +46,7 @@ def buffer_by_m(
     .. versionadded:: 0.6.0
 
     Args:
-        line (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
+        geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.
         quad_segs (int, optional): The number of segments used to approximate a
             quarter circle. Defaults to 8.
         cap_style (str, optional): The style of the buffer's end caps. One of
@@ -105,14 +105,14 @@ def buffer_by_m(
             buffer_geoms.geometry = pygeoops.buffer_by_m(lines_gdf.geometry)
 
     """
-    if line is None:
+    if geometry is None:
         return None
-    line = _extract_0dim_ndarray(line)
+    geometry = _extract_0dim_ndarray(geometry)
 
     # If input is not arraylike, treat the single geometry
-    if not hasattr(line, "__len__"):
+    if not hasattr(geometry, "__len__"):
         return _buffer_by_m(
-            line=line,
+            geometry=geometry,
             quad_segs=quad_segs,
             cap_style=cap_style,
             join_style=join_style,
@@ -123,44 +123,44 @@ def buffer_by_m(
         result = np.array(
             [
                 _buffer_by_m(
-                    line=geom,
+                    geometry=geom,
                     quad_segs=quad_segs,
                     cap_style=cap_style,
                     join_style=join_style,
                     mitre_limit=mitre_limit,
                 )
-                for geom in line
+                for geom in geometry
             ]
         )
-        if isinstance(line, GeoSeries):
-            result = GeoSeries(result, index=line.index, crs=line.crs)
+        if isinstance(geometry, GeoSeries):
+            result = GeoSeries(result, index=geometry.index, crs=geometry.crs)
 
         return result
 
 
 def _buffer_by_m(
-    line: LineString,
-    quad_segs,
-    cap_style,
-    join_style,
-    mitre_limit,
+    geometry,
+    quad_segs: int,
+    cap_style: str,
+    join_style: str,
+    mitre_limit: float,
 ) -> BaseGeometry:
     # Determine which include kwargs to use. Using kwargs as include_m is not available
     # in all Shapely versions.
     include_kwargs = {}
-    if SHAPELY_GTE_2_1_0 and GEOS_GTE_3_12_0 and line.has_m:
+    if SHAPELY_GTE_2_1_0 and GEOS_GTE_3_12_0 and geometry.has_m:
         # has_m is available in Shapely >= 2.1.0 and GEOS >= 3.12.0
         include_kwargs["include_m"] = True
-    elif line.has_z:
+    elif geometry.has_z:
         include_kwargs["include_z"] = True
     else:
         message = "input geometry must have M or Z values for buffer distances."
         if not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0:
             message += " For M, Shapely >= 2.1.0 and GEOS >= 3.12.0 are needed."
-        raise ValueError(f"{message}: got {line}")
+        raise ValueError(f"{message}: got {geometry}")
 
     # Extract points and distances
-    coords = shapely.get_coordinates(line, **include_kwargs)
+    coords = shapely.get_coordinates(geometry, **include_kwargs)
     pts = shapely.points(coords[:, :2])
     distances = coords[:, 2]
 
