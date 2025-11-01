@@ -7,11 +7,8 @@ import numpy as np
 from shapely.geometry import LineString, Polygon, MultiPolygon
 
 from pygeoops._buffer_by_m import buffer_by_m
-from pygeoops._compat import SHAPELY_GTE_21
+from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 import test_helper
-
-if not SHAPELY_GTE_21:
-    pytest.skip("buffer_by_m tests require Shapely >= 2.1.0", allow_module_level=True)
 
 
 @pytest.mark.parametrize(
@@ -22,6 +19,10 @@ if not SHAPELY_GTE_21:
         ([[0, 6, 1], [0, 0, -1], [10, 0, 2], [13, 5, 4]], MultiPolygon, "disjoint"),
         ([[0, 6, 1], [0, 0, np.nan], [10, 0, 2], [13, 5, 4]], MultiPolygon, "disjoint"),
     ],
+)
+@pytest.mark.skipif(
+    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
+    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
 )
 def test_buffer_by_m(tmp_path, line_coords, exp_type, exp_parts_relation):
     """Test buffer_by_m function.
@@ -57,7 +58,25 @@ def test_buffer_by_m(tmp_path, line_coords, exp_type, exp_parts_relation):
     test_helper.plot([buffer_geom, line], output_path)
 
 
+@pytest.mark.skipif(
+    SHAPELY_GTE_2_1_0 and GEOS_GTE_3_12_0,
+    reason="Shapely >= 2.1.0 and GEOS >= 3.12.0 present, so no error expected",
+)
+def test_buffer_by_m_dependencies():
+    """Test if buffer_by_m gives a proper error when dependencies are not met."""
+    line = LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
+    with pytest.raises(
+        RuntimeError,
+        match="buffer_by_m requires Shapely >= 2.1.0 and GEOS >= 3.12.0",
+    ):
+        _ = buffer_by_m(line)
+
+
 @pytest.mark.parametrize("input_type", ["geoseries", "ndarray", "list"])
+@pytest.mark.skipif(
+    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
+    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
+)
 def test_buffer_by_m_geometries(tmp_path, input_type):
     """Test processing an array of polygons."""
     # Prepare test data
@@ -92,14 +111,10 @@ def test_buffer_by_m_geometries(tmp_path, input_type):
         )
 
 
-def test_buffer_by_m__no_m_or_z():
-    """Test buffer_by_m with LineString without M or Z values."""
-    line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
-
-    with pytest.raises(ValueError, match="input geometry must have M or Z values"):
-        _ = buffer_by_m(line)
-
-
+@pytest.mark.skipif(
+    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
+    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
+)
 def test_buffer_by_m_parallel():
     """Test processing an array of polygons."""
     # Prepare test data
@@ -133,6 +148,10 @@ def test_buffer_by_m_parallel():
                 raise ValueError(f"Unknown {exp_parts_relation=}")
 
 
+@pytest.mark.skipif(
+    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
+    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
+)
 def test_buffer_by_m_separate_distances():
     """Test buffer_by_m with LineString without M or Z values."""
     line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
@@ -144,3 +163,15 @@ def test_buffer_by_m_separate_distances():
     # Check result
     assert isinstance(buffer_geom, Polygon)
     assert not buffer_geom.is_empty
+
+
+@pytest.mark.skipif(
+    not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0,
+    reason="buffer_by_m tests require Shapely >= 2.1.0 and GEOS >= 3.12.0",
+)
+def test_buffer_by_m_without_zm():
+    """Test buffer_by_m with LineString without M or Z values."""
+    line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
+
+    with pytest.raises(ValueError, match="input geometry must have M or Z values"):
+        _ = buffer_by_m(line)

@@ -14,6 +14,7 @@ import shapely
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import LineString, MultiPoint, Polygon
 
+from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 from pygeoops._general import _extract_0dim_ndarray
 
 logger = logging.getLogger(__name__)
@@ -104,6 +105,8 @@ def buffer_by_m(
             buffer_geoms.geometry = pygeoops.buffer_by_m(lines_gdf.geometry)
 
     """
+    if not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0:
+        raise RuntimeError("buffer_by_m requires Shapely >= 2.1.0 and GEOS >= 3.12.0")
     if line is None:
         return None
     line = _extract_0dim_ndarray(line)
