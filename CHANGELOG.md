@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.6.0 (????-??-??)
+## 0.6.0 (2025-11-02)
 
 ### Deprecations and compatibility notes
 
@@ -10,8 +10,6 @@
 
 - Add `buffer_by_m` function (#139)
 - Add `get_parts_recursive` function (#140)
-
-## 0.5.1 (????-??-??)
 
 ### Bugs fixed
 
