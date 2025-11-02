@@ -341,7 +341,7 @@ def format_short(geometry: BaseGeometry | None) -> str:
     return result
 
 
-def get_parts_recursive(geometry: BaseGeometry | None) -> NDArray[BaseGeometry] | None:
+def get_parts_recursive(geometry: BaseGeometry | None):
     """
     Recursively get all parts of the input till only single geometries remain.
 
