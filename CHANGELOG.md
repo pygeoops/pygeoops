@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 0.6.0 (????-??-??)
+
+### Deprecations and compatibility notes
+
+- Deprecate `explode` -> please use `shapely.get_parts` (#140)
+
+### Improvements
+
+- Add `get_parts_recursive` function (#140)
+
 ## 0.5.1 (????-??-??)
 
 ### Bugs fixed
