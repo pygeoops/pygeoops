@@ -9,7 +9,7 @@ import geopandas as gpd
 import shapely
 import numpy as np
 from shapely import from_wkt
-from shapely.geometry import LineString, Polygon, MultiPolygon
+from shapely.geometry import LineString, MultiLineString, Polygon, MultiPolygon
 
 import pygeoops
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
@@ -20,6 +20,7 @@ import test_helper
 @pytest.mark.parametrize(
     "geometry, distance_dim, exp_type, exp_parts_relation",
     [
+        (None, "Z", None, None),
         (LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]), "Z", Polygon, None),
         (LineString([[0, 6, 1], [0, 0, 0], [9, 0, 2]]), "Z", MultiPolygon, "touches"),
         (LineString([[0, 6, 1], [0, 0, -1], [9, 0, 2]]), "Z", MultiPolygon, "disjoint"),
@@ -30,19 +31,38 @@ import test_helper
             "disjoint",
         ),
         (LineString([[0, 6, -1], [0, 0, -1], [9, 0, -2]]), "Z", Polygon(), None),
-        (from_wkt("LINESTRING M (0 6 1, 0 0 2, 9 0 2)"), "M", Polygon, None),
-        (from_wkt("LINESTRING M (0 6 -1, 0 0 -1, 9 0 -1)"), "M", Polygon(), None),
+        (from_wkt("LINESTRING M(0 6 1, 0 0 2, 9 0 2)"), "M", Polygon, None),
+        (from_wkt("LINESTRING M(0 6 -1, 0 0 -1, 9 0 -1)"), "M", Polygon(), None),
         (
-            from_wkt("LINESTRING ZM (0 6 -1 1, 0 0 -1 0, 9 0 -1 2)"),
+            from_wkt("LINESTRING ZM(0 6 -1 1, 0 0 -1 0, 9 0 -1 2)"),
             "M",
             MultiPolygon,
             "touches",
         ),
         (np.array(LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]])), "Z", Polygon, None),
         (
-            from_wkt("POLYGON Z ((0 0 0, 0 5 1, 5 5 2, 5 0 3, 0 0 0))"),
+            MultiLineString(
+                [[[0, 6, 1], [0, 0, 2], [9, 0, 2]], [[0, 9, 1], [5, 9, 2], [9, 9, 1]]]
+            ),
             "Z",
-            Polygon,
+            MultiPolygon,
+            None,
+        ),
+        (
+            from_wkt("MULTILINESTRING M((0 6 1, 0 0 2, 9 0 2), (0 9 1, 5 9 2, 9 9 1))"),
+            "M",
+            MultiPolygon,
+            None,
+        ),
+        (from_wkt("POLYGON Z((0 0 0, 0 5 1, 5 2.5 2, 0 0 0))"), "Z", Polygon, None),
+        (
+            from_wkt(
+                "MULTIPOLYGON Z("
+                "((0 0 0, 0 5 1, 5 5 2, 5 0 3, 0 0 0)), "
+                "((10 0 0, 10 5 1, 15 5 2, 15 0 3, 10 0 0)))"
+            ),
+            "Z",
+            MultiPolygon,
             None,
         ),
     ],
@@ -51,6 +71,7 @@ def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relat
     """Test buffer_by_m function with various input geometries.
 
     Specific cases tested:
+    - None input returns None
     - line with M values all > 0 will produce a single Polygon
     - line with one M value = 0 will produce a MultiPolygon with touching parts, as
       this point will be represented as the original (unbuffered) point
@@ -68,7 +89,14 @@ def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relat
 
     buffer_geom = pygeoops.buffer_by_m(geometry)
 
+    # Plot for visual inspection
+    output_path = tmp_path / "test_buffer_by_m.png"
+    test_helper.plot([buffer_geom, _extract_0dim_ndarray(geometry)], output_path)
+
     # Check result
+    if exp_type is None:
+        assert buffer_geom is None
+        return
     if exp_type == Polygon():
         # Special case: an empty Polygon is expected as result
         assert buffer_geom.is_empty
@@ -76,6 +104,9 @@ def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relat
 
     assert isinstance(buffer_geom, exp_type)
     assert not buffer_geom.is_empty
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        # For polygon input, check that original area is preserved
+        assert geometry.within(buffer_geom)
 
     if exp_parts_relation is not None:
         parts = list(buffer_geom.geoms)
@@ -87,10 +118,6 @@ def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relat
             assert parts[0].touches(parts[1])
         else:
             raise ValueError(f"Unknown {exp_parts_relation=}")
-
-    # Plot for visual inspection
-    output_path = tmp_path / "test_buffer_by_m.png"
-    test_helper.plot([buffer_geom, _extract_0dim_ndarray(geometry)], output_path)
 
 
 @pytest.mark.skipif(

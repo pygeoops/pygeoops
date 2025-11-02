@@ -130,32 +130,38 @@ def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
             message += " For M, Shapely >= 2.1.0 and GEOS >= 3.12.0 are needed."
         raise ValueError(f"{message}: got {geometry}")
 
-    # Extract points and distances
-    coords = shapely.get_coordinates(geometry, **include_kwargs)
-    pts = shapely.points(coords[:, :2])
-    distances = coords[:, 2]
+    # Treat part per part
+    partial_buffers = []
+    for part in shapely.get_parts(geometry):
+        # Extract points and distances
+        coords = shapely.get_coordinates(part, **include_kwargs)
+        pts = shapely.points(coords[:, :2])
+        distances = coords[:, 2]
 
-    # Buffer each point by its M/Z value
-    buffers = shapely.buffer(pts, distances, quad_segs=quad_segs)
+        # Buffer each point by its M/Z value
+        buffers = shapely.buffer(pts, distances, quad_segs=quad_segs)
 
-    # Zero-distance points get empty geometries, so replace those with the original
-    # points. Negative distances also result in empty geometries, but we don't want to
-    # recuperate those.
-    zero_m_indices = np.argwhere(distances == 0)
-    buffers[zero_m_indices] = pts[zero_m_indices]
+        # Zero-distance points get empty geometries, so replace those with the original
+        # points. Negative distances also result in empty geometries, but we don't want to
+        # recuperate those.
+        zero_m_indices = np.argwhere(distances == 0)
+        buffers[zero_m_indices] = pts[zero_m_indices]
 
-    # Create convex hulls between each pair of buffers
-    hull_inputs = [
-        MultiPoint(shapely.get_coordinates([buffer1, buffer2]))
-        for buffer1, buffer2 in pairwise(buffers)
-    ]
-    hulls = shapely.convex_hull(hull_inputs)
+        # Create convex hulls between each pair of buffers
+        hull_inputs = [
+            MultiPoint(shapely.get_coordinates([buffer1, buffer2]))
+            for buffer1, buffer2 in pairwise(buffers)
+        ]
+        hulls = shapely.convex_hull(hull_inputs)
 
-    # Union all hulls to get the final buffer. If input was a polygon, union it in as
-    # well to make sure original areas are preserved.
+        partial_buffers.append(hulls)
+
+    # If input was a polygon, we want the original areas to be preserved as well.
     if isinstance(geometry, Polygon) or isinstance(geometry, MultiPolygon):
-        hulls = np.append(hulls, geometry)
-    buffer_geom = shapely.union_all(hulls)
+        partial_buffers.append([geometry])
+
+    # Union all partial buffers to get the final buffer result.
+    buffer_geom = shapely.union_all(np.concatenate(partial_buffers))
 
     if buffer_geom.is_empty:
         return Polygon()
