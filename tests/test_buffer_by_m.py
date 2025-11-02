@@ -253,7 +253,7 @@ def test_buffer_by_m_parallel():
 
     # Check result
     for line, buffer_geom, exp_type, exp_parts_relation in zip(
-        input, results, exp_types, exp_parts_relations
+        input, results, exp_types, exp_parts_relations, strict=True
     ):
         assert buffer_geom is not None
         assert not buffer_geom.is_empty
@@ -272,7 +272,9 @@ def test_buffer_by_m_separate_distances():
     """Test buffer_by_m with LineString without M or Z values."""
     line = LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
     distances = [1, 2, 2, 4]
-    line_with_m = LineString([[x, y, m] for (x, y), m in zip(line.coords, distances)])
+    line_with_m = LineString(
+        [[x, y, m] for (x, y), m in zip(line.coords, distances, strict=True)]
+    )
 
     buffer_geom = pygeoops.buffer_by_m(line_with_m)
 
