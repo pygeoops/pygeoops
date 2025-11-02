@@ -9,7 +9,15 @@ import geopandas as gpd
 import shapely
 import numpy as np
 from shapely import from_wkt
-from shapely.geometry import LineString, MultiLineString, Polygon, MultiPolygon
+from shapely.geometry import (
+    GeometryCollection,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    Polygon,
+    Point,
+    MultiPolygon,
+)
 
 import pygeoops
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
@@ -18,29 +26,65 @@ import test_helper
 
 
 @pytest.mark.parametrize(
-    "geometry, distance_dim, exp_type, exp_parts_relation",
+    "test_descr, geometry, distance_dim, exp_type, exp_parts_relation",
     [
-        (None, "Z", None, None),
-        (LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]), "Z", Polygon, None),
-        (LineString([[0, 6, 1], [0, 0, 0], [9, 0, 2]]), "Z", MultiPolygon, "touches"),
-        (LineString([[0, 6, 1], [0, 0, -1], [9, 0, 2]]), "Z", MultiPolygon, "disjoint"),
+        ("None input returns None", None, "Z", None, None),
+        ("Point, +M", Point(0, 0, 1), "Z", Polygon, None),
+        ("Point, -M", Point(0, 0, -1), "Z", Polygon(), None),
+        ("MultiPt", MultiPoint([[0, 0, 1], [5, 6, 2]]), "Z", MultiPolygon, "disjoint"),
+        ("Line", LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]), "Z", Polygon, None),
         (
+            "Line, 1 x Z=0: tapering towards 0-distance point: touches",
+            LineString([[0, 6, 1], [0, 0, 0], [9, 0, 2]]),
+            "Z",
+            MultiPolygon,
+            "touches",
+        ),
+        (
+            "Line, 1 x Z<0: <0-distance point omitted: disjoint",
+            LineString([[0, 6, 1], [0, 0, -1], [9, 0, 2]]),
+            "Z",
+            MultiPolygon,
+            "disjoint",
+        ),
+        (
+            "Line, 1 x Z=NaN: NaN-distance point omitted: disjoint",
             LineString([[0, 6, 1], [0, 0, np.nan], [9, 0, 2]]),
             "Z",
             MultiPolygon,
             "disjoint",
         ),
-        (LineString([[0, 6, -1], [0, 0, -1], [9, 0, -2]]), "Z", Polygon(), None),
-        (from_wkt("LINESTRING M(0 6 1, 0 0 2, 9 0 2)"), "M", Polygon, None),
-        (from_wkt("LINESTRING M(0 6 -1, 0 0 -1, 9 0 -1)"), "M", Polygon(), None),
         (
+            "Line, all Z<0: empty Polygon",
+            LineString([[0, 6, -1], [0, 0, -1], [9, 0, -2]]),
+            "Z",
+            Polygon(),
+            None,
+        ),
+        ("Line, M", from_wkt("LINESTRING M(0 6 1, 0 0 2, 9 0 2)"), "M", Polygon, None),
+        (
+            "Line, all M<0: empty Polygon",
+            from_wkt("LINESTRING M(0 6 -1, 0 0 -1, 9 0 -1)"),
+            "M",
+            Polygon(),
+            None,
+        ),
+        (
+            "Line, 1 x M=0",
             from_wkt("LINESTRING ZM(0 6 -1 1, 0 0 -1 0, 9 0 -1 2)"),
             "M",
             MultiPolygon,
             "touches",
         ),
-        (np.array(LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]])), "Z", Polygon, None),
         (
+            "Line, 0dim ndarray",
+            np.array(LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]])),
+            "Z",
+            Polygon,
+            None,
+        ),
+        (
+            "MultiLine, positive Z",
             MultiLineString(
                 [[[0, 6, 1], [0, 0, 2], [9, 0, 2]], [[0, 9, 1], [5, 9, 2], [9, 9, 1]]]
             ),
@@ -49,13 +93,21 @@ import test_helper
             None,
         ),
         (
+            "MultiLine, positive M",
             from_wkt("MULTILINESTRING M((0 6 1, 0 0 2, 9 0 2), (0 9 1, 5 9 2, 9 9 1))"),
             "M",
             MultiPolygon,
             None,
         ),
-        (from_wkt("POLYGON Z((0 0 0, 0 5 1, 5 2.5 2, 0 0 0))"), "Z", Polygon, None),
         (
+            "Poly, Z",
+            from_wkt("POLYGON Z((0 0 0, 0 5 1, 5 2.5 2, 0 0 0))"),
+            "Z",
+            Polygon,
+            None,
+        ),
+        (
+            "MultiPoly, Z",
             from_wkt(
                 "MULTIPOLYGON Z("
                 "((0 0 0, 0 5 1, 5 5 2, 5 0 3, 0 0 0)), "
@@ -65,25 +117,36 @@ import test_helper
             MultiPolygon,
             None,
         ),
+        (
+            "GeoColl with mixed geometries and Z values",
+            GeometryCollection(
+                [
+                    LineString([[0, 6, 1], [0, 0, 2], [9, 0, 2]]),
+                    Point(5, 9, 1),
+                    Polygon(
+                        [[10, 0, 0], [10, 5, 1], [15, 5, 2], [15, 0, 3], [10, 0, 0]]
+                    ),
+                ]
+            ),
+            "Z",
+            MultiPolygon,
+            "disjoint",
+        ),
+        (
+            "GeoColl, deeply nested",
+            GeometryCollection(
+                GeometryCollection([MultiPoint([[0, 0, 1], [0, 5, 2]])])
+            ),
+            "Z",
+            MultiPolygon,
+            "disjoint",
+        ),
     ],
 )
-def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relation):
-    """Test buffer_by_m function with various input geometries.
-
-    Specific cases tested:
-    - None input returns None
-    - line with M values all > 0 will produce a single Polygon
-    - line with one M value = 0 will produce a MultiPolygon with touching parts, as
-      this point will be represented as the original (unbuffered) point
-    - line with one M value < 0 will produce a MultiPolygon with disjoint
-      parts, as this point will be omitted from the buffer
-    - line with one M value = NaN: same as previous case
-    - line as WKT LINESTRING M
-    - line as WKT LINESTRING M with all negative M values: should produce empty Polygon
-    - line as WKT LINESTRING ZM with all negative Z values, which should be ignored
-    - line as 0dim ndarray
-    - polygon as WKT POLYGON Z
-    """
+def test_buffer_by_m(
+    tmp_path, test_descr, geometry, distance_dim, exp_type, exp_parts_relation
+):
+    """Test buffer_by_m function with various input geometries."""
     if distance_dim == "M" and (not SHAPELY_GTE_2_1_0 or not GEOS_GTE_3_12_0):
         pytest.xfail("Shapely >= 2.1.0 and GEOS >= 3.12.0 required for M values")
 
@@ -91,7 +154,11 @@ def test_buffer_by_m(tmp_path, geometry, distance_dim, exp_type, exp_parts_relat
 
     # Plot for visual inspection
     output_path = tmp_path / "test_buffer_by_m.png"
-    test_helper.plot([buffer_geom, _extract_0dim_ndarray(geometry)], output_path)
+    try:
+        test_helper.plot([buffer_geom, _extract_0dim_ndarray(geometry)], output_path)
+    except Exception:
+        # plotting is not the main purpose of this test, so just continue
+        pass
 
     # Check result
     if exp_type is None:

@@ -12,10 +12,10 @@ import numpy as np
 from numpy.typing import NDArray
 import shapely
 from shapely.geometry.base import BaseGeometry
-from shapely.geometry import MultiPoint, Polygon, MultiPolygon
+from shapely.geometry import MultiPoint, Polygon
 
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
-from pygeoops._general import _extract_0dim_ndarray
+from pygeoops._general import _extract_0dim_ndarray, get_parts_recursive
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +29,13 @@ def buffer_by_m(
     The buffer distance at each vertex is determined by the M value of that vertex, or
     the Z value if M is not available.
       - If a distance is zero, the resulting buffer will taper towards the original
-        point and the result will be a multipolygon where the parts touch at that point.
+        point. If the input is a LineString, this means the result will be a
+        MultiPolygon where the parts touch at that point.
       - If a distance is negative or NaN, the resulting buffer will omit that point from
-        treatment entirely and the result will be a multipolygon with disjoint parts.
+        treatment entirely. If the input is a LineString, this means the result will be
+        a MultiPolygon with disjoint parts.
 
-    Support for polygons is experimental, feedback welcome.
+    Support for Polygon input is experimental, feedback welcome.
 
     Example output (grey: original line, blue: buffer):
 
@@ -132,7 +134,7 @@ def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
 
     # Treat part per part
     partial_buffers = []
-    for part in shapely.get_parts(geometry):
+    for part in get_parts_recursive(geometry):
         # Extract points and distances
         coords = shapely.get_coordinates(part, **include_kwargs)
         pts = shapely.points(coords[:, :2])
@@ -140,6 +142,11 @@ def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
 
         # Buffer each point by its M/Z value
         buffers = shapely.buffer(pts, distances, quad_segs=quad_segs)
+
+        if len(buffers) == 1:
+            # Single point case: just add the buffer (could be empty polygon)
+            partial_buffers.append(buffers)
+            continue
 
         # Zero-distance points get empty geometries, so replace those with the original
         # points. Negative or nan distances also result in empty geometries, but we
@@ -156,9 +163,9 @@ def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
 
         partial_buffers.append(hulls)
 
-    # If input was a polygon, we want the original areas to be preserved as well.
-    if isinstance(geometry, Polygon) or isinstance(geometry, MultiPolygon):
-        partial_buffers.append([geometry])
+        # If the part is a polygon, we want the original areas to be preserved as well.
+        if isinstance(part, Polygon):
+            partial_buffers.append([part])
 
     # Union all partial buffers to get the final buffer result.
     buffer_geom = shapely.union_all(np.concatenate(partial_buffers))
