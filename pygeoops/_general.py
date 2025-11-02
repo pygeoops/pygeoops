@@ -172,7 +172,7 @@ def collection_extract(
         result = np.array(
             [
                 _collection_extract(geometry=geom, primitivetype_id=type)
-                for geom, type in zip(geometry, primitivetype)  # type: ignore[arg-type]
+                for geom, type in zip(geometry, primitivetype, strict=True)  # type: ignore[arg-type]
             ]
         )
         # If input is GeoSeries, recover index

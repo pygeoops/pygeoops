@@ -134,7 +134,7 @@ def test_simplify_topo_GeometryCollection():
     assert result is not None
     assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
-    for geom_input, geom_result in zip(input, result):
+    for geom_input, geom_result in zip(input, result, strict=True):
         assert type(geom_input) is type(geom_result)
 
 
@@ -155,7 +155,7 @@ def test_simplify_topo_mixedtypes():
     assert result is not None
     assert isinstance(result, np.ndarray)
     assert len(result) == len(input)
-    for geom_input, geom_result in zip(input, result):
+    for geom_input, geom_result in zip(input, result, strict=True):
         assert type(geom_result) is type(geom_input)
         if geom_input.geom_type == "Polygon":
             assert geom_result == geom_input
