@@ -8,6 +8,7 @@
 
 ### Improvements
 
+- Add `buffer_by_m` function (#139)
 - Add `get_parts_recursive` function (#140)
 
 ## 0.5.1 (????-??-??)

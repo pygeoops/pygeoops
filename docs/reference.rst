@@ -11,6 +11,7 @@ methods implemented in PyGeoOps. All classes and function exposed in
 .. autosummary::
    :toctree: api/
 
+   buffer_by_m
    centerline
    collect
    collection_extract

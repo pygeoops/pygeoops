@@ -28,6 +28,31 @@ Determine the :meth:`~centerline` for polygons
 .. plot:: code/centerline_basic.py
 
 
+Calculate a variable width buffer with :meth:`~buffer_by_m`
+-----------------------------------------------------------
+
+Calculates a buffer where the width at each vertex is determined by the Z or M dimension
+of the geometry. If an M dimension is present, it is used. Otherwise, the Z dimension is
+used.
+
+.. code-block:: python
+
+    # For a line with the Z dimension already included
+    line = shapely.LineString([[0, 6, 1], [0, 0, 2], [10, 0, 2], [13, 5, 4]])
+    buffer_geom = pygeoops.buffer_by_m(line)
+
+    # If the distances are separately available, they can be added like this
+    line = shapely.LineString([[0, 6], [0, 0], [10, 0], [13, 5]])
+    distances = [1, 2, 2, 4]
+    line_with_m = shapely.LineString(
+        [[x, y, m] for (x, y), m in zip(line.coords, distances)]
+    )
+    buffer_geom = pygeoops.buffer_by_m(line_with_m)
+
+
+.. plot:: code/buffer_by_m_different_cases.py
+
+
 Determine :meth:`~view_angles` from a viewpoint towards polygons
 ----------------------------------------------------------------
 
