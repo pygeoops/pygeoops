@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- Add `buffer_by_m function` (#139)
+- Add `buffer_by_m` function (#139)
 
 ## 0.5.1 (????-??-??)
 
