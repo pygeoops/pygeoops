@@ -364,6 +364,38 @@ def test_format_short(geometry, expected):
     assert pygeoops.format_short(geometry) == expected
 
 
+def test_get_parts_recursive():
+    # Test None input
+    assert pygeoops.get_parts_recursive(None) is None
+
+    # Test simple geometries
+    point = Point((0, 0))
+    line = LineString([(0, 0), (0, 1)])
+    poly = shapely.box(0, 0, 1, 1)
+    assert pygeoops.get_parts_recursive(point) == [point]
+    assert pygeoops.get_parts_recursive(line) == [line]
+    assert pygeoops.get_parts_recursive(poly) == [poly]
+
+    # Test multi geometries
+    multipoint = MultiPoint([point, point])
+    multiline = MultiLineString([line, line])
+    multipoly = MultiPolygon([poly, poly])
+    assert pygeoops.get_parts_recursive(multipoint).tolist() == [point, point]
+    assert pygeoops.get_parts_recursive(multiline).tolist() == [line, line]
+    assert pygeoops.get_parts_recursive(multipoly).tolist() == [poly, poly]
+
+    # Test geometrycollection
+    geometrycoll = GeometryCollection([point, line, poly])
+    assert pygeoops.get_parts_recursive(geometrycoll).tolist() == [point, line, poly]
+
+    # Test deeper nested geometrycollection
+    deep_geometrycoll = GeometryCollection(
+        [GeometryCollection([multipoint, multiline]), multipoly]
+    )
+    expected_parts = [point, point, line, line, poly, poly]
+    assert pygeoops.get_parts_recursive(deep_geometrycoll).tolist() == expected_parts
+
+
 @pytest.mark.parametrize(
     "test_id, input, expected_id",
     [

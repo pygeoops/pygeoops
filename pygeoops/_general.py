@@ -1,5 +1,6 @@
 import copy
 import math
+import warnings
 
 from geopandas import GeoSeries
 import numpy as np
@@ -244,16 +245,19 @@ def empty(geometrytype: int | GeometryType | None) -> BaseGeometry | None:
 
 def explode(geometry: BaseGeometry | None) -> NDArray[BaseGeometry] | None:
     """
-    Dump all (multi)geometries in the input to one list of single geometries.
+    Return the parts of the input as an array.
 
     Args:
         geometry (BaseGeometry, optional): geometry to explode.
 
     Returns:
-        Optional[NDArray[BaseGeometry]]: array of simple geometries or None if the input
-            was None.
+        Optional[NDArray[BaseGeometry]]: array with the parts of the input geometry or
+            None if the input was None.
 
     """
+    warnings.warn(
+        "Deprecated: use shapely.get_parts() instead", DeprecationWarning, stacklevel=2
+    )
     if geometry is None:
         return None
     return shapely.get_parts(geometry)
@@ -335,6 +339,49 @@ def format_short(geometry: BaseGeometry | None) -> str:
         result += suffix
 
     return result
+
+
+def get_parts_recursive(geometry: BaseGeometry | None) -> NDArray[BaseGeometry] | None:
+    """
+    Recursively get all parts of the input till only single geometries remain.
+
+    Even if there is deep nesting of multipart geometries, all parts are extracted to
+    one flat array.
+
+    Args:
+        geometry (BaseGeometry, optional): geometry to get the parts for.
+
+    Returns:
+        Optional[NDArray[BaseGeometry]]: array of simple geometries or None if the input
+            was None.
+
+    """
+    if geometry is None:
+        return None
+    if not isinstance(geometry, BaseMultipartGeometry):
+        return np.array([geometry])
+
+    parts = shapely.get_parts(geometry)
+    while True:
+        new_parts = []
+        multi_found = False
+        for part in parts:
+            if isinstance(part, BaseMultipartGeometry):
+                # Multipart geometry -> get its parts as well
+                subparts = shapely.get_parts(part)
+                new_parts.append(subparts)
+                multi_found = True
+            else:
+                new_parts.append([part])
+
+        if multi_found:
+            # At least one multipart geometry found -> continue
+            parts = np.concatenate(new_parts)
+        else:
+            # No more multipart geometries found -> stop
+            break
+
+    return parts
 
 
 def get_primitivetype_id(geometry) -> int | NDArray[np.number]:
