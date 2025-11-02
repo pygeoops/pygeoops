@@ -142,8 +142,8 @@ def _buffer_by_m(geometry, quad_segs: int) -> BaseGeometry:
         buffers = shapely.buffer(pts, distances, quad_segs=quad_segs)
 
         # Zero-distance points get empty geometries, so replace those with the original
-        # points. Negative distances also result in empty geometries, but we don't want to
-        # recuperate those.
+        # points. Negative or nan distances also result in empty geometries, but we
+        # don't want to recuperate those.
         zero_m_indices = np.argwhere(distances == 0)
         buffers[zero_m_indices] = pts[zero_m_indices]
 
