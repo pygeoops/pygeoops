@@ -1,21 +1,18 @@
-"""
-Module to benchmark pygeoops operations.
-"""
+"""Module to benchmark pygeoops operations."""
 
-from datetime import datetime
 import inspect
 import logging
-from pathlib import Path
-
 import os
+from datetime import datetime
+from pathlib import Path
 
 os.environ["USE_PYGEOS"] = "0"
 import geopandas as gpd
 import shapely
 
+import pygeoops
 from benchmark.benchmarker import RunResult
 from benchmark.benchmarks import testdata
-import pygeoops
 
 logger = logging.getLogger(__name__)
 nb_rows_simplify = 50000
@@ -30,6 +27,7 @@ def _get_version() -> str:
 
 
 def simplify_lang(tmp_dir: Path) -> RunResult:
+    """Simplify geometries using Lang algorithm with pygeoops."""
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -62,6 +60,7 @@ def simplify_lang(tmp_dir: Path) -> RunResult:
 
 
 def simplify_lang_plus(tmp_dir: Path) -> RunResult:
+    """Simplify geometries using Lang+ algorithm with pygeoops."""
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -94,6 +93,7 @@ def simplify_lang_plus(tmp_dir: Path) -> RunResult:
 
 
 def simplify_rdp(tmp_dir: Path) -> RunResult:
+    """Simplify geometries using RDP algorithm with pygeoops."""
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -126,6 +126,7 @@ def simplify_rdp(tmp_dir: Path) -> RunResult:
 
 
 def simplify_rdp_keep_points_on(tmp_dir: Path) -> RunResult:
+    """Simplify geometries using RDP algorithm with keep_points_on."""
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -171,6 +172,7 @@ def simplify_rdp_keep_points_on(tmp_dir: Path) -> RunResult:
 
 
 def simplify_rdp_geopandas(tmp_dir: Path) -> RunResult:
+    """Simplify geometries using RDP algorithm with GeoPandas."""
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)

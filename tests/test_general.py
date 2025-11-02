@@ -7,13 +7,13 @@ import numpy as np
 import pytest
 import shapely
 from shapely import (
-    Point,
-    LineString,
-    Polygon,
-    MultiPoint,
-    MultiLineString,
-    MultiPolygon,
     GeometryCollection,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    MultiPolygon,
+    Point,
+    Polygon,
 )
 
 import pygeoops

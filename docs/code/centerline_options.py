@@ -1,11 +1,11 @@
+"""Example of different centerline options."""
+
 import matplotlib.pyplot as plt
 import shapely
-from shapely import LineString
+from figures import BLUE, GRAY, W
 from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
-
-from figures import W, BLACK, BLUE, GRAY, YELLOW
 
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
     nrows=2, ncols=2, figsize=(W, W), dpi=90, layout="constrained"

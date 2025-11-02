@@ -1,16 +1,14 @@
-"""
-Module containing utilities regarding operations on geoseries.
-"""
+"""Module containing utilities regarding operations on geoseries."""
 
 import logging
 import warnings
 
-from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray
 import shapely
-from shapely.geometry.base import BaseGeometry
 import topojson
+from geopandas import GeoSeries
+from numpy.typing import NDArray
+from shapely.geometry.base import BaseGeometry
 
 import pygeoops
 from pygeoops import GeometryType, PrimitiveType
@@ -27,8 +25,7 @@ def simplify_topo(
     lookahead: int = 8,
     keep_points_on: BaseGeometry | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
-    """
-    Applies simplify while retaining common boundaries between all input geometries.
+    """Applies simplify while retaining common boundaries between all input geometries.
 
     Args:
         geometry (geometry, GeoSeries or arraylike): a geometry, GeoSeries or arraylike.

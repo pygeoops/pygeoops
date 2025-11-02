@@ -2,11 +2,11 @@ import copy
 import math
 import warnings
 
-from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
 import pyproj
 import shapely
+from geopandas import GeoSeries
+from numpy.typing import ArrayLike, NDArray
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 
 import pygeoops
@@ -14,8 +14,7 @@ from pygeoops._types import GeometryType, PrimitiveType
 
 
 def collect(geometries) -> BaseGeometry | None:
-    """
-    Collects a list of geometries to one (multi)geometry.
+    """Collects a list of geometries to one (multi)geometry.
 
     Elements in the list that are None or empty geometries are dropped.
 
@@ -104,8 +103,7 @@ def collection_extract(
     geometry,
     primitivetype: int | PrimitiveType | ArrayLike | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | None:
-    """
-    Extracts the parts from the input that comply with the type specified.
+    """Extracts the parts from the input that comply with the type specified.
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
@@ -225,8 +223,7 @@ def _collection_extract(
 
 
 def empty(geometrytype: int | GeometryType | None) -> BaseGeometry | None:
-    """
-    Generate an empty geometry of the type specified.
+    """Generate an empty geometry of the type specified.
 
     Args:
         geometrytype (GeometryType or int): geometrytype or geometrytype id of the empty
@@ -244,8 +241,7 @@ def empty(geometrytype: int | GeometryType | None) -> BaseGeometry | None:
 
 
 def explode(geometry: BaseGeometry | None) -> NDArray[BaseGeometry] | None:
-    """
-    Return the parts of the input as an array.
+    """Return the parts of the input as an array.
 
     Args:
         geometry (BaseGeometry, optional): geometry to explode.
@@ -342,8 +338,7 @@ def format_short(geometry: BaseGeometry | None) -> str:
 
 
 def get_parts_recursive(geometry: BaseGeometry | None):
-    """
-    Recursively get all parts of the input till only single geometries remain.
+    """Recursively get all parts of the input till only single geometries remain.
 
     Even if there is deep nesting of multipart geometries, all parts are extracted to
     one flat array.
@@ -385,8 +380,7 @@ def get_parts_recursive(geometry: BaseGeometry | None):
 
 
 def get_primitivetype_id(geometry) -> int | NDArray[np.number]:
-    """
-    Determines for each input geometry which is the primitive type of the geometry.
+    """Determines for each input geometry which is the primitive type of the geometry.
 
     Args:
         geometry (geometry, GeoSeries or arraylike): geometry or arraylike.
@@ -408,11 +402,10 @@ def get_primitivetype_id(geometry) -> int | NDArray[np.number]:
 
         # Overwrite primitivetype with 0 for geometrycollections
         primitivetype_id[collections_mask] = 0
+    elif isinstance(geometry, shapely.GeometryCollection):
+        primitivetype_id = 0
     else:
-        if isinstance(geometry, shapely.GeometryCollection):
-            primitivetype_id = 0
-        else:
-            primitivetype_id = shapely.get_dimensions(geometry) + 1
+        primitivetype_id = shapely.get_dimensions(geometry) + 1
 
     return primitivetype_id
 
@@ -422,8 +415,7 @@ def _is_arraylike(a) -> bool:
 
 
 def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = False):
-    """
-    Make the input geometry valid.
+    """Make the input geometry valid.
 
     If the input geometry is already valid, it will be returned. If the geometry must be
     split into multiple parts of the same type to be made valid, a multi-part geometry
@@ -457,12 +449,11 @@ def make_valid(geometry, keep_collapsed: bool = True, only_if_invalid: bool = Fa
             result = np.array(geometry)
             result[~is_valid] = _make_valid(result[~is_valid], keep_collapsed)
             result = _extract_0dim_ndarray(result)
+        # No make_valid needed, but copy because we're supposed to return a copy
+        elif not hasattr(geometry, "__len__"):
+            result = copy.deepcopy(geometry)
         else:
-            # No make_valid needed, but copy because we're supposed to return a copy
-            if not hasattr(geometry, "__len__"):
-                result = copy.deepcopy(geometry)
-            else:
-                result = np.array(geometry)
+            result = np.array(geometry)
 
     else:
         result = _make_valid(geometry, keep_collapsed)
@@ -491,8 +482,7 @@ def remove_inner_rings(
     min_area_to_keep: float,
     crs: str | pyproj.CRS | None,
 ) -> shapely.Polygon | shapely.MultiPolygon | None:
-    """
-    Remove (small) inner rings from a (multi)polygon.
+    """Remove (small) inner rings from a (multi)polygon.
 
     Args:
         geometry (Union[shapely.Polygon, shapely.MultiPolygon, None]): polygon geometry.
@@ -575,8 +565,7 @@ def remove_inner_rings(
 def subdivide(
     geometry: BaseGeometry, num_coords_max: int = 1000
 ) -> NDArray[BaseGeometry]:
-    """
-    Divide the input geometry to smaller parts using rectilinear lines.
+    """Divide the input geometry to smaller parts using rectilinear lines.
 
     Args:
         geometry (geometry): the geometry to subdivide.

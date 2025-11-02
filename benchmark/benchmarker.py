@@ -1,13 +1,11 @@
-"""
-Module for benchmarking.
-"""
+"""Module for benchmarking."""
 
 import datetime
 import importlib
 import inspect
 import logging
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 
@@ -36,8 +34,7 @@ class RunResult:
         secs_taken: float,
         run_details: dict | None = None,
     ):
-        """
-        Constructor for a RunResult.
+        """Constructor for a RunResult.
 
         Args:
             package (str): Package being benchmarked.
@@ -57,6 +54,7 @@ class RunResult:
         self.run_details = run_details
 
     def __repr__(self):
+        """String representation of the RunResult."""
         return f"{self.__class__}({self.__dict__})"
 
 
@@ -64,6 +62,15 @@ def run_benchmarks(
     modules_to_run: list[str] | None = None,
     functions_to_run: list[str] | None = None,
 ):
+    """Run all benchmarks and generate reports.
+
+    Args:
+        modules_to_run (list[str] | None, optional): list of benchmark modules to run.
+            If None, all discovered benchmark modules are run. Defaults to None.
+        functions_to_run (list[str] | None, optional): list of benchmark functions to
+            run. If None, all functions in the discovered benchmark modules are run.
+            Defaults to None.
+    """
     # Init logging
     logging.basicConfig(
         format="%(asctime)s.%(msecs)03d|%(levelname)s|%(name)s|%(message)s",

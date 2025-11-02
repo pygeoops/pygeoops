@@ -6,9 +6,9 @@ import geopandas as gpd
 import numpy as np
 import pytest
 import shapely
+import test_helper
 
 import pygeoops
-import test_helper
 
 
 def test_simplify_basic_lang():

@@ -7,12 +7,12 @@ https://stackoverflow.com/questions/79804624/buffer-a-polyline-by-variable-dista
 import logging
 from itertools import pairwise
 
-from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray
 import shapely
-from shapely.geometry.base import BaseGeometry
+from geopandas import GeoSeries
+from numpy.typing import NDArray
 from shapely.geometry import MultiPoint, Polygon
+from shapely.geometry.base import BaseGeometry
 
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 from pygeoops._general import _extract_0dim_ndarray, get_parts_recursive
@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 def buffer_by_m(
     geometry, quad_segs: int = 8
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
-    """
-    Calculates a variable width buffer for a geometry.
+    """Calculates a variable width buffer for a geometry.
 
     The buffer distance at each vertex is determined by the M value of that vertex, or
     the Z value if M is not available.

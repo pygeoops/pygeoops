@@ -1,6 +1,4 @@
-"""
-Library with some less common or extended spatial functions.
-"""
+"""Library with some less common or extended spatial functions."""
 
 from pathlib import Path
 
@@ -17,7 +15,7 @@ from pygeoops._view_angles import *  # noqa: F403
 
 def _get_version():
     version_path = Path(__file__).resolve().parent / "version.txt"
-    with open(version_path) as file:
+    with version_path.open() as file:
         return file.readline()
 
 

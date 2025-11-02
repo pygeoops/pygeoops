@@ -5,9 +5,7 @@ import shapely
 
 
 class GeometryType(enum.Enum):
-    """
-    Enumeration of the different geometry types.
-    """
+    """Enumeration of the different geometry types."""
 
     MISSING = -1
     GEOMETRY = 0
@@ -54,8 +52,7 @@ class GeometryType(enum.Enum):
 
     @classmethod
     def _missing_(cls, value):
-        """
-        Expand options in the Geometrytype() constructor.
+        """Expand options in the Geometrytype() constructor.
 
         Args:
             value (Union[str, int, GeometryType]):
@@ -188,9 +185,7 @@ class GeometryType(enum.Enum):
 
 
 class PrimitiveType(enum.Enum):
-    """
-    Enumeration of the different existing primitive types of a geometry.
-    """
+    """Enumeration of the different existing primitive types of a geometry."""
 
     GEOMETRY = 0
     POINT = 1

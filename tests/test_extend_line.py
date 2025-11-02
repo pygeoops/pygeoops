@@ -1,19 +1,20 @@
 import math
 import re
+
 import pytest
+import test_helper
 from shapely import (
-    box,
-    get_coordinates,
     LineString,
     MultiLineString,
     MultiPolygon,
     Point,
     Polygon,
+    box,
+    get_coordinates,
 )
 
 import pygeoops
 from pygeoops import _extend_line
-import test_helper
 
 
 @pytest.mark.parametrize(

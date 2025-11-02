@@ -1,11 +1,11 @@
+"""Example of using the 'keep_points_on' parameter in the simplify function."""
+
 import matplotlib.pyplot as plt
 import shapely
-from shapely import LineString
-from shapely.plotting import plot_line, plot_polygon
+from figures import BLUE, GRAY, W
+from shapely.plotting import plot_polygon
 
 import pygeoops
-
-from figures import W, BLACK, BLUE, GRAY, YELLOW
 
 fig, (ax1, ax2) = plt.subplots(
     nrows=1, ncols=2, figsize=(W, W / 3), dpi=90, layout="constrained"

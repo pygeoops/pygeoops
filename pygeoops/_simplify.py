@@ -1,15 +1,14 @@
-"""
-Module containing utilities to simplify geometries.
-"""
+"""Module containing utilities to simplify geometries."""
 
 import logging
 
-from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray
 import shapely
-from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
 import shapely.coords
+from geopandas import GeoSeries
+from numpy.typing import NDArray
+from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
+
 import pygeoops
 
 try:
@@ -36,8 +35,7 @@ def simplify(
     preserve_common_boundaries=False,
     keep_points_on: BaseGeometry | None = None,
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
-    """
-    Simplify geometry/geometries.
+    """Simplify geometry/geometries.
 
     Example of simplify on a polygon (grey: original, blue: simplified):
 
