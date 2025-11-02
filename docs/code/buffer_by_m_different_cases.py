@@ -1,11 +1,11 @@
+"""Example of buffering by M values with different cases."""
+
 import matplotlib.pyplot as plt
-import shapely
+from figures import BLUE, GRAY, W
 from shapely import LineString
 from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
-
-from figures import W, BLACK, BLUE, GRAY, YELLOW
 
 fig, (ax1, ax2, ax3) = plt.subplots(
     nrows=1, ncols=3, figsize=(W, W / 2), dpi=90, layout="constrained"

@@ -1,15 +1,13 @@
-"""
-Module to prepare test data for benchmarking geo operations.
-"""
+"""Module to prepare test data for benchmarking geo operations."""
 
 import enum
 import logging
-from pathlib import Path
 import pprint
 import shutil
 import tempfile
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import geofileops as gfo
 
@@ -25,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class TestFile(enum.Enum):
+    """Enum with test files for benchmarking."""
+
     AGRIPRC_2018 = (
         0,
         "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2018/Landbouwgebruikspercelen_LV_2018_GewVLA_Shape.zip",
@@ -42,11 +42,13 @@ class TestFile(enum.Enum):
     )
 
     def __init__(self, value, url, filename):
+        """Initialize the TestFile enum."""
         self._value_ = value
         self.url = url
         self.filename = filename
 
     def get_file(self, tmp_dir: Path) -> Path:
+        """Get the test file, downloading it if needed."""
         testfile_path = download_samplefile(
             url=self.url, dst_name=self.filename, dst_dir=tmp_dir
         )
@@ -59,14 +61,14 @@ class TestFile(enum.Enum):
 
 
 def download_samplefile(url: str, dst_name: str, dst_dir: Path | None = None) -> Path:
-    """
-    Download a sample file to dest_path.
+    """Download a sample file to dest_path.
 
     If it is zipped, it will be unzipped. If needed, it will be converted to
     the file type as determined by the suffix of dst_name.
 
     Args:
         url (str): the url of the file to download
+        dst_name (str): the name of the destination file
         dst_dir (Path): the dir to downloaded the sample file to.
             If it is None, a dir in the default tmp location will be
             used. Defaults to None.
@@ -75,7 +77,7 @@ def download_samplefile(url: str, dst_name: str, dst_dir: Path | None = None) ->
         Path: the path to the downloaded sample file.
     """
     # If the destination path is a directory, use the default file name
-    dst_path = prepare_dst_path(dst_name, dst_dir)
+    dst_path = _prepare_dst_path(dst_name, dst_dir)
     # If the sample file already exists, return
     if dst_path.exists():
         return dst_path
@@ -135,7 +137,7 @@ def download_samplefile(url: str, dst_name: str, dst_dir: Path | None = None) ->
     return dst_path
 
 
-def prepare_dst_path(dst_name: str, dst_dir: Path | None = None):
+def _prepare_dst_path(dst_name: str, dst_dir: Path | None = None):
     if dst_dir is None:
         return Path(tempfile.gettempdir()) / "geofileops_sampledata" / dst_name
     else:

@@ -1,11 +1,12 @@
 import warnings
+
 import geopandas as gpd
 import numpy as np
 import pytest
 import shapely
+import test_helper
 
 from pygeoops import _simplify_topo as simplify_topo
-import test_helper
 
 
 @pytest.mark.parametrize(

@@ -14,8 +14,7 @@ def simplify_coords_lang(
     lookahead: int = 8,
     simplify_lookahead_points: bool = False,
 ) -> np.ndarray | list:
-    """
-    Simplify a line using the lang algorithm.
+    """Simplify a line using the lang algorithm.
 
     The implementation also supports an alternative behaviour of the standard lang
     algorithm to increase the potential number of points removed from the input
@@ -73,8 +72,7 @@ def simplify_coords_lang_idx(
     lookahead: int = 8,
     simplify_lookahead_points: bool = False,
 ) -> np.ndarray | list:
-    """
-    Simplify a line using the lang algorithm.
+    """Simplify a line using the lang algorithm.
 
     The result is the coordinate indexes to be kept.
 
@@ -145,32 +143,31 @@ def simplify_coords_lang_idx(
                 # the end point of the previous window.
                 mask_idx_to_keep[window_start + 1 : window_end] = False
                 window_start = window_end
-            else:
-                # To be able to also mask the "lookahead points", this code path doesn't
-                # move the window_start if the current window contained points to be
-                # masked. Only the window_end will be moved.
-                # This has as effect that the current window_end point will be
-                # considered for masking, but increases the effective window_size to
-                # check distances for to double when many points are within tolerance,
-                # so this will affect performance!
-                #
-                # Other considered options:
-                #   - setting window_start to (window_end -1) would also enable
-                #     window_end to be masked in theory, but this doesn't work because
-                #     with eg. 90° corners consisting of 2 point within tolerance
-                #     "disappear".
-                #   - doing two passes, but this effectively at least doubles the
-                #     effective tolerance.
-                #   - using the mask for not calculating distances for points that are
-                #     already masked, but this also increases the effective tolerance
+            # To be able to also mask the "lookahead points", this code path doesn't
+            # move the window_start if the current window contained points to be
+            # masked. Only the window_end will be moved.
+            # This has as effect that the current window_end point will be
+            # considered for masking, but increases the effective window_size to
+            # check distances for to double when many points are within tolerance,
+            # so this will affect performance!
+            #
+            # Other considered options:
+            #   - setting window_start to (window_end -1) would also enable
+            #     window_end to be masked in theory, but this doesn't work because
+            #     with eg. 90° corners consisting of 2 point within tolerance
+            #     "disappear".
+            #   - doing two passes, but this effectively at least doubles the
+            #     effective tolerance.
+            #   - using the mask for not calculating distances for points that are
+            #     already masked, but this also increases the effective tolerance
 
-                # Check if there are points in tolerance in the window
-                if not mask_idx_to_keep[window_start + 1 : window_end].any():
-                    # No points within tolerance found, so move window forward
-                    window_start = window_end
-                else:
-                    # There are points found, so mask them, but don't move window_start
-                    mask_idx_to_keep[window_start + 1 : window_end] = False
+            # Check if there are points in tolerance in the window
+            elif not mask_idx_to_keep[window_start + 1 : window_end].any():
+                # No points within tolerance found, so move window forward
+                window_start = window_end
+            else:
+                # There are points found, so mask them, but don't move window_start
+                mask_idx_to_keep[window_start + 1 : window_end] = False
 
             if window_start >= nb_points - 1 or window_end >= nb_points - 1:
                 break
@@ -196,8 +193,7 @@ def _point_line_distance(
     line_x2: float,
     line_y2: float,
 ) -> float:
-    """
-    Calculate the orthogonal distance between the point and line specified.
+    """Calculate the orthogonal distance between the point and line specified.
 
     Args:
         point_x (float): x coordinate of the point

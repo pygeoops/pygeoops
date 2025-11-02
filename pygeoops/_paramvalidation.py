@@ -1,14 +1,13 @@
 import numpy as np
+from shapely.geometry.base import BaseGeometry
 
 import pygeoops
-from shapely.geometry.base import BaseGeometry
 
 
 def keep_geom_type2primitivetype_id(
     keep_geom_type: bool | int, geometry: BaseGeometry
 ) -> int:
-    """
-    Interprete a keep_geom_type parameter and return the appropriate primitivetype.
+    """Interprete a keep_geom_type parameter and return the appropriate primitivetype.
 
     Args:
         keep_geom_type (Union[bool, int]): value to check and interprete

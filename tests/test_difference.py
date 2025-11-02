@@ -1,11 +1,12 @@
 from datetime import datetime
+
 import numpy as np
 import pytest
 import shapely
+import test_helper
 
 import pygeoops
 from pygeoops import _difference as difference
-import test_helper
 
 
 def test_difference_all():

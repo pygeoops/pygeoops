@@ -2,8 +2,8 @@ import concurrent.futures
 import warnings
 
 import numpy as np
-from numpy.typing import NDArray
 import shapely
+from numpy.typing import NDArray
 from shapely.geometry.base import BaseGeometry
 
 import pygeoops
@@ -17,8 +17,7 @@ def difference_all_tiled(
     keep_geom_type: bool | int = False,
     subdivide_coords: int = 1000,
 ) -> BaseGeometry:
-    """
-    Subtracts all geometries in geometries_to_subtract from the input geometry.
+    """Subtracts all geometries in geometries_to_subtract from the input geometry.
 
     If the input geometry has many points, it can be subdivided in smaller parts
     to potentially speed up processing as controlled by parameter `subdivide_coords`.
@@ -119,8 +118,7 @@ def difference_all(
     keep_geom_type: bool | int = False,
     check_intersects: bool = False,
 ) -> BaseGeometry:
-    """
-    Subtracts all geometries in geometries_to_subtract from the input geometry.
+    """Subtracts all geometries in geometries_to_subtract from the input geometry.
 
     Args:
         geometry (geometry): single geometry to subtract geometries from.
@@ -193,8 +191,7 @@ def _difference_intersecting(
     geometry_to_subtract: BaseGeometry,
     primitivetype_id: int = 0,
 ) -> BaseGeometry | NDArray[BaseGeometry]:
-    """
-    Subtracts one geometry from one or more geometies.
+    """Subtracts one geometry from one or more geometies.
 
     An intersects is called before applying difference to speedup if this hasn't been
     done before.
@@ -244,8 +241,8 @@ def _difference_intersecting(
 
         # Take copy of geometry so the input parameter isn't changed.
         geometry = geometry.copy()
-        for idx_subtracted, idx_to_diff in enumerate(idx_to_diff):
-            geometry[idx_to_diff] = subtracted[idx_subtracted]
+        for idx_subtracted, idx_diff in enumerate(idx_to_diff):
+            geometry[idx_diff] = subtracted[idx_subtracted]
 
     if return_array:
         return geometry

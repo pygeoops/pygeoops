@@ -1,7 +1,10 @@
+"""Main module to run benchmarks."""
+
 from benchmark import benchmarker
 
 
 def main():
+    """Main function to run benchmarks."""
     # Only run specific benchmark function(s)
     benchmarker.run_benchmarks(
         modules_to_run=["benchmarks_pygeoops"],

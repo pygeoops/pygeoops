@@ -3,26 +3,25 @@
 import re
 from concurrent.futures import ProcessPoolExecutor
 
-import pytest
-
 import geopandas as gpd
-import shapely
 import numpy as np
+import pytest
+import shapely
+import test_helper
 from shapely import from_wkt
 from shapely.geometry import (
     GeometryCollection,
     LineString,
     MultiLineString,
     MultiPoint,
-    Polygon,
-    Point,
     MultiPolygon,
+    Point,
+    Polygon,
 )
 
 import pygeoops
 from pygeoops._compat import GEOS_GTE_3_12_0, SHAPELY_GTE_2_1_0
 from pygeoops._general import _extract_0dim_ndarray
-import test_helper
 
 
 @pytest.mark.parametrize(
@@ -244,8 +243,8 @@ def test_buffer_by_m_parallel():
         LineString([[0, 6, 1], [0, 0, 0], [10, 0, 2], [13, 5, 4]]),
         LineString([[0, 6, 1], [0, 0, -1], [10, 0, 2], [13, 5, 4]]),
     ]
-    exp_type = [Polygon, MultiPolygon, MultiPolygon]
-    exp_parts_relation = [None, "touches", "disjoint"]
+    exp_types = [Polygon, MultiPolygon, MultiPolygon]
+    exp_parts_relations = [None, "touches", "disjoint"]
 
     # Run test
     quad_segs = [4] * len(input)
@@ -254,7 +253,7 @@ def test_buffer_by_m_parallel():
 
     # Check result
     for line, buffer_geom, exp_type, exp_parts_relation in zip(
-        input, results, exp_type, exp_parts_relation
+        input, results, exp_types, exp_parts_relations
     ):
         assert buffer_geom is not None
         assert not buffer_geom.is_empty

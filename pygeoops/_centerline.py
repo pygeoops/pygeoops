@@ -1,15 +1,14 @@
 import logging
 import math
 
-from geopandas import GeoSeries
 import numpy as np
-from numpy.typing import NDArray
 import shapely
+from geopandas import GeoSeries
+from numpy.typing import NDArray
 from shapely.geometry.base import BaseGeometry
 
-from pygeoops._general import _extract_0dim_ndarray, format_short
 from pygeoops import _extend_line
-
+from pygeoops._general import _extract_0dim_ndarray, format_short
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +20,7 @@ def centerline(
     simplifytolerance: float = -0.25,
     extend: bool = False,
 ) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
-    """
-    Calculates an approximated centerline for a polygon.
+    """Calculates an approximated centerline for a polygon.
 
     Negative values for the algorithm parameters will result in an automatic
     optimisation based on the average geometry width for each input geometry.
@@ -222,8 +220,7 @@ def _centerline(
 
 
 def _average_width(geom: BaseGeometry) -> float:
-    """
-    Calculate the average width for a polygon.
+    """Calculate the average width for a polygon.
 
     Args:
         geom (BaseGeometry): the input polygon
@@ -235,8 +232,7 @@ def _average_width(geom: BaseGeometry) -> float:
 
 
 def _compactness(geom: BaseGeometry) -> float:
-    """
-    Calculate the compactness of a polygon.
+    """Calculate the compactness of a polygon.
 
     Is also called the Polsby-Popper index.
 
@@ -253,8 +249,7 @@ def _remove_short_branches_notempty(
     line: shapely.MultiLineString | shapely.LineString | None,
     min_branch_length: float,
 ) -> shapely.MultiLineString | shapely.LineString | None:
-    """
-    Remove all branches of the input lines shorter than min_branch_length.
+    """Remove all branches of the input lines shorter than min_branch_length.
 
     If this leads to a None or empty result, return a valid line anyway.
 
@@ -292,8 +287,7 @@ def _remove_short_branches(
     min_branch_length: float,
     remove_one_by_one: bool,
 ) -> shapely.MultiLineString | shapely.LineString | None:
-    """
-    Remove all branches of the input lines shorter than min_branch_length.
+    """Remove all branches of the input lines shorter than min_branch_length.
 
     Args:
         line (shapely line): input line

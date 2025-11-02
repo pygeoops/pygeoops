@@ -8,11 +8,11 @@ import geopandas as gpd
 import numpy as np
 import pytest
 import shapely
-from shapely.geometry.base import BaseGeometry
 import shapely.plotting
+import test_helper
+from shapely.geometry.base import BaseGeometry
 
 import pygeoops
-import test_helper
 
 # Define the box tests here so they can be used in both the box test + the array test.
 box_tests = [

@@ -3,14 +3,14 @@ Helper functions for all tests.
 """
 
 import os
-from pathlib import Path
 import re
+from pathlib import Path
 
-from matplotlib import figure as mpl_figure
 import matplotlib.colors as mcolors
 import shapely
 import shapely.affinity
 import shapely.plotting
+from matplotlib import figure as mpl_figure
 from shapely.geometry.base import BaseGeometry
 
 _data_dir = Path(__file__).parent.resolve() / "data"

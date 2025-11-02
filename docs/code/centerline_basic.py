@@ -1,11 +1,11 @@
+"""Example of basic usage of the centerline function."""
+
 import matplotlib.pyplot as plt
 import shapely
-from shapely import LineString
+from figures import BLUE, GRAY, W
 from shapely.plotting import plot_line, plot_polygon
 
 import pygeoops
-
-from figures import W, BLACK, BLUE, GRAY, YELLOW
 
 fig, ax = plt.subplots(figsize=(W / 2, W / 2), dpi=90)
 

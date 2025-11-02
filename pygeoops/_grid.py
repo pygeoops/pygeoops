@@ -1,15 +1,13 @@
-"""
-Module containing utilities to create/manipulate grids.
-"""
+"""Module containing utilities to create/manipulate grids."""
 
 import logging
 import math
-import numpy as np
 
-from numpy.typing import NDArray
-from geopandas import GeoDataFrame
+import numpy as np
 import shapely
 import shapely.ops
+from geopandas import GeoDataFrame
+from numpy.typing import NDArray
 from shapely import Polygon
 
 # Get a logger...
@@ -21,8 +19,7 @@ def create_grid(
     nb_columns: int,
     nb_rows: int,
 ) -> NDArray[Polygon]:
-    """
-    Creates a grid with tiles of the width and height specified.
+    """Creates a grid with tiles of the width and height specified.
 
     Args:
         total_bounds (Tuple[float, float, float, float]): bounds of the grid to be
@@ -45,8 +42,7 @@ def create_grid3(
     width: float,
     height: float,
 ) -> NDArray[Polygon]:
-    """
-    Creates a grid with tiles of the width and height specified.
+    """Creates a grid with tiles of the width and height specified.
 
     Args:
         total_bounds (Tuple[float, float, float, float]): bounds of the grid to be
@@ -98,8 +94,7 @@ def create_grid2(
     nb_squarish_tiles: int,
     nb_squarish_tiles_max: int | None = None,
 ) -> NDArray[Polygon]:
-    """
-    Creates a grid with about the indicated number of ~square tiles.
+    """Creates a grid with about the indicated number of ~square tiles.
 
     Args:
         total_bounds (Tuple[float, float, float, float]): bounds of the grid to be
@@ -151,8 +146,7 @@ def create_grid2(
 
 
 def split_tiles(input_tiles: GeoDataFrame, nb_tiles_wanted: int) -> GeoDataFrame:
-    """
-    Split tiles till the number of tiles approaches nb_tiles_wanted.
+    """Split tiles till the number of tiles approaches nb_tiles_wanted.
 
     For tiles that are split, any values in additional attribute columns in the
     GeoDataFrame will be retained in the result.
@@ -214,18 +208,17 @@ def split_tiles(input_tiles: GeoDataFrame, nb_tiles_wanted: int) -> GeoDataFrame
                                 (xmin - 1, ymin + 2 * height / 3),
                             ]
                         )
+                elif width > height:
+                    split_line = shapely.LineString(
+                        [(xmin + width / 2, ymin - 1), (xmin + width / 2, ymax + 1)]
+                    )
                 else:
-                    if width > height:
-                        split_line = shapely.LineString(
-                            [(xmin + width / 2, ymin - 1), (xmin + width / 2, ymax + 1)]
-                        )
-                    else:
-                        split_line = shapely.LineString(
-                            [
-                                (xmin - 1, ymin + height / 2),
-                                (xmax + 1, ymin + height / 2),
-                            ]
-                        )
+                    split_line = shapely.LineString(
+                        [
+                            (xmin - 1, ymin + height / 2),
+                            (xmax + 1, ymin + height / 2),
+                        ]
+                    )
                 tmp_tiles_after_split.extend(
                     shapely.ops.split(tile_to_split, split_line).geoms
                 )

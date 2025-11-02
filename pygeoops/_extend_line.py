@@ -1,13 +1,13 @@
 import math
+
 import shapely
-from shapely import box, LineString, MultiLineString, MultiPolygon, Polygon, Point
+from shapely import LineString, MultiLineString, MultiPolygon, Point, Polygon, box
 
 
 def extend_line_by_distance(
     line: LineString, start_distance: float, end_distance: float
 ) -> LineString:
-    """
-    Extends a line with the specified distances.
+    """Extends a line with the specified distances.
 
     Args:
         line (LineString): The line to extend.
@@ -39,8 +39,7 @@ def extend_line_to_geometry(
     line: LineString | MultiLineString,
     extend_to: LineString | MultiLineString | MultiPolygon | Polygon,
 ) -> LineString | MultiLineString:
-    """
-    Extends a line to (the boundaries of) a given geometry.
+    """Extends a line to (the boundaries of) a given geometry.
 
     Args:
         line (Union[LineString, MultiLineString]): The line(s) to extend.
@@ -134,8 +133,7 @@ def _find_closest_extend_point(
     p2: tuple[float, float],
     extend_to: LineString | MultiLineString,
 ) -> tuple[float, float]:
-    """
-    Find the closest point on the geometry line that can be extended to.
+    """Find the closest point on the geometry line that can be extended to.
 
     Args:
         p1 (Tuple[float, float]): point 1 of the segment to extend.
@@ -173,8 +171,7 @@ def _find_closest_extend_point(
 def _extend_segment_by_distance(
     p1: tuple[float, float], p2: tuple[float, float], distance: float
 ) -> tuple[tuple[float, float], tuple[float, float]]:
-    """
-    Extends the segment by the distance specified.
+    """Extends the segment by the distance specified.
 
     Args:
         p1 (Tuple[float, float]): the first point of the segment
@@ -199,8 +196,7 @@ def _extend_segment_by_distance(
 def _extend_segment_by_ratio(
     p1: tuple[float, float], p2: tuple[float, float], ratio: float
 ) -> tuple[tuple[float, float], tuple[float, float]]:
-    """
-    Extends the segment by a ratio.
+    """Extends the segment by a ratio.
 
     Args:
         p1 (Tuple[float, float]): the first point of the segment
@@ -226,8 +222,7 @@ def _extend_segment_to_bbox(
     p2: tuple[float, float],
     bbox: tuple[float, float, float, float],
 ) -> tuple[tuple[float, float], tuple[float, float]]:
-    """
-    Extends a segment so both points are on the boundaries of a given bounding box.
+    """Extends a segment so both points are on the boundaries of a given bounding box.
 
     Args:
         p1 (Tuple[float, float]): The first point of the segment.
@@ -283,8 +278,7 @@ def _extend_segment_to_bbox(
                 return (p_extended1, p_extended2)
             else:
                 return (p_extended2, p_extended1)
+        elif p_extended1[0] > p_extended2[0]:
+            return (p_extended1, p_extended2)
         else:
-            if p_extended1[0] > p_extended2[0]:
-                return (p_extended1, p_extended2)
-            else:
-                return (p_extended2, p_extended1)
+            return (p_extended2, p_extended1)

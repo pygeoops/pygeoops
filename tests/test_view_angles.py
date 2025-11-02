@@ -1,8 +1,8 @@
-from geopandas import GeoSeries
 import numpy as np
 import pytest
 import shapely
 import shapely.affinity
+from geopandas import GeoSeries
 from shapely import from_wkt
 
 import pygeoops

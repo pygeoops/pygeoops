@@ -92,7 +92,7 @@ def test_geometrytype_to_primitivetype():
         ValueError,
         match=re.escape("No primitivetype implemented for GeometryType.MISSING"),
     ):
-        GeometryType.MISSING.to_primitivetype
+        _ = GeometryType.MISSING.to_primitivetype
 
 
 def test_geometrytype_to_multitype():
@@ -116,7 +116,7 @@ def test_geometrytype_to_multitype():
     with pytest.raises(
         ValueError, match=re.escape("No multitype implemented for GeometryType.MISSING")
     ):
-        GeometryType.MISSING.to_multitype
+        _ = GeometryType.MISSING.to_multitype
 
 
 def test_geometrytype_to_singletype():
@@ -139,7 +139,7 @@ def test_geometrytype_to_singletype():
         ValueError,
         match=re.escape("No singletype implemented for GeometryType.MISSING"),
     ):
-        GeometryType.MISSING.to_singletype
+        _ = GeometryType.MISSING.to_singletype
 
 
 def test_primitivetype():
