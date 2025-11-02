@@ -343,6 +343,8 @@ def get_parts_recursive(geometry: BaseGeometry | None):
     Even if there is deep nesting of multipart geometries, all parts are extracted to
     one flat array.
 
+    .. versionadded:: 0.6.0
+
     Args:
         geometry (BaseGeometry, optional): geometry to get the parts for.
 

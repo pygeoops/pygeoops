@@ -293,6 +293,7 @@ def test_empty():
         pygeoops.empty(-2)
 
 
+@pytest.mark.filterwarnings("ignore:Deprecated: use shapely.get_parts() instead")
 def test_explode():
     # Test dealing with None/empty input
     # ----------------------------------
