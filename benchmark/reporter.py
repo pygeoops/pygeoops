@@ -2,6 +2,8 @@
 
 import ast
 import math
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Literal
 
@@ -9,19 +11,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas.api
-
-# mypy: disable-error-code="operator"
+from PIL import Image
 
 A4_LONG_SIDE = 11.69
 A4_SHORT_SIDE = 8.27
 
 
 def generate_reports(results_path: Path, output_dir: Path):
-    """Generate reports based on benchmark results."""
+    """Generate the benchmarking reports.
+
+    Args:
+        results_path (Path): the result path to find the results to report on.
+        output_dir (Path): directory to write the reports to.
+    """
     benchmark_df = pd.read_csv(results_path)
 
     def format_run_details(input: dict) -> str:
-        if input is None or np.isnan(input):
+        if input is None or input == np.nan:  # noqa: PLW0177
             return ""
         if isinstance(input, str):
             input = ast.literal_eval(input)
@@ -193,7 +199,7 @@ def save_chart(
 
         label_above_line = True
         for index, row in enumerate(df.itertuples()):
-            for row_fieldname, row_fieldvalue in row._asdict().items():
+            for row_fieldname, row_fieldvalue in row._asdict().items():  # type: ignore
                 if row_fieldname != "Index":
                     if max_y_value is None or row_fieldvalue > max_y_value:
                         max_y_value = row_fieldvalue
@@ -236,8 +242,20 @@ def save_chart(
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
 
-    # Save and open if wanted
-    fig.savefig(str(output_path))
+    # Save the file if it doesn't exist yet
+    if not output_path.exists():
+        fig.savefig(str(output_path))
+    else:
+        # If it already exists, only save it if it has changed
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_output_path = Path(tmp_dir) / output_path.name
+            fig.savefig(tmp_output_path)
+            img_new = np.asarray(Image.open(tmp_output_path))
+            img_old = np.asarray(Image.open(output_path))
+            if not np.array_equal(img_new, img_old):
+                shutil.move(tmp_output_path, output_path)
+
+    plt.close(fig=fig)
 
 
 if __name__ == "__main__":
