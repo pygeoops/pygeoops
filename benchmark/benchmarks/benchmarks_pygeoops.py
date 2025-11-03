@@ -26,6 +26,36 @@ def _get_version() -> str:
     return pygeoops.__version__
 
 
+def buffer_by_m_lines(tmp_dir: Path) -> RunResult:
+    """Buffer line geometries with variable width."""
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+    line = [[0, 0], [5, -2], [10, 2], [15, 0], [20, 5], [25, 0], [35, 0]]
+    buffer_distances = [3, 4, 0, 2, 5, 2, 2]
+    line_z = [[x, y, z] for (x, y), z in zip(line, buffer_distances, strict=True)]
+    nb_lines = 20000
+    data_z = [line_z] * nb_lines
+    lines = [shapely.LineString(line) for line in data_z]
+
+    quad_segs_new = 8
+
+    # Go!
+    start_time = datetime.now()
+    _ = pygeoops.buffer_by_m(lines, quad_segs_new)
+    operation_descr = f"{function_name} on {nb_lines} lines"
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=operation_descr,
+        run_details=None,
+    )
+
+    # Cleanup and return
+    return result
+
+
 def simplify_lang(tmp_dir: Path) -> RunResult:
     """Simplify geometries using Lang algorithm with pygeoops."""
     # Init
