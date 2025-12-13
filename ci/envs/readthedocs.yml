@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - python =3.12
-  - pip
   # required
   - geopandas-base >=0.12.1
   - numpy
@@ -16,6 +15,5 @@ dependencies:
   - matplotlib
   - pydata-sphinx-theme
   - sphinx
+  - sphinx-automodapi
   - sphinx-copybutton
-  - pip:
-    - sphinx-automodapi
