@@ -1,7 +1,6 @@
 name: pygeoops-doc
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python =3.12
   - pip  # Is apparently needed even though there are no pip packages specified
