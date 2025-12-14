@@ -1,5 +1,7 @@
 .. currentmodule:: pygeoops
 
+.. _api-reference:
+
 =============
 API Reference
 =============
@@ -22,7 +24,7 @@ methods implemented in PyGeoOps. All classes and function exposed in
    difference_all_tiled
    empty
    extend_line_by_distance
-   extend_line_to_polygon
+   extend_line_to_geometry
    get_parts_recursive
    make_valid
    remove_inner_rings

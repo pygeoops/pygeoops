@@ -27,6 +27,7 @@ def buffer_by_m(
 
     The buffer distance at each vertex is determined by the M value of that vertex, or
     the Z value if M is not available.
+
       - If a distance is zero, the resulting buffer will taper towards the original
         point. If the input is a LineString, this means the result will be a
         MultiPolygon where the parts touch at that point.

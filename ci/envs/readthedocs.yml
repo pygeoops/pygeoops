@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python =3.12
-  - pip
+  - pip  # Is apparently needed even though there are no pip packages specified
   # required
   - geopandas-base >=0.12.1
   - numpy
@@ -13,9 +13,8 @@ dependencies:
   # optional
   - simplification
   # docs
-  - matplotlib
+  - matplotlib-base
   - pydata-sphinx-theme
   - sphinx
+  - sphinx-automodapi
   - sphinx-copybutton
-  - pip:
-    - sphinx-automodapi

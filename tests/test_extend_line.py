@@ -226,7 +226,7 @@ def test_extend_line_to_geometry_singleline(tmp_path, desc, line, geom, exp_line
         ),
     ],
 )
-def test_extend_line_to_polygon_island(tmp_path, desc, line, geom, exp_line):
+def test_extend_line_to_geometry_polygon_island(tmp_path, desc, line, geom, exp_line):
     result = pygeoops.extend_line_to_geometry(line, geom)
     output_path = tmp_path / "test_extend_line_to_geometry_island.png"
     test_helper.plot([geom, result], output_path)
