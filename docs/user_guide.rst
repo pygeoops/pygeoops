@@ -6,7 +6,7 @@ User guide
 PyGeoOps provides some less common or extended spatial algorithms and utility functions.
 
 A full list of functionalities can be found in the 
-:ref:`API reference<API-reference>`. 
+:ref:`API reference<api-reference>`. 
 
 As a quick start, here are some examples on how PyGeoOps can be used.
 

@@ -1,5 +1,7 @@
 .. currentmodule:: pygeoops
 
+.. _api-reference:
+
 =============
 API Reference
 =============
