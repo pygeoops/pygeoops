@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+type: software
+title: pygeoops
+version: 0.6.0
+date-released: 2025-08-01
+doi: 10.5281/zenodo.20099988
+abstract: Pygeoops is a Python library with some less common geospatial operations.
+identifiers:
+  - type: url
+    value: 'https://pygeoops.readthedocs.io/'
+    description: ReadTheDocs documentation of pygeoops
+repository-code: https://github.com/pygeoops/pygeoops
+license: GPL-3.0
+authors:
+  - given-names: Pieter
+    family-names: Roggemans
+    orcid: https://orcid.org/0009-0009-2046-3284
+
+keywords:
+  - python
+  - geospatial
+  - gis
+  - geoprocessing
+  - geospatial-analysis
+  - geospatial-operations
+  - geospatial-tools
+  - centerline
+  - medial-axis
+  - skeleton
+  - grid
+  - geopandas
+  - shapely
+  - pygeos
+  - view-angles
