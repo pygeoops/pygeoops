@@ -155,7 +155,7 @@ def _centerline(
             else:
                 raise
 
-        if geom_for_voronoi_dedup.is_valid:
+        if not geom_for_voronoi_dedup.is_empty and geom_for_voronoi_dedup.is_valid:
             geom_for_voronoi = geom_for_voronoi_dedup
 
         # Calculate voronoi edges
