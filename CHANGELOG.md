@@ -4,7 +4,7 @@
 
 ### Bugs fixed
 
-- Avoid error in `centerline` for very small (< 1e-8 wide) polygons (#)
+- Avoid error in `centerline` for very small (< 1e-8 wide) polygons (#155)
 
 ## 0.6.0 (2025-11-02)
 
