@@ -3,3 +3,6 @@ include pygeoops/version.txt
 
 # Include the py.typed file so e.g. mypy knows pygeoops is typed
 include pygeoops/py.typed
+
+# For whatever reason, this is needed to avoid tests being included
+recursive-exclude tests *

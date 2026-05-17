@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.6.1 (yyyy-mm-dd)
+
+### Bugs fixed
+
+- Avoid error in `centerline` for very small (< 1e-8 wide) polygons (#155)
+
 ## 0.6.0 (2025-11-02)
 
 ### Deprecations and compatibility notes
