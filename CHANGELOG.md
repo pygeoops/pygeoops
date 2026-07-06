@@ -10,8 +10,6 @@
 
 - Add `remove_small_parts` function (#158)
 
-## 0.6.1 (yyyy-mm-dd)
-
 ### Bugs fixed
 
 - Avoid error in `centerline` for very small (< 1e-8 wide) polygons (#155)
