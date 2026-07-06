@@ -70,13 +70,11 @@ extend-exclude = ["docs/conf.py", "local_ignore/*"]
 
 [tool.ruff.lint]
 select = [
-    "YTT",  # flake8-2020
-    "ANN",  # flake8-annotations
-    "B",  # flake8-bugbear
-    "E",  # pycodestyle
     "F",  # pyflakes
+    "E",  # pycodestyle
     "W",
     "UP",  # pyupgrade
+    "B",  # flake8-bugbear
     "PTH",  # flake8-pathlib
     "T10",  # flake8-debugger
     # "SIM",  # flake8-simplify
@@ -95,16 +93,26 @@ select = [
 
 ignore = [
     ### Intentionally disabled
+    "E402",  # module level import not at top of file
+    "E731",  # do not assign a lambda expression, use a def
+    "B006",  # mutable-argument-default
+    "B007",  # unused-loop-control-variable
+    "B009",  # get-attr-with-constant
+    "C408",  # dict literals
     "PLR0913",  # Too many arguments to function call
     "PLR0911",  # Too many returns
     "PLR0912",  # Too many branches
     "PLR0915",  # Too many statements
     "PLR2004",  # Magic number
+    "PLW2901",  # Redefined loop name
+    "PLW0603",  # Global statements are discouraged
+    "PLC1901",  # compare-to-empty-string
+    "RUF005",  # collection-literal-concatenation
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["ANN", "D"]
-"perftests/*" = ["ANN", "D"]
+"tests/*" = ["D"]
+"perftests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
