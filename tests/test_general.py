@@ -546,7 +546,8 @@ def test_makevalid_multi(
 
 def test_remove_inner_rings():
     # Test with None input
-    assert pygeoops.remove_inner_rings(None, min_area_to_keep=1, crs=None) is None
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        assert pygeoops.remove_inner_rings(None, min_area_to_keep=1, crs=None) is None
 
     # Apply to single Polygon, with area tolerance smaller than holes
     polygon_removerings_withholes = Polygon(
@@ -556,40 +557,45 @@ def test_remove_inner_rings():
             [(5, 5), (5, 6), (7, 6), (7, 5), (5, 5)],
         ],
     )
-    poly_result = pygeoops.remove_inner_rings(
-        polygon_removerings_withholes, min_area_to_keep=1, crs=None
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            polygon_removerings_withholes, min_area_to_keep=1, crs=None
+        )
     assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 2
 
     # Apply to single Polygon, with area tolerance smaller than holes and passed as a
     # 0 dimension ndarray
-    poly_result = pygeoops.remove_inner_rings(
-        np.array(polygon_removerings_withholes), min_area_to_keep=1, crs=None
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            np.array(polygon_removerings_withholes), min_area_to_keep=1, crs=None
+        )
     assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 2
 
     # Apply to single Polygon, with area tolerance between
     # smallest hole (= 2m²) and largest (= 4m²)
-    poly_result = pygeoops.remove_inner_rings(
-        polygon_removerings_withholes, min_area_to_keep=3, crs="epsg:31370"
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            polygon_removerings_withholes, min_area_to_keep=3, crs="epsg:31370"
+        )
     assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 1
 
     # Apply to single polygon and remove all holes
-    poly_result = pygeoops.remove_inner_rings(
-        polygon_removerings_withholes, min_area_to_keep=0, crs=None
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            polygon_removerings_withholes, min_area_to_keep=0, crs=None
+        )
     assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 0
     polygon_removerings_noholes = Polygon(
         shell=[(100, 100), (100, 110), (110, 110), (110, 100), (100, 100)]
     )
-    poly_result = pygeoops.remove_inner_rings(
-        polygon_removerings_noholes, min_area_to_keep=0, crs=None
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            polygon_removerings_noholes, min_area_to_keep=0, crs=None
+        )
     assert isinstance(poly_result, Polygon)
     assert len(poly_result.interiors) == 0
 
@@ -598,18 +604,66 @@ def test_remove_inner_rings():
     multipoly_removerings = MultiPolygon(
         [polygon_removerings_withholes, polygon_removerings_noholes]
     )
-    poly_result = pygeoops.remove_inner_rings(
-        multipoly_removerings, min_area_to_keep=3, crs=None
-    )
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        poly_result = pygeoops.remove_inner_rings(
+            multipoly_removerings, min_area_to_keep=3, crs=None
+        )
     assert isinstance(poly_result, MultiPolygon)
     interiors = poly_result.geoms[0].interiors  # pyright: ignore[reportOptionalMemberAccess]
     assert len(interiors) == 1
 
 
 def test_remove_inner_rings_invalid_input():
-    with pytest.raises(ValueError, match="remove_inner_rings impossible on LineString"):
-        pygeoops.remove_inner_rings(
-            LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
+    with pytest.warns(DeprecationWarning, match="remove_small_parts"):
+        with pytest.raises(
+            ValueError, match="remove_inner_rings impossible on LineString"
+        ):
+            pygeoops.remove_inner_rings(
+                LineString([(0, 0), (0, 1)]), min_area_to_keep=1, crs=None
+            )
+
+
+def test_remove_small_parts():
+    polygon_with_holes = Polygon(
+        shell=[(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)],
+        holes=[
+            [(1, 1), (1, 3), (3, 3), (3, 1), (1, 1)],  # 4 m2
+            [(5, 5), (5, 6), (6, 6), (6, 5), (5, 5)],  # 1 m2
+        ],
+    )
+    polygon_small_outer = Polygon(
+        shell=[(20, 20), (20, 21), (21, 21), (21, 20), (20, 20)]
+    )
+
+    # INNER: removes only small inner rings.
+    result = pygeoops.remove_small_parts(
+        polygon_with_holes, min_area_to_keep=2, crs=None, part_type="INNER"
+    )
+    assert isinstance(result, Polygon)
+    assert len(result.interiors) == 1
+
+    # OUTER: keeps holes, but can remove full polygon if outer ring too small.
+    result = pygeoops.remove_small_parts(
+        polygon_small_outer, min_area_to_keep=2, crs=None, part_type="OUTER"
+    )
+    assert isinstance(result, Polygon)
+    assert result.is_empty
+
+    # BOTH: remove small holes and small polygons in a multipolygon.
+    result = pygeoops.remove_small_parts(
+        MultiPolygon([polygon_with_holes, polygon_small_outer]),
+        min_area_to_keep=2,
+        crs=None,
+        part_type="BOTH",
+    )
+    assert isinstance(result, MultiPolygon)
+    assert len(result.geoms) == 1
+    assert len(result.geoms[0].interiors) == 1
+
+    # Invalid part_type should raise.
+    with pytest.raises(ValueError, match="Invalid value for part_type"):
+        pygeoops.remove_small_parts(
+            polygon_with_holes, min_area_to_keep=1, crs=None, part_type="INVALID"
         )
 
 

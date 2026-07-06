@@ -1,6 +1,7 @@
 import copy
 import math
 import warnings
+from typing import Literal
 
 import numpy as np
 import pyproj
@@ -479,23 +480,27 @@ def _make_valid(geometry, keep_collapsed: bool = True):
     return result
 
 
-def remove_inner_rings(
+def remove_small_parts(
     geometry: shapely.Polygon | shapely.MultiPolygon | None,
     min_area_to_keep: float,
     crs: str | pyproj.CRS | None,
+    part_type: Literal["INNER", "OUTER", "BOTH"] = "INNER",
 ) -> shapely.Polygon | shapely.MultiPolygon | None:
-    """Remove (small) inner rings from a (multi)polygon.
+    """Remove (small) inner and/or outer rings from a (multi)polygon.
 
     Args:
         geometry (Union[shapely.Polygon, shapely.MultiPolygon, None]): polygon geometry.
-        min_area_to_keep (float): keep the inner rings with at least this area
-            in the coordinate units (typically m). If 0.0, no inner rings are kept.
+        min_area_to_keep (float): keep parts with at least this area in the
+            coordinate units (typically m). If 0.0, all inner rings are removed.
         crs (Union[str, pyproj.CRS]): the projection of the geometry. Passing
             None is fine if min_area_to_keep and/or the geometry is in a
             projected crs (not in degrees). Otherwise the/a crs should be passed.
+        part_type (str, optional): which parts can be removed. Supported values:
+            "INNER", "OUTER", "BOTH". Defaults to "INNER".
 
     Raises:
-        Exception: if the input geometry is no (multi)polygon.
+        ValueError: if the input geometry is no (multi)polygon.
+        ValueError: if part_type has an unsupported value.
 
     Returns:
         Union[shapely.Polygon, shapely.MultiPolygon, None]: the resulting (multi)polygon
@@ -506,35 +511,55 @@ def remove_inner_rings(
     if crs is not None and isinstance(crs, str):
         crs = pyproj.CRS(crs)
     geometry = _extract_0dim_ndarray(geometry)
+    part_type_upper = part_type.upper()
+    if part_type_upper not in {"INNER", "OUTER", "BOTH"}:
+        raise ValueError(
+            f"Invalid value for part_type: {part_type}, should be INNER, OUTER or BOTH"
+        )
+
+    remove_inner = part_type_upper in {"INNER", "BOTH"}
+    remove_outer = part_type_upper in {"OUTER", "BOTH"}
+
+    def area_in_units(ring: shapely.LinearRing, crs: pyproj.CRS | None = None) -> float:
+        if crs is None:
+            return shapely.Polygon(ring).area
+        if crs.is_projected is True:
+            return shapely.Polygon(ring).area
+
+        geod = crs.get_geod()
+        assert geod is not None
+        ring_area, _ = geod.geometry_area_perimeter(ring)
+        return ring_area
 
     # Define function to treat simple polygons
-    def remove_inner_rings_polygon(
+    def remove_small_parts_polygon(
         geom_poly: shapely.Polygon,
-        min_area_to_keep: float | None = None,
-        crs: pyproj.CRS | None = None,
+        min_area_to_keep: float,
+        crs: pyproj.CRS | None,
     ) -> shapely.Polygon:
+        if (
+            remove_outer
+            and abs(area_in_units(geom_poly.exterior, crs)) <= min_area_to_keep
+        ):
+            return shapely.Polygon()
+
+        if not remove_inner:
+            return geom_poly
+
         # If all inner rings need to be removed...
-        if min_area_to_keep is None or min_area_to_keep == 0.0:
+        if min_area_to_keep == 0.0:
             # If there are no interior rings anyway, just return input
             if len(geom_poly.interiors) == 0:
                 return geom_poly
-            else:
-                # Else create new polygon with only the exterior ring
-                return shapely.Polygon(geom_poly.exterior)
+
+            # Else create new polygon with only the exterior ring
+            return shapely.Polygon(geom_poly.exterior)
 
         # If only small rings need to be removed... loop over them
         ring_coords_to_keep = []
         small_ring_found = False
         for ring in geom_poly.interiors:
-            # Calculate area
-            if crs is None:
-                ring_area = shapely.Polygon(ring).area
-            elif crs.is_projected is True:
-                ring_area = shapely.Polygon(ring).area
-            else:
-                geod = crs.get_geod()
-                assert geod is not None
-                ring_area, _ = geod.geometry_area_perimeter(ring)
+            ring_area = area_in_units(ring, crs)
 
             # If ring area small, skip it, otherwise keep it
             if abs(ring_area) <= min_area_to_keep:
@@ -551,17 +576,50 @@ def remove_inner_rings(
 
     # If the input is a simple Polygon, apply remove on it and return.
     if isinstance(geometry, shapely.Polygon):
-        return remove_inner_rings_polygon(geometry, min_area_to_keep, crs=crs)
+        return remove_small_parts_polygon(geometry, min_area_to_keep, crs=crs)
     elif isinstance(geometry, shapely.MultiPolygon):
         # If the input is a MultiPolygon, apply remove on each Polygon in it.
         polys = []
         for poly in geometry.geoms:
-            polys.append(remove_inner_rings_polygon(poly, min_area_to_keep, crs=crs))
+            poly_result = remove_small_parts_polygon(poly, min_area_to_keep, crs=crs)
+            if remove_outer and poly_result.is_empty:
+                continue
+            polys.append(poly_result)
         return shapely.MultiPolygon(polys)
     else:
         raise ValueError(
-            f"remove_inner_rings impossible on {geometry.geom_type}: {geometry}"
+            f"remove_small_parts impossible on {geometry.geom_type}: {geometry}"
         )
+
+
+def remove_inner_rings(
+    geometry: shapely.Polygon | shapely.MultiPolygon | None,
+    min_area_to_keep: float,
+    crs: str | pyproj.CRS | None,
+) -> shapely.Polygon | shapely.MultiPolygon | None:
+    """Remove (small) inner rings from a (multi)polygon.
+
+    Deprecated: use :func:`remove_small_parts` with ``part_type='INNER'``.
+    """
+    warnings.warn(
+        "Deprecated: use remove_small_parts(..., part_type='INNER') instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    try:
+        return remove_small_parts(
+            geometry=geometry,
+            min_area_to_keep=min_area_to_keep,
+            crs=crs,
+            part_type="INNER",
+        )
+    except ValueError as ex:
+        if str(ex).startswith("remove_small_parts impossible on"):
+            raise ValueError(
+                str(ex).replace("remove_small_parts", "remove_inner_rings", 1)
+            ) from ex
+        raise
 
 
 def subdivide(

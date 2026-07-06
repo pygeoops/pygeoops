@@ -252,7 +252,7 @@ def test_buffer_by_m_parallel():
         results = pool.map(pygeoops.buffer_by_m, input, quad_segs)
 
     # Check result
-    for line, buffer_geom, exp_type, exp_parts_relation in zip(
+    for _line, buffer_geom, exp_type, exp_parts_relation in zip(
         input, results, exp_types, exp_parts_relations, strict=True
     ):
         assert buffer_geom is not None
