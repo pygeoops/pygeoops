@@ -4,11 +4,11 @@
 
 ### Deprecations and compatibility notes
 
-- Deprecate `remove_inner_rings` -> please use `remove_small_parts` (#)
+- Deprecate `remove_inner_rings` -> please use `remove_small_parts` (#158)
 
 ### Improvements
 
-- Add `remove_small_parts` function (#)
+- Add `remove_small_parts` function (#158)
 
 ## 0.6.1 (yyyy-mm-dd)
 
