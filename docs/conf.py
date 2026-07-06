@@ -28,7 +28,7 @@ devdir = "./"
 # -- Project information -----------------------------------------------------
 
 project = "pygeoops"
-copyright = "2023, Pieter Roggemans"
+copyright = "2026, Pieter Roggemans"
 author = "Pieter Roggemans"
 
 # The full version, including alpha/beta/rc tags
