@@ -666,6 +666,38 @@ def test_remove_small_parts():
             polygon_with_holes, min_area_to_keep=1, crs=None, part_type="INVALID"
         )
 
+    # ndarray/list-like input support.
+    result = pygeoops.remove_small_parts(
+        np.array([polygon_with_holes, polygon_small_outer]),
+        min_area_to_keep=2,
+        crs=None,
+        part_type="OUTER",
+    )
+    assert isinstance(result, np.ndarray)
+    assert len(result) == 2
+    assert isinstance(result[0], Polygon)
+    assert isinstance(result[1], Polygon)
+    assert result[0].is_empty is False
+    assert result[1].is_empty
+
+    # GeoSeries input support + index retention.
+    geo_input = gpd.GeoSeries(
+        [polygon_with_holes, polygon_small_outer],
+        index=[10, 20],
+    )
+    result = pygeoops.remove_small_parts(
+        geo_input,
+        min_area_to_keep=2,
+        crs=None,
+        part_type="OUTER",
+    )
+    assert isinstance(result, gpd.GeoSeries)
+    assert list(result.index) == [10, 20]
+    assert isinstance(result[10], Polygon)
+    assert isinstance(result[20], Polygon)
+    assert result[10].is_empty is False
+    assert result[20].is_empty
+
 
 def test_subdivide():
     # Prepare a complex polygon to test with

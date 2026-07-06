@@ -481,15 +481,15 @@ def _make_valid(geometry, keep_collapsed: bool = True):
 
 
 def remove_small_parts(
-    geometry: shapely.Polygon | shapely.MultiPolygon | None,
+    geometry,
     min_area_to_keep: float,
     crs: str | pyproj.CRS | None,
     part_type: Literal["INNER", "OUTER", "BOTH"] = "INNER",
-) -> shapely.Polygon | shapely.MultiPolygon | None:
+) -> BaseGeometry | NDArray[BaseGeometry] | GeoSeries | None:
     """Remove (small) inner and/or outer rings from a (multi)polygon.
 
     Args:
-        geometry (Union[shapely.Polygon, shapely.MultiPolygon, None]): polygon geometry.
+        geometry (geometry, GeoSeries or arraylike): polygon geometry or arraylike.
         min_area_to_keep (float): keep parts with at least this area in the
             coordinate units (typically m). If 0.0, all inner rings are removed.
         crs (Union[str, pyproj.CRS]): the projection of the geometry. Passing
@@ -503,14 +503,51 @@ def remove_small_parts(
         ValueError: if part_type has an unsupported value.
 
     Returns:
-        Union[shapely.Polygon, shapely.MultiPolygon, None]: the resulting (multi)polygon
+        geometry, GeoSeries or array_like: the resulting (multi)polygon(s).
     """
-    # If input geom is None, just return.
+    # Prepare input
+    geometry = _extract_0dim_ndarray(geometry)
     if geometry is None:
         return None
     if crs is not None and isinstance(crs, str):
         crs = pyproj.CRS(crs)
-    geometry = _extract_0dim_ndarray(geometry)
+
+    if _is_arraylike(geometry):
+        result = np.array(
+            [
+                _remove_small_parts(
+                    geometry=geom,
+                    min_area_to_keep=min_area_to_keep,
+                    crs=crs,
+                    part_type=part_type,
+                )
+                for geom in geometry
+            ]
+        )
+
+        if isinstance(geometry, GeoSeries):
+            return GeoSeries(result, index=geometry.index, crs=geometry.crs)
+
+        return result
+
+    return _remove_small_parts(
+        geometry=geometry,
+        min_area_to_keep=min_area_to_keep,
+        crs=crs,
+        part_type=part_type,
+    )
+
+
+def _remove_small_parts(
+    geometry: shapely.Polygon | shapely.MultiPolygon | None,
+    min_area_to_keep: float,
+    crs: pyproj.CRS | None,
+    part_type: Literal["INNER", "OUTER", "BOTH"],
+) -> shapely.Polygon | shapely.MultiPolygon | None:
+    # If input geom is None, just return.
+    if geometry is None:
+        return None
+
     part_type_upper = part_type.upper()
     if part_type_upper not in {"INNER", "OUTER", "BOTH"}:
         raise ValueError(
