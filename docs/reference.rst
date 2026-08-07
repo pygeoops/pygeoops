@@ -27,7 +27,7 @@ methods implemented in PyGeoOps. All classes and function exposed in
    extend_line_to_geometry
    get_parts_recursive
    make_valid
-   remove_inner_rings
+   remove_small_parts
    simplify
    split_tiles
    subdivide

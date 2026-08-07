@@ -24,7 +24,7 @@ Examples are:
   view point
 * utility functions to create and split grids
   (:meth:`~create_grid`, :meth:`~split_tiles`)
-* general utility functions on geometries like :meth:`~remove_inner_rings`,
+* general utility functions on geometries like :meth:`~remove_small_parts`,
   :meth:`~get_parts_recursive`,...
 
 
